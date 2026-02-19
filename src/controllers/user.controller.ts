@@ -5,26 +5,26 @@ import * as schema from "../config/schema.js";
 import { verifyPassword } from "../utilities/argon2.js";
 
 export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body as {
-        //  todo: @rishi validate using zod
-        email: string;
-        password: string;
-    };
+	const { email, password } = req.body as {
+		//  todo: @rishi validate using zod
+		email: string;
+		password: string;
+	};
 
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password required" });
-    }
+	if (!email || !password) {
+		return res.status(400).json({ message: "Email and password required" });
+	}
 
-    const user = await db.query.user.findFirst({
-        where: eq(schema.user.email, email),
-    });
+	const user = await db.query.user.findFirst({
+		where: eq(schema.user.email, email),
+	});
 
-    if (!user) {
-        return res.status(400).json({ message: "Invalid credentials" });
-    }
+	if (!user) {
+		return res.status(400).json({ message: "Invalid credentials" });
+	}
 
-    const isValid = await verifyPassword(user.password_hash, password);
-    if (!isValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
-    }
+	const isValid = await verifyPassword(user.password_hash, password);
+	if (!isValid) {
+		return res.status(401).json({ message: "Invalid credentials" });
+	}
 };
