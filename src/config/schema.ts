@@ -63,7 +63,7 @@ export const user = pgTable(
 	},
 	(t) => [
 		unique().on(t.email),
-		check("email_check", sql`${t.email} like "%@tkmce.ac.in`),
+		check("email_check", sql`${t.email} LIKE '%@tkmce.ac.in'`),
 	],
 );
 
