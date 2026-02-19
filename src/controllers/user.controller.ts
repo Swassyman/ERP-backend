@@ -1,11 +1,12 @@
-import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { db } from "../config/db.js";
 import * as schema from "../config/schema.js";
+import { verifyPassword } from "../utilities/argon2.js";
 
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body as {
+        //  todo: @rishi validate using zod
         email: string;
         password: string;
     };
@@ -22,7 +23,7 @@ export const login = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isValid = await bcrypt.compare(password, user.password_hash);
+    const isValid = await verifyPassword(user.password_hash, password);
     if (!isValid) {
         return res.status(401).json({ message: "Invalid credentials" });
     }

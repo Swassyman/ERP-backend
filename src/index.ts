@@ -50,6 +50,6 @@ app.get("/", (_req, res) => {
     res.status(200).json({ status: "active" });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server listening on port ${PORT} at http://localhost:${PORT}`);
 });

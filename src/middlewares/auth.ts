@@ -1,5 +1,6 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { jwtVerify } from "jose";
+import type { IJWTPayload } from "../config/types.js";
 import {
     JWS_ALG_HEADER_PARAMETER,
     JWT_ACCESS_SECRET_SIGN_KEY,
@@ -7,12 +8,11 @@ import {
 
 const BEARER_PREFIX = "Bearer ";
 
-/** @type {import("express").RequestHandler} */
-export async function authenticateToken(
+export const authenticateToken: RequestHandler = async (
     req: Request,
     res: Response,
     next: NextFunction,
-) {
+) => {
     const authHeader = req.headers.authorization;
 
     if (
@@ -25,19 +25,21 @@ export async function authenticateToken(
 
     try {
         const accessToken = authHeader.slice(BEARER_PREFIX.length);
-        const { payload } =
-            /** @type {import("jose").JWTVerifyResult<Tourney.IJWTPayload>} */ await jwtVerify(
-                accessToken,
-                JWT_ACCESS_SECRET_SIGN_KEY,
-                { algorithms: [JWS_ALG_HEADER_PARAMETER] },
-            );
+        const { payload } = await jwtVerify<IJWTPayload>(
+            accessToken,
+            JWT_ACCESS_SECRET_SIGN_KEY,
+            { algorithms: [JWS_ALG_HEADER_PARAMETER] },
+        );
+
+        if (typeof payload.userId !== "number") {
+            return res.status(401).json({ message: "Unauthorised" });
+        }
 
         req.user = {
-            // todo: fix this swassy!
-            id: payload.userId,
+            id: payload.id,
         };
         next();
     } catch {
         return res.status(401).json({ message: "Unauthorised" });
     }
-}
+};

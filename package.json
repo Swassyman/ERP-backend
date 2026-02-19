@@ -6,7 +6,9 @@
     "type": "module",
     "scripts": {
         "fmt": "biome format --write",
-        "dev": "tsx --env-file=.env src/index.ts"
+        "dev": "tsx --env-file=.env src/index.ts",
+        "db:push": "drizzle-kit push",
+        "db:generate": "drizzle-kit generate"
     },
     "keywords": [],
     "author": "",
@@ -14,7 +16,7 @@
     "packageManager": "pnpm@10.24.0",
     "dependencies": {
         "@neondatabase/serverless": "^1.0.2",
-        "bcrypt": "^6.0.0",
+        "@node-rs/argon2": "^2.0.2",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
         "drizzle-orm": "^0.45.1",
@@ -30,6 +32,7 @@
         "@types/jsonwebtoken": "^9.0.10",
         "@types/node": "^25.3.0",
         "dotenv": "^17.3.1",
+        "drizzle-kit": "^0.31.9",
         "tsx": "^4.21.0",
         "typescript": "^5.9.3"
     }

@@ -14,7 +14,7 @@
         ],
         "types": [
             "node",
-            "./index.d.ts"
+            "./src/index.d.ts"
         ],
         // Other Outputs
         // "sourceMap": true,
@@ -33,8 +33,8 @@
         // Recommended Options
         "strict": true,
         "jsx": "react-jsx",
-        "verbatimModuleSyntax": true,
-        "isolatedModules": true,
+        "verbatimModuleSyntax": false, // too irritating
+        "isolatedModules": false, // this too
         "noUncheckedSideEffectImports": true,
         "moduleDetection": "force",
         "skipLibCheck": true
