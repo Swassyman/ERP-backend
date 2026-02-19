@@ -1,8 +1,8 @@
-import express from "express";
-import * as userController from "../controllers/user.controller";
-import { authenticateToken } from "../middlewares/auth";
+import express, { type Router } from "express";
+import * as userController from "../controllers/user.controller.js";
+import { authenticateToken } from "../middlewares/auth.js";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.post("/login", userController.login);
 
