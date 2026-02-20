@@ -68,7 +68,7 @@ export const user = pgTable(
 );
 
 export const userRelations = relations(user, (r) => ({
-	organizationRoles: r.many(organizationUser),
+	organizationRoles: r.many(organizationUserRole),
 }));
 
 export const role = pgTable(
@@ -82,11 +82,11 @@ export const role = pgTable(
 );
 
 export const roleRelations = relations(role, (r) => ({
-	organizationUsers: r.many(organizationUser),
+	organizationUsers: r.many(organizationUserRole),
 }));
 
-export const organizationUser = pgTable(
-	"organization_user",
+export const organizationUserRole = pgTable(
+	"organization_user_role",
 	{
 		id: bigint({ mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(),
 		userId: bigint({ mode: "bigint" })
@@ -109,20 +109,23 @@ export const organizationUser = pgTable(
 	],
 );
 
-export const organizationUserRelation = relations(organizationUser, (r) => ({
-	user: r.one(user, {
-		fields: [organizationUser.userId],
-		references: [user.id],
+export const organizationUserRelation = relations(
+	organizationUserRole,
+	(r) => ({
+		user: r.one(user, {
+			fields: [organizationUserRole.userId],
+			references: [user.id],
+		}),
+		role: r.one(role, {
+			fields: [organizationUserRole.roleId],
+			references: [role.id],
+		}),
+		organization: r.one(organization, {
+			fields: [organizationUserRole.organizationId],
+			references: [organization.id],
+		}),
 	}),
-	role: r.one(role, {
-		fields: [organizationUser.roleId],
-		references: [role.id],
-	}),
-	organization: r.one(organization, {
-		fields: [organizationUser.organizationId],
-		references: [organization.id],
-	}),
-}));
+);
 
 // export const permission = pgTable("permission", {
 // 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
