@@ -2,9 +2,9 @@ import "express";
 import type * as types from "./config/types.ts";
 
 declare global {
-    namespace Express {
-        interface Request {
-            user?: Pick<types.User, "id">;
-        }
-    }
+	namespace Express {
+		interface Request {
+			user?: Pick<types.User, "id">;
+		}
+	}
 }

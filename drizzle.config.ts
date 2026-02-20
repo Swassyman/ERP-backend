@@ -3,15 +3,15 @@ import { defineConfig } from "drizzle-kit";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (typeof DATABASE_URL !== "string" || DATABASE_URL.trim().length === 0) {
-    throw new Error("invalid");
+	throw new Error("invalid");
 }
 
 export default defineConfig({
-    out: "./drizzle",
-    schema: "./src/config/schema.ts",
-    dialect: "postgresql",
-    dbCredentials: {
-        url: DATABASE_URL,
-    },
-    casing: "snake_case",
+	out: "./drizzle",
+	schema: "./src/config/schema.ts",
+	dialect: "postgresql",
+	dbCredentials: {
+		url: DATABASE_URL,
+	},
+	casing: "snake_case",
 });
