@@ -109,7 +109,7 @@ export const organizationUserRole = pgTable(
 	],
 );
 
-export const organizationUserRelation = relations(
+export const organizationUserRoleRelations = relations(
 	organizationUserRole,
 	(r) => ({
 		user: r.one(user, {
