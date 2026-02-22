@@ -53,7 +53,7 @@ export const organization = pgTable(
 export const user = pgTable(
 	"user",
 	{
-		id: bigint({ mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(),
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
 		fullName: text().notNull(),
 		email: text().notNull(),
 		passwordHash: text().notNull(),
