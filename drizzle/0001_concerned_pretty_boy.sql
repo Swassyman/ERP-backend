@@ -1,0 +1,1 @@
+ALTER TABLE "organization" ALTER COLUMN "parent_organization_id" DROP NOT NULL;

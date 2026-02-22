@@ -1,6 +1,6 @@
 {
-	"id": "ac1b81cd-d3eb-439f-9b0f-ccc11bff027a",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "ede14739-5db5-48d6-9e88-117bc88bc3c1",
+	"prevId": "ac1b81cd-d3eb-439f-9b0f-ccc11bff027a",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -42,7 +42,7 @@
 					"name": "parent_organization_id",
 					"type": "integer",
 					"primaryKey": false,
-					"notNull": true
+					"notNull": false
 				},
 				"is_active": {
 					"name": "is_active",
