@@ -3,7 +3,12 @@ import type { Request, Response } from "express";
 import { db } from "../config/db.js";
 import * as schema from "../config/schema.js";
 import { verifyPassword } from "../utilities/argon2.js";
-import { generateAccessToken, generateRefreshToken, JWT_REFRESH_SECRET_SIGN_KEY, JWT_REFRESH_TOKEN_EXPIRY } from "../utilities/jwt.js";
+import {
+	generateAccessToken,
+	generateRefreshToken,
+	JWT_REFRESH_SECRET_SIGN_KEY,
+	JWT_REFRESH_TOKEN_EXPIRY,
+} from "../utilities/jwt.js";
 import { IJWTPayload } from "../config/types.js";
 import { z } from "zod";
 import { jwtVerify } from "jose";
@@ -16,7 +21,7 @@ const loginSchema = z.object({
 });
 
 export const login = async (req: Request, res: Response) => {
-  const parsed = loginSchema.safeParse(req.body);
+	const parsed = loginSchema.safeParse(req.body);
 
 	if (!parsed.success) {
 		return res.status(400).json({
@@ -43,30 +48,28 @@ export const login = async (req: Request, res: Response) => {
 		return res.status(401).json({ message: "Invalid credentials" });
 	}
 
-  const payload: IJWTPayload = {
-  id: user.id,
+	const payload: IJWTPayload = {
+		id: user.id,
 	};
 
-  const accessToken = await generateAccessToken(payload);
-  const refreshToken = await generateRefreshToken(payload);
+	const accessToken = await generateAccessToken(payload);
+	const refreshToken = await generateRefreshToken(payload);
 
-  res.cookie("refreshToken", refreshToken, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "strict",
-  maxAge: JWT_REFRESH_TOKEN_EXPIRY,
-  });
-
-  return res.status(200).json({
-  message: "Login successful",
-  accessToken,
+	res.cookie("refreshToken", refreshToken, {
+		httpOnly: true,
+		secure: true,
+		sameSite: "strict",
+		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
 
+	return res.status(200).json({
+		message: "Login successful",
+		accessToken,
+	});
 };
 
 export const userDetails = async (req: Request, res: Response) => {
 	try {
-
 		if (!req.user) {
 			return res.status(401).json({ message: "Unauthorised" });
 		}
@@ -83,7 +86,6 @@ export const userDetails = async (req: Request, res: Response) => {
 		return res.status(200).json({
 			user,
 		});
-
 	} catch (error) {
 		return res.status(500).json({ message: "Internal server error" });
 	}
@@ -98,9 +100,9 @@ export const refresh = async (req: Request, res: Response) => {
 		}
 		const { payload } = await jwtVerify<IJWTPayload>(
 			refreshToken,
-		  JWT_REFRESH_SECRET_SIGN_KEY,
+			JWT_REFRESH_SECRET_SIGN_KEY,
 		);
-		
+
 		if (typeof payload.id !== "number") {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
@@ -123,8 +125,9 @@ export const refresh = async (req: Request, res: Response) => {
 		return res.status(200).json({
 			accessToken: newAccessToken,
 		});
-		
 	} catch (error) {
-		return res.status(401).json({ message: "Invalid or expired refresh token" });
+		return res
+			.status(401)
+			.json({ message: "Invalid or expired refresh token" });
 	}
 };
