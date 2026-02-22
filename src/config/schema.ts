@@ -40,9 +40,9 @@ export const organization = pgTable(
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
 		type: organizationTypeEnum().notNull(),
-		parentOrganizationId: integer()
-			.references((): AnyPgColumn => organization.id)
-			.notNull(),
+		parentOrganizationId: integer().references(
+			(): AnyPgColumn => organization.id,
+		),
 		isActive: boolean().notNull().default(true),
 		deletedAt: timestamp({ mode: "string", withTimezone: true }),
 		...commonFields,
