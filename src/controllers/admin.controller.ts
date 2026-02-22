@@ -56,7 +56,7 @@ export const createUser = async (req: Request, res: Response) => {
 			.insert(user)
 			.values({ fullName, email, passwordHash })
 			.returning({
-				id: sql<string>`${user.id}::text`,
+				id: user.id,
 				fullName: user.fullName,
 				email: user.email,
 				createdAt: user.createdAt,
