@@ -108,11 +108,9 @@ export const createOrganization = async (req: Request, res: Response) => {
 				.limit(1);
 
 			if (!existingOrg[0] || existingOrg.length === 0) {
-				return res
-					.status(404)
-					.json({
-						message: `Organization '${parentOrganizationName}' does not exist.`,
-					});
+				return res.status(404).json({
+					message: `Organization '${parentOrganizationName}' does not exist.`,
+				});
 			}
 
 			const [newOrg] = await db
@@ -191,11 +189,9 @@ export const assignRole = async (req: Request, res: Response) => {
 	);
 
 	if (!userEmail || !roleName || !organizationName) {
-		return res
-			.status(400)
-			.json({
-				message: "userEmail, roleName, and organizationName are required.",
-			});
+		return res.status(400).json({
+			message: "userEmail, roleName, and organizationName are required.",
+		});
 	}
 
 	try {
@@ -230,11 +226,9 @@ export const assignRole = async (req: Request, res: Response) => {
 			.limit(1);
 
 		if (existingOrg.length === 0 || !existingOrg[0]) {
-			return res
-				.status(404)
-				.json({
-					message: `Organization '${organizationName}' does not exist.`,
-				});
+			return res.status(404).json({
+				message: `Organization '${organizationName}' does not exist.`,
+			});
 		}
 
 		const userId = existingUser[0].id;
@@ -273,4 +267,3 @@ export const assignRole = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Internal server error." });
 	}
 };
-
