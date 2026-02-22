@@ -31,13 +31,14 @@ export const authenticateToken: RequestHandler = async (
 			{ algorithms: [JWS_ALG_HEADER_PARAMETER] },
 		);
 
-		if (typeof payload.userId !== "number") {
+		if (typeof payload.id !== "number") {
 			return res.status(401).json({ message: "Unauthorised" });
 		}
 
 		req.user = {
 			id: payload.id,
 		};
+
 		next();
 	} catch {
 		return res.status(401).json({ message: "Unauthorised" });
