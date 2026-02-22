@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 import userRouter from "./routes/user.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -41,6 +42,7 @@ app.use(express.json());
 
 // Routes
 app.use("/user", userRouter);
+app.use("/admin", adminRoutes);
 
 // Health
 app.get("/", (_req, res) => {
