@@ -12,14 +12,14 @@ import {
 	timestamp,
 	unique,
 } from "drizzle-orm/pg-core";
+import { ORGANIZATION_TYPES } from "../constants.js";
 
 // Enums
 
-export const organizationTypeEnum = pgEnum("organization_type", [
-	"department",
-	"club",
-	"institution",
-]);
+export const organizationTypeEnum = pgEnum(
+	"organization_type",
+	ORGANIZATION_TYPES,
+);
 
 // Common fields
 const commonFields = {

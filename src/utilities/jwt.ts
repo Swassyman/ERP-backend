@@ -1,5 +1,5 @@
-import { type JWTPayload, SignJWT } from "jose";
-import { IJWTPayload } from "../config/types.js";
+import { SignJWT } from "jose";
+import type { IJWTPayload } from "../config/types.js";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 if (typeof JWT_ACCESS_SECRET !== "string" || JWT_ACCESS_SECRET.length === 0) {

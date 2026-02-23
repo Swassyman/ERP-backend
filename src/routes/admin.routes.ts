@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {
+	assignRole,
 	createOrganization,
 	createUser,
-	assignRole,
 } from "../controllers/admin.controller.js";
 
 const router: Router = Router();

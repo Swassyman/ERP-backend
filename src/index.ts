@@ -1,7 +1,9 @@
 import cookieParser from "cookie-parser";
-import express from "express";
-import userRouter from "./routes/user.routes.js";
+import express, { type ErrorRequestHandler } from "express";
+import type { ApiResponse } from "./config/types.js";
 import adminRoutes from "./routes/admin.routes.js";
+import authRouter from "./routes/auth.routes.js";
+import { ERROR_CODES } from "./utilities/errors.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -9,13 +11,19 @@ if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
 }
 
 const app = express();
+
+// todo: rate-limits
+
 app.use((req, _res, next) => {
 	console.log(req.method, req.hostname, req.path);
 	next();
 });
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN as string;
-if (!process.env.FRONTEND_ORIGIN) {
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+if (
+	typeof FRONTEND_ORIGIN !== "string" ||
+	FRONTEND_ORIGIN.trim().length === 0
+) {
 	throw new Error("FRONTEND_ORIGIN must be set");
 }
 
@@ -41,13 +49,30 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Routes
-app.use("/user", userRouter);
+app.use("/auth", authRouter);
 app.use("/admin", adminRoutes);
 
 // Health
 app.get("/", (_req, res) => {
 	res.status(200).json({ status: "active" });
 });
+
+// todo: revisit, also async-errors?
+const errorHandler: ErrorRequestHandler = (
+	error: Error,
+	_req,
+	res: ApiResponse,
+	_next,
+) => {
+	console.error(error);
+
+	return res.status(500).json({
+		code: ERROR_CODES.internal_server_error,
+		message: "Something went wrong",
+	});
+};
+
+app.use(errorHandler);
 
 app.listen(PORT, "0.0.0.0", () => {
 	console.log(`Server listening on port ${PORT} at http://localhost:${PORT}`);
