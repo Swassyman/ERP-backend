@@ -1,7 +1,10 @@
 import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { jwtVerify } from "jose";
+import { z } from "zod";
 import { db } from "../config/db.js";
 import * as schema from "../config/schema.js";
+import type { IJWTPayload } from "../config/types.js";
 import { verifyPassword } from "../utilities/argon2.js";
 import {
 	generateAccessToken,
@@ -9,9 +12,6 @@ import {
 	JWT_REFRESH_SECRET_SIGN_KEY,
 	JWT_REFRESH_TOKEN_EXPIRY,
 } from "../utilities/jwt.js";
-import { IJWTPayload } from "../config/types.js";
-import { z } from "zod";
-import { jwtVerify } from "jose";
 
 const loginSchema = z.object({
 	email: z.email({ message: "Invalid email format" }),
@@ -86,7 +86,7 @@ export const userDetails = async (req: Request, res: Response) => {
 		return res.status(200).json({
 			user,
 		});
-	} catch (error) {
+	} catch {
 		return res.status(500).json({ message: "Internal server error" });
 	}
 };
@@ -125,7 +125,7 @@ export const refresh = async (req: Request, res: Response) => {
 		return res.status(200).json({
 			accessToken: newAccessToken,
 		});
-	} catch (error) {
+	} catch {
 		return res
 			.status(401)
 			.json({ message: "Invalid or expired refresh token" });

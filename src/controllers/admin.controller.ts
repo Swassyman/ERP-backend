@@ -1,18 +1,9 @@
 import type { Request, Response } from "express";
-import { db } from "../config/db.js";
-import {
-	user,
-	organization,
-	organizationUserRole,
-} from "../config/schema.js";
-import { hashPassword } from "../utilities/argon2.js";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import {
-	CREATE_USER_SCHEMA,
-	CREATE_ORGANIZATION_SCHEMA,
-	ASSIGN_ROLE_SCHEMA,
-} from "../constants.js";
+import { db } from "../config/db.js";
+import { organization, organizationUserRole, user } from "../config/schema.js";
+import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
+import { hashPassword } from "../utilities/argon2.js";
 
 type PgError = {
 	code?: string;
@@ -27,9 +18,26 @@ const formatZodErrors = (error: z.ZodError) =>
 		message: e.message,
 	}));
 
+const tkmceEmail = z
+	.email("Invalid email format.")
+	.regex(INSTITUTION_DOMAIN_REGEXP, "Email must be a @tkmce.ac.in address.");
+
+const CREATE_USER_SCHEMA = z
+	.object({
+		fullName: z
+			.string()
+			.min(1, "fullName cannot be empty.")
+			.max(256, "fullName cannot exceed 256 characters."),
+		email: tkmceEmail,
+		password: z.string().min(6, "Password must be at least 6 characters."),
+	})
+	.strict();
+
 export const createUser = async (req: Request, res: Response) => {
 	try {
-		const { fullName, email, password } = CREATE_USER_SCHEMA.parse(req.body);
+		const { fullName, email, password } = CREATE_USER_SCHEMA.parse(
+			req.body,
+		);
 
 		const passwordHash = await hashPassword(password);
 
@@ -49,9 +57,10 @@ export const createUser = async (req: Request, res: Response) => {
 			.json({ message: "User created successfully.", user: newUser });
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			return res
-				.status(400)
-				.json({ message: "Invalid request.", errors: formatZodErrors(error) });
+			return res.status(400).json({
+				message: "Invalid request.",
+				errors: formatZodErrors(error),
+			});
 		}
 
 		const pgCode = getPgCode(error as PgError);
@@ -66,6 +75,23 @@ export const createUser = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Internal server error." });
 	}
 };
+
+const CREATE_ORGANIZATION_SCHEMA = z
+	.object({
+		name: z
+			.string()
+			.min(1, "name cannot be empty.")
+			.max(256, "name cannot exceed 256 characters."),
+		type: z.enum(["department", "club", "institution"], {
+			message: "type must be one of: department, club, institution.",
+		}),
+		parentOrganizationId: z
+			.number()
+			.int("parentOrganizationId must be an integer.")
+			.positive("parentOrganizationId must be a positive number.")
+			.optional(),
+	})
+	.strict();
 
 export const createOrganization = async (req: Request, res: Response) => {
 	try {
@@ -93,17 +119,18 @@ export const createOrganization = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			return res
-				.status(400)
-				.json({ message: "Invalid request.", errors: formatZodErrors(error) });
+			return res.status(400).json({
+				message: "Invalid request.",
+				errors: formatZodErrors(error),
+			});
 		}
 
 		const pgCode = getPgCode(error as PgError);
 
 		if (pgCode === "23505") {
-			return res
-				.status(409)
-				.json({ message: "An organization with this name already exists." });
+			return res.status(409).json({
+				message: "An organization with this name already exists.",
+			});
 		}
 		if (pgCode === "23503") {
 			return res
@@ -115,6 +142,23 @@ export const createOrganization = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Internal server error." });
 	}
 };
+
+const ASSIGN_ROLE_SCHEMA = z
+	.object({
+		userId: z
+			.number()
+			.int("userId must be an integer.")
+			.positive("userId must be a positive number."),
+		roleId: z
+			.number()
+			.int("roleId must be an integer.")
+			.positive("roleId must be a positive number."),
+		organizationId: z
+			.number()
+			.int("organizationId must be an integer.")
+			.positive("organizationId must be a positive number."),
+	})
+	.strict();
 
 export const assignRole = async (req: Request, res: Response) => {
 	try {
@@ -138,22 +182,24 @@ export const assignRole = async (req: Request, res: Response) => {
 			.json({ message: "Role assigned successfully.", assignment });
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			return res
-				.status(400)
-				.json({ message: "Invalid request.", errors: formatZodErrors(error) });
+			return res.status(400).json({
+				message: "Invalid request.",
+				errors: formatZodErrors(error),
+			});
 		}
 
 		const pgCode = getPgCode(error as PgError);
 
 		if (pgCode === "23505") {
 			return res.status(409).json({
-				message: "This role is already assigned to the user in this organization.",
+				message:
+					"This role is already assigned to the user in this organization.",
 			});
 		}
 		if (pgCode === "23503") {
-			return res
-				.status(400)
-				.json({ message: "userId, roleId, or organizationId does not exist." });
+			return res.status(400).json({
+				message: "userId, roleId, or organizationId does not exist.",
+			});
 		}
 
 		console.error(error);

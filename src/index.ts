@@ -1,7 +1,7 @@
 import cookieParser from "cookie-parser";
 import express from "express";
-import userRouter from "./routes/user.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import userRouter from "./routes/user.routes.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -9,13 +9,17 @@ if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
 }
 
 const app = express();
+
 app.use((req, _res, next) => {
 	console.log(req.method, req.hostname, req.path);
 	next();
 });
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN as string;
-if (!process.env.FRONTEND_ORIGIN) {
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+if (
+	typeof FRONTEND_ORIGIN !== "string" ||
+	FRONTEND_ORIGIN.trim().length === 0
+) {
 	throw new Error("FRONTEND_ORIGIN must be set");
 }
 
@@ -27,7 +31,10 @@ app.use((req, res, next) => {
 			"Access-Control-Allow-Methods",
 			"GET,POST,PATCH,PUT,DELETE,OPTIONS",
 		);
-		res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+		res.setHeader(
+			"Access-Control-Allow-Headers",
+			"Content-Type,Authorization",
+		);
 	}
 	if (req.method === "OPTIONS") {
 		res.setHeader("Access-Control-Max-Age", "86400"); // cache pre-flight for 24h
