@@ -35,10 +35,7 @@ app.use((req, res, next) => {
 			"Access-Control-Allow-Methods",
 			"GET,POST,PATCH,PUT,DELETE,OPTIONS",
 		);
-		res.setHeader(
-			"Access-Control-Allow-Headers",
-			"Content-Type,Authorization",
-		);
+		res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 	}
 	if (req.method === "OPTIONS") {
 		res.setHeader("Access-Control-Max-Age", "86400"); // cache pre-flight for 24h
