@@ -50,6 +50,14 @@ export const organization = pgTable(
 	(t) => [unique().on(t.name)],
 );
 
+export const organizationRelations = relations(organization, (r) => ({
+	userRoles: r.many(organizationUserRole),
+	parentOrganization: r.one(organization, {
+		fields: [organization.parentOrganizationId],
+		references: [organization.id],
+	}),
+}));
+
 export const user = pgTable(
 	"user",
 	{

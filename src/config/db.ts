@@ -7,8 +7,10 @@ if (typeof DATABASE_URL !== "string" || DATABASE_URL.trim().length === 0) {
 	throw new Error("DATABASE_URL must be set");
 }
 
-const neonClient = neon(DATABASE_URL);
-export const db = drizzle(neonClient, {
+const sql = neon(DATABASE_URL);
+const db = drizzle(sql, {
 	schema: schema,
 	casing: "snake_case",
 });
+
+export { db, schema };

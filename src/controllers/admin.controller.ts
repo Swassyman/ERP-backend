@@ -1,6 +1,7 @@
+import { isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { z } from "zod";
-import { db } from "../config/db.js";
+import { db, schema } from "../config/db.js";
 import { organization, organizationUserRole, user } from "../config/schema.js";
 import type { ApiResponse, OrganizationType } from "../config/types.js";
 import { INSTITUTION_DOMAIN_REGEXP, ORGANIZATION_TYPES } from "../constants.js";
@@ -79,6 +80,55 @@ export const createUser = async (
 
 		throw error;
 	}
+};
+
+// todo: protection
+export const getUsers = async (
+	_req: Request,
+	res: ApiResponse<{
+		users: {
+			email: string;
+			fullName: string;
+			id: number;
+			isActive: boolean;
+			createdAt: string;
+			organizationRoles: {
+				id: number;
+				isActive: boolean;
+				createdAt: string;
+				roleId: number;
+				organizationId: number;
+			}[];
+		}[];
+	}>,
+) => {
+	const users = await db.query.user.findMany({
+		where: isNull(schema.user.deletedAt),
+		columns: {
+			id: true,
+			fullName: true,
+			email: true,
+			createdAt: true,
+			isActive: true,
+		},
+		with: {
+			organizationRoles: {
+				columns: {
+					id: true,
+					isActive: true,
+					createdAt: true,
+					roleId: true,
+					organizationId: true,
+				},
+			},
+		},
+	});
+
+	res.status(200).json({
+		data: {
+			users: users,
+		},
+	});
 };
 
 const createOrganizationSchema = z
@@ -163,6 +213,39 @@ export const createOrganization = async (
 	}
 };
 
+// todo: protection
+export const getOrganizations = async (
+	_req: Request,
+	res: ApiResponse<{
+		organizations: {
+			type: OrganizationType;
+			id: number;
+			name: string;
+			parentOrganizationId: number | null;
+			isActive: boolean;
+			createdAt: string;
+		}[];
+	}>,
+) => {
+	const organizations = await db.query.organization.findMany({
+		where: isNull(schema.organization.deletedAt),
+		columns: {
+			id: true,
+			name: true,
+			type: true,
+			parentOrganizationId: true,
+			isActive: true,
+			createdAt: true,
+		},
+	});
+
+	res.status(200).json({
+		data: {
+			organizations: organizations,
+		},
+	});
+};
+
 const assignRoleSchema = z
 	.object({
 		userId: z.int({ error: "Invalid user ID" }),
@@ -233,4 +316,29 @@ export const assignRole = async (
 
 		throw error;
 	}
+};
+
+export const getRoles = async (
+	_req: Request,
+	res: ApiResponse<{
+		roles: {
+			id: number;
+			createdAt: string;
+			roleName: string;
+		}[];
+	}>,
+) => {
+	const roles = await db.query.role.findMany({
+		columns: {
+			id: true,
+			roleName: true,
+			createdAt: true,
+		},
+	});
+
+	res.status(200).json({
+		data: {
+			roles: roles,
+		},
+	});
 };
