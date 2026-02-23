@@ -5,8 +5,9 @@
 	"main": "out/index.js",
 	"type": "module",
 	"scripts": {
+		"lint": "biome lint",
 		"fmt": "biome format --write",
-		"dev": "tsx --env-file=.env src/index.ts",
+		"dev": "tsx watch --env-file=.env src/index.ts",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate"
 	},
