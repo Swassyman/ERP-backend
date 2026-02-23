@@ -1,4 +1,5 @@
 import { type JWTPayload, SignJWT } from "jose";
+import { IJWTPayload } from "../config/types.js";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 if (typeof JWT_ACCESS_SECRET !== "string" || JWT_ACCESS_SECRET.length === 0) {
@@ -29,7 +30,7 @@ export const JWS_ALG_HEADER_PARAMETER = "HS256";
  * @returns
  */
 export function getJWTTokenGenerator(expiration: number, signKey: Uint8Array) {
-	return async (payload: JWTPayload & { userId: number; role: string }) => {
+	return async (payload: IJWTPayload) => {
 		const expires = new Date(Date.now() + expiration);
 
 		return await new SignJWT(payload)
