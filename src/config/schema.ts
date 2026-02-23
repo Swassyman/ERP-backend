@@ -88,8 +88,8 @@ export const roleRelations = relations(role, (r) => ({
 export const organizationUserRole = pgTable(
 	"organization_user_role",
 	{
-		id: bigint({ mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(),
-		userId: bigint({ mode: "bigint" })
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		userId: bigint({ mode: "number" })
 			.references(() => user.id)
 			.notNull(),
 		roleId: smallint()
