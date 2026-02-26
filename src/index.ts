@@ -16,7 +16,7 @@ const app = express();
 // todo: rate-limits
 
 app.use((req, _res, next) => {
-	console.log(req.method, req.hostname, req.path);
+	console.log(new Date().toISOString(), req.method, req.hostname, req.path);
 	next();
 });
 
