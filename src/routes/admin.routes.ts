@@ -7,11 +7,13 @@ import {
 	getRoles,
 	getUsers,
 } from "../controllers/admin.controller.js";
+import { authenticateToken } from "../middlewares/auth.js";
 import { requireUserType } from "../middlewares/require-user-type.js";
 
 const router: Router = Router();
 
 // todo: all these routes aren't really admin-only. it needs to be split into resource specific controllers.
+router.use(authenticateToken);
 router.use(requireUserType(["admin"]));
 
 router.get("/users", getUsers);
