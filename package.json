@@ -5,11 +5,14 @@
 	"main": "out/index.js",
 	"type": "module",
 	"scripts": {
+		"dev": "tsx watch --env-file=.env src/index.ts",
+		"check": "tsc --noEmit",
 		"lint": "biome lint",
 		"fmt": "biome format --write",
-		"dev": "tsx watch --env-file=.env src/index.ts",
 		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate"
+		"db:generate": "drizzle-kit generate",
+		"db:populate": "tsx populate.ts",
+		"db:studio": "drizzle-kit studio"
 	},
 	"keywords": [],
 	"author": "",
@@ -27,6 +30,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.2",
+		"@inquirer/prompts": "^8.3.0",
 		"@types/bcrypt": "^6.0.0",
 		"@types/cookie-parser": "^1.4.10",
 		"@types/express": "^5.0.6",

@@ -1,4 +1,10 @@
-import { relations, sql } from "drizzle-orm";
+import {
+	type HasDefault,
+	isNull,
+	type NotNull,
+	relations,
+	sql,
+} from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -10,27 +16,59 @@ import {
 	smallint,
 	text,
 	timestamp,
-	unique,
+	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { ORGANIZATION_TYPES } from "../constants.js";
+
+export const ORGANIZATION_TYPES = [
+	"department",
+	"club",
+	"institution",
+] as const;
+export const USER_TYPES = ["admin", "end_user"] as const;
+
+// todo: how about switching to string based ids?
 
 // Enums
-
 export const organizationTypeEnum = pgEnum(
 	"organization_type",
 	ORGANIZATION_TYPES,
 );
+export const userTypeEnum = pgEnum("user_type", USER_TYPES);
 
 // Common fields
-const commonFields = {
-	createdAt: timestamp({ mode: "string", withTimezone: true })
-		.defaultNow()
-		.notNull(),
-	updatedAt: timestamp({ mode: "string", withTimezone: true })
-		.defaultNow()
-		.$onUpdate(() => sql`now()`)
-		.notNull(),
+type PgStringTimestamp = ReturnType<typeof timestamp<"string">>;
+type Scope = "common" | "soft-delete";
+type CommonFields = {
+	createdAt: NotNull<HasDefault<PgStringTimestamp>>;
+	updatedAt: NotNull<HasDefault<PgStringTimestamp>>;
 };
+type SoftDeleteFields = {
+	deletedAt: PgStringTimestamp;
+};
+type FieldsFor<T extends readonly Scope[]> = ("common" extends T[number]
+	? CommonFields
+	: Record<never, never>) &
+	("soft-delete" extends T[number] ? SoftDeleteFields : Record<never, never>);
+
+function fields<const T extends readonly Scope[]>(...scopes: T): FieldsFor<T> {
+	return {
+		...(scopes.includes("common") && {
+			createdAt: timestamp({ mode: "string", withTimezone: true })
+				.defaultNow()
+				.notNull(),
+			updatedAt: timestamp({ mode: "string", withTimezone: true })
+				.defaultNow()
+				.$onUpdate(() => sql`now()`)
+				.notNull(),
+		}),
+		...(scopes.includes("soft-delete") && {
+			deletedAt: timestamp({
+				mode: "string",
+				withTimezone: true,
+			}),
+		}),
+	} as FieldsFor<T>;
+}
 
 // Tables
 
@@ -44,10 +82,9 @@ export const organization = pgTable(
 			(): AnyPgColumn => organization.id,
 		),
 		isActive: boolean().notNull().default(true),
-		deletedAt: timestamp({ mode: "string", withTimezone: true }),
-		...commonFields,
+		...fields("common", "soft-delete"),
 	},
-	(t) => [unique().on(t.name)],
+	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
 );
 
 export const organizationRelations = relations(organization, (r) => ({
@@ -62,16 +99,16 @@ export const user = pgTable(
 	"user",
 	{
 		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		type: userTypeEnum().notNull(),
 		fullName: text().notNull(),
 		email: text().notNull(),
 		passwordHash: text().notNull(),
 		isActive: boolean().notNull().default(true),
-		deletedAt: timestamp({ mode: "string", withTimezone: true }),
-		...commonFields,
+		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		unique().on(t.email),
-		check("email_check", sql`${t.email} LIKE '%@tkmce.ac.in'`),
+		uniqueIndex().on(t.email).where(isNull(t.deletedAt)),
+		check("email_check", sql`${t.email} LIKE '%@tkmce.ac.in'`), // todo: fix constraint with constant
 	],
 );
 
@@ -83,14 +120,19 @@ export const role = pgTable(
 	"role",
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
-		roleName: text().notNull(),
-		...commonFields,
+		name: text().notNull(),
+		code: text().notNull(),
+		...fields("common", "soft-delete"),
 	},
-	(t) => [unique().on(t.roleName)],
+	(t) => [
+		// uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: needed?
+		uniqueIndex().on(t.code).where(isNull(t.deletedAt)),
+	],
 );
 
 export const roleRelations = relations(role, (r) => ({
 	organizationUsers: r.many(organizationUserRole),
+	permissions: r.many(rolePermission),
 }));
 
 export const organizationUserRole = pgTable(
@@ -107,13 +149,12 @@ export const organizationUserRole = pgTable(
 			.references(() => organization.id)
 			.notNull(),
 		isActive: boolean().notNull().default(true),
-		deletedAt: timestamp({ mode: "string", withTimezone: true }),
-		...commonFields,
+		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		unique()
-			.on(t.userId, t.roleId, t.organizationId, t.deletedAt)
-			.nullsNotDistinct(),
+		uniqueIndex()
+			.on(t.userId, t.roleId, t.organizationId)
+			.where(isNull(t.deletedAt)),
 	],
 );
 
@@ -135,17 +176,48 @@ export const organizationUserRoleRelations = relations(
 	}),
 );
 
-// export const permission = pgTable("permission", {
-// 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
-// 	permissionName: text().notNull().unique(),
-// });
+export const permission = pgTable(
+	"permission",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		code: text().notNull(),
+		description: text().notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		// uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: needed?
+		uniqueIndex().on(t.code).where(isNull(t.deletedAt)),
+	],
+);
 
-// export const rolePermission = pgTable("rolePermission", {
-// 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
-// 	permissionId: integer()
-// 		.references(() => permission.id)
-// 		.notNull(),
-// 	roleId: smallint()
-// 		.references(() => role.id)
-// 		.notNull(),
-// });
+export const permissionRelations = relations(permission, (r) => ({
+	associatedRoles: r.many(rolePermission),
+}));
+
+export const rolePermission = pgTable(
+	"role_permission",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		permissionId: integer()
+			.references(() => permission.id)
+			.notNull(),
+		roleId: smallint()
+			.references(() => role.id)
+			.notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex().on(t.roleId, t.permissionId).where(isNull(t.deletedAt)),
+	],
+);
+
+export const rolePermissionRelations = relations(rolePermission, (r) => ({
+	permission: r.one(permission, {
+		fields: [rolePermission.permissionId],
+		references: [permission.id],
+	}),
+	role: r.one(role, {
+		fields: [rolePermission.roleId],
+		references: [role.id],
+	}),
+}));
