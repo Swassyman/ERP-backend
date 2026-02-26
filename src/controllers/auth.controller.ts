@@ -3,8 +3,15 @@ import type { Request } from "express";
 import { jwtVerify } from "jose";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
-import type { ApiResponse, IJWTPayload } from "../config/types.js";
-import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
+import type {
+	ApiRequestHandler,
+	ApiResponse,
+	IJWTPayload,
+} from "../config/types.js";
+import {
+	INSTITUTION_DOMAIN_REGEXP,
+	REFRESH_TOKEN_COOKIE_NAME,
+} from "../constants.js";
 import { verifyPassword } from "../utilities/argon2.js";
 import { ERROR_CODES } from "../utilities/errors.js";
 import {
@@ -35,6 +42,7 @@ export const login = async (
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: "Invalid credentials",
 		});
@@ -48,6 +56,7 @@ export const login = async (
 
 	if (user == null) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.user_not_found,
 			message: "Invalid credentials",
 		});
@@ -56,6 +65,7 @@ export const login = async (
 	const isValid = await verifyPassword(user.passwordHash, password);
 	if (!isValid) {
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.user_not_found,
 			message: "Invalid credentials",
 		});
@@ -69,7 +79,7 @@ export const login = async (
 	const accessToken = await generateAccessToken(payload);
 	const refreshToken = await generateRefreshToken(payload);
 
-	res.cookie("refreshToken", refreshToken, {
+	res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
 		httpOnly: true,
 		secure: true,
 		sameSite: "strict",
@@ -77,10 +87,20 @@ export const login = async (
 	});
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			accessToken: accessToken,
 		},
 	});
+};
+
+export const logout: ApiRequestHandler = (_req, res) => {
+	res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
+		httpOnly: true,
+		secure: true,
+		sameSite: "strict",
+	});
+	return res.sendStatus(200);
 };
 
 export const userDetails = async (
@@ -97,6 +117,7 @@ export const userDetails = async (
 ) => {
 	if (req.user == null) {
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.unauthorized,
 			message: "Unauthorised",
 		});
@@ -131,6 +152,7 @@ export const userDetails = async (
 	if (user == null) {
 		// todo: revisit
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.unauthorized,
 			message: "Unauthorised",
 		});
@@ -151,6 +173,7 @@ export const userDetails = async (
 		);
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			user: {
 				id: user.id,
@@ -168,13 +191,14 @@ export const refresh = async (
 	res: ApiResponse<{ accessToken: string }>,
 ) => {
 	try {
-		const refreshToken = req.cookies?.refreshToken;
+		const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
 		if (
 			typeof refreshToken !== "string" ||
 			refreshToken.trim().length === 0
 		) {
 			return res.status(401).json({
+				success: false,
 				code: ERROR_CODES.unauthorized,
 				message: "No refresh token",
 			});
@@ -195,7 +219,7 @@ export const refresh = async (
 		const newRefreshToken = await generateRefreshToken(newPayload);
 
 		// todo: extract this into a constant
-		res.cookie("refreshToken", newRefreshToken, {
+		res.cookie(REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, {
 			httpOnly: true,
 			secure: true,
 			sameSite: "strict",
@@ -203,12 +227,14 @@ export const refresh = async (
 		});
 
 		return res.status(200).json({
+			success: true,
 			data: {
 				accessToken: newAccessToken,
 			},
 		});
 	} catch {
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.unauthorized,
 			message: "Invalid or expired refresh token",
 		});

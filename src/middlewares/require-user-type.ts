@@ -6,6 +6,7 @@ export function requireUserType(userTypes: UserType[]): RequestHandler {
 	return (req: Request, res: ApiResponse, next: NextFunction) => {
 		if (req.user == null) {
 			return res.status(401).json({
+				success: false,
 				code: ERROR_CODES.unauthorized,
 				message: "Unauthorized",
 			});
@@ -15,6 +16,7 @@ export function requireUserType(userTypes: UserType[]): RequestHandler {
 			return next();
 		} else {
 			return res.status(403).json({
+				success: false,
 				code: ERROR_CODES.forbidden,
 				message: "You have no access",
 			});

@@ -34,6 +34,7 @@ export const getOrganizationTypes: ApiRequestHandler<{
 	});
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			organizationTypes: organizationTypes,
 		},
@@ -58,6 +59,7 @@ export const createOrganizationType: ApiRequestHandler<{
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: parsed.error.message,
 		});
@@ -73,6 +75,7 @@ export const createOrganizationType: ApiRequestHandler<{
 	}
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			id: inserted.id,
 			name: parsed.data.name,
@@ -104,6 +107,7 @@ export const addAllowedParent: ApiRequestHandler<
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: parsed.error.message,
 		});
@@ -125,6 +129,7 @@ export const addAllowedParent: ApiRequestHandler<
 	}
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			user: {
 				parentTypeId: inserted.parentTypeId,

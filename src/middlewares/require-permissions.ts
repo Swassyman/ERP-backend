@@ -8,6 +8,7 @@ export function requirePermissions(
 	return (req: Request, res: ApiResponse, next: NextFunction) => {
 		if (req.user == null) {
 			return res.status(401).json({
+				success: false,
 				code: ERROR_CODES.unauthorized,
 				message: "Unauthorized",
 			});
@@ -30,6 +31,7 @@ export function requirePermissions(
 			return next();
 		} else {
 			return res.status(403).json({
+				success: false,
 				code: ERROR_CODES.forbidden,
 				message: "You do not have enough permissions for this",
 			});

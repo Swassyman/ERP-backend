@@ -3,6 +3,8 @@ import type { PermissionCode, PermissionScope } from "./config/types.js";
 export const INSTITUTION_NAME = "TKMCE";
 export const INSTITUTION_DOMAIN_REGEXP = /@tkmce\.ac\.in$/;
 
+export const REFRESH_TOKEN_COOKIE_NAME = "refresh-token";
+
 // todo: fill
 // NOTE: keep it sorted like the schema:
 export const PERMISSION = {

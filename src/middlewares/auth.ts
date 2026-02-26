@@ -24,6 +24,7 @@ export const authenticateToken: RequestHandler = async (
 		authHeader.length <= BEARER_PREFIX.length
 	) {
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.unauthorized,
 			message: "Unauthorized",
 		});
@@ -39,6 +40,7 @@ export const authenticateToken: RequestHandler = async (
 
 		if (typeof payload.id !== "number") {
 			return res.status(401).json({
+				success: false,
 				code: ERROR_CODES.unauthorized,
 				message: "Unauthorized",
 			});
@@ -80,6 +82,7 @@ export const authenticateToken: RequestHandler = async (
 		next();
 	} catch {
 		return res.status(401).json({
+			success: false,
 			code: ERROR_CODES.unauthorized,
 			message: "Unauthorized",
 		});
