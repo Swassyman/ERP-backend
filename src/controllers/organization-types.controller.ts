@@ -50,10 +50,10 @@ const createOrganizationTypeSchema = z
 	})
 	.strict();
 
-export const createOrganizationType: ApiRequestHandler<{}> = async (
-	req,
-	res,
-) => {
+export const createOrganizationType: ApiRequestHandler<{
+	id: number;
+	name: string;
+}> = async (req, res) => {
 	const parsed = createOrganizationTypeSchema.safeParse(req.body);
 
 	if (!parsed.success) {
