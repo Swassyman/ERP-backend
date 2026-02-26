@@ -7,6 +7,7 @@ import type {
 	ApiRequestHandler,
 	ApiResponse,
 	IJWTPayload,
+	UserType,
 } from "../config/types.js";
 import {
 	INSTITUTION_DOMAIN_REGEXP,
@@ -110,6 +111,7 @@ export const userDetails = async (
 			id: number;
 			email: string;
 			fullName: string;
+			type: UserType;
 		};
 		// roles: string[];
 		permissions: string[];
@@ -132,6 +134,7 @@ export const userDetails = async (
 			id: true,
 			email: true,
 			fullName: true,
+			type: true,
 			// todo: return more info
 		},
 		with: {
@@ -179,6 +182,7 @@ export const userDetails = async (
 				id: user.id,
 				email: user.email,
 				fullName: user.fullName,
+				type: user.type,
 			},
 			// roles: user.organizationRoles.map(({ role }) => role.code),
 			permissions: permissions.map((permission) => permission.code),
@@ -188,7 +192,17 @@ export const userDetails = async (
 
 export const refresh = async (
 	req: Request,
-	res: ApiResponse<{ accessToken: string }>,
+	res: ApiResponse<{
+		accessToken: string;
+		user: {
+			id: number;
+			email: string;
+			fullName: string;
+			type: UserType;
+		};
+		// roles: string[];
+		permissions: string[];
+	}>,
 ) => {
 	try {
 		const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
@@ -210,9 +224,60 @@ export const refresh = async (
 		);
 
 		// todo: fetch user details from database, and use that in new payload.
+
+		const user = await db.query.user.findFirst({
+			where: and(
+				eq(schema.user.id, payload.id),
+				isNull(schema.user.deletedAt),
+			),
+			columns: {
+				id: true,
+				email: true,
+				fullName: true,
+				type: true,
+				// todo: return more info
+			},
+			with: {
+				roles: {
+					columns: {},
+					with: {
+						role: {
+							columns: {
+								code: true,
+								id: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		if (user == null) {
+			// todo: revisit
+			return res.status(401).json({
+				success: false,
+				code: ERROR_CODES.unauthorized,
+				message: "Unauthorised",
+			});
+		}
+
+		const permissions = await db
+			.selectDistinct({ code: schema.permission.code })
+			.from(schema.rolePermission)
+			.innerJoin(
+				schema.permission,
+				eq(schema.rolePermission.permissionId, schema.permission.id),
+			)
+			.where(
+				inArray(
+					schema.rolePermission.roleId,
+					user.roles.map(({ role }) => role.id),
+				),
+			);
+
 		const newPayload = {
-			id: payload.id,
-			type: payload.type,
+			id: user.id,
+			type: user.type,
 		} satisfies IJWTPayload;
 
 		const newAccessToken = await generateAccessToken(newPayload);
@@ -230,6 +295,13 @@ export const refresh = async (
 			success: true,
 			data: {
 				accessToken: newAccessToken,
+				user: {
+					id: user.id,
+					type: user.type,
+					email: user.email,
+					fullName: user.fullName,
+				},
+				permissions: permissions.map((permission) => permission.code),
 			},
 		});
 	} catch {

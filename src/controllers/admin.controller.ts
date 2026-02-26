@@ -1,4 +1,4 @@
-import { isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
@@ -103,7 +103,10 @@ export const getUsers: ApiRequestHandler<{
 	}[];
 }> = async (_req, res) => {
 	const users = await db.query.user.findMany({
-		where: isNull(schema.user.deletedAt),
+		where: and(
+			eq(schema.user.type, "end_user"),
+			isNull(schema.user.deletedAt),
+		),
 		columns: {
 			id: true,
 			fullName: true,
