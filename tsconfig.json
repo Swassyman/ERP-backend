@@ -32,6 +32,7 @@
 		"isolatedModules": false, // this too
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
-		"skipLibCheck": true
-	}
+		"skipLibCheck": true,
+	},
+	"exclude": ["./db-playground.ts"],
 }

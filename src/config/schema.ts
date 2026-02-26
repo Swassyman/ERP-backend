@@ -13,27 +13,26 @@ import {
 	integer,
 	pgEnum,
 	pgTable,
+	primaryKey,
 	smallint,
 	text,
 	timestamp,
+	unique,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { PermissionCode } from "./types.js";
 
-export const ORGANIZATION_TYPES = [
-	"department",
-	"club",
-	"institution",
-] as const;
 export const USER_TYPES = ["admin", "end_user"] as const;
+export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
 
 // todo: how about switching to string based ids?
 
 // Enums
-export const organizationTypeEnum = pgEnum(
-	"organization_type",
-	ORGANIZATION_TYPES,
-);
 export const userTypeEnum = pgEnum("user_type", USER_TYPES);
+export const managedEntityTypeEnum = pgEnum(
+	"managed_entity_type",
+	MANAGED_ENTITY_TYPES,
+);
 
 // Common fields
 type PgStringTimestamp = ReturnType<typeof timestamp<"string">>;
@@ -72,27 +71,106 @@ function fields<const T extends readonly Scope[]>(...scopes: T): FieldsFor<T> {
 
 // Tables
 
+export const managedEntity = pgTable(
+	"managed_entity",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		managedEntityType: managedEntityTypeEnum().notNull(),
+		refId: integer().notNull(), // todo: make trigger for check
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex()
+			.on(t.managedEntityType, t.refId)
+			.where(isNull(t.deletedAt)),
+	],
+	// soft-fk(ref_id) -> organization, venue
+);
+
+export const organizationType = pgTable(
+	"organization_type",
+	{
+		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(), // institution, department, club, cgpu
+		...fields("common", "soft-delete"),
+	},
+	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
+);
+
+export const organizationTypeRelations = relations(organizationType, (r) => ({
+	organizations: r.many(organization),
+	parents: r.many(organizationTypeAllowedParent, {
+		relationName: "as_child",
+	}),
+	children: r.many(organizationTypeAllowedParent, {
+		relationName: "as_parent",
+	}),
+}));
+
+export const organizationTypeAllowedParent = pgTable(
+	"organization_type_allowed_parent",
+	{
+		childTypeId: smallint()
+			.references(() => organizationType.id)
+			.notNull(),
+		parentTypeId: smallint()
+			.references(() => organizationType.id)
+			.notNull(),
+		...fields("common"), // no soft-deletes :)
+	},
+	(t) => [primaryKey({ columns: [t.childTypeId, t.parentTypeId] })],
+);
+
+export const organizationTypeAllowedParentRelations = relations(
+	organizationTypeAllowedParent,
+	(r) => ({
+		childType: r.one(organizationType, {
+			fields: [organizationTypeAllowedParent.childTypeId],
+			references: [organizationType.id],
+			relationName: "as_child",
+		}),
+		parentType: r.one(organizationType, {
+			fields: [organizationTypeAllowedParent.parentTypeId],
+			references: [organizationType.id],
+			relationName: "as_parent",
+		}),
+	}),
+);
+
 export const organization = pgTable(
 	"organization",
 	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
-		type: organizationTypeEnum().notNull(),
+		organizationTypeId: smallint()
+			.references(() => organizationType.id)
+			.notNull(),
 		parentOrganizationId: integer().references(
 			(): AnyPgColumn => organization.id,
 		),
 		isActive: boolean().notNull().default(true),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
+	(t) => [
+		uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: discuss whether to add 'organizationTypeId' to unique
+	],
 );
 
 export const organizationRelations = relations(organization, (r) => ({
-	userRoles: r.many(organizationUserRole),
+	userRoles: r.many(userRole),
+	type: r.one(organizationType, {
+		fields: [organization.organizationTypeId],
+		references: [organizationType.id],
+	}),
 	parentOrganization: r.one(organization, {
 		fields: [organization.parentOrganizationId],
 		references: [organization.id],
+		relationName: "parent",
 	}),
+	childOrganizations: r.many(organization, {
+		relationName: "parent",
+	}),
+	// soft-fk(managed_entity)
 }));
 
 export const user = pgTable(
@@ -113,7 +191,7 @@ export const user = pgTable(
 );
 
 export const userRelations = relations(user, (r) => ({
-	organizationRoles: r.many(organizationUserRole),
+	roles: r.many(userRole),
 }));
 
 export const role = pgTable(
@@ -122,6 +200,8 @@ export const role = pgTable(
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
 		code: text().notNull(),
+		managedEntityType: managedEntityTypeEnum() // to which type of managed entity this role belongs to.
+			.notNull(),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
@@ -131,12 +211,12 @@ export const role = pgTable(
 );
 
 export const roleRelations = relations(role, (r) => ({
-	organizationUsers: r.many(organizationUserRole),
+	users: r.many(userRole),
 	permissions: r.many(rolePermission),
 }));
 
-export const organizationUserRole = pgTable(
-	"organization_user_role",
+export const userRole = pgTable(
+	"user_role",
 	{
 		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
 		userId: bigint({ mode: "number" })
@@ -145,48 +225,45 @@ export const organizationUserRole = pgTable(
 		roleId: smallint()
 			.references(() => role.id)
 			.notNull(),
-		organizationId: integer()
-			.references(() => organization.id)
+		managedEntityId: bigint({ mode: "number" })
+			.references(() => managedEntity.id)
 			.notNull(),
 		isActive: boolean().notNull().default(true),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
 		uniqueIndex()
-			.on(t.userId, t.roleId, t.organizationId)
+			.on(t.userId, t.roleId, t.managedEntityId)
 			.where(isNull(t.deletedAt)),
 	],
 );
 
-export const organizationUserRoleRelations = relations(
-	organizationUserRole,
-	(r) => ({
-		user: r.one(user, {
-			fields: [organizationUserRole.userId],
-			references: [user.id],
-		}),
-		role: r.one(role, {
-			fields: [organizationUserRole.roleId],
-			references: [role.id],
-		}),
-		organization: r.one(organization, {
-			fields: [organizationUserRole.organizationId],
-			references: [organization.id],
-		}),
+export const userRoleRelations = relations(userRole, (r) => ({
+	user: r.one(user, {
+		fields: [userRole.userId],
+		references: [user.id],
 	}),
-);
+	role: r.one(role, {
+		fields: [userRole.roleId],
+		references: [role.id],
+	}),
+	managedEntity: r.one(managedEntity, {
+		fields: [userRole.managedEntityId],
+		references: [managedEntity.id],
+	}),
+}));
 
 export const permission = pgTable(
 	"permission",
 	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
-		code: text().notNull(),
+		code: text().$type<PermissionCode>().notNull(),
 		description: text().notNull(),
-		...fields("common", "soft-delete"),
+		...fields("common"), // hard delete
 	},
 	(t) => [
-		// uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: needed?
-		uniqueIndex().on(t.code).where(isNull(t.deletedAt)),
+		// unique().on(t.name), // todo: needed?
+		unique().on(t.code),
 	],
 );
 
@@ -199,16 +276,14 @@ export const rolePermission = pgTable(
 	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		permissionId: integer()
-			.references(() => permission.id)
+			.references(() => permission.id, { onDelete: "cascade" })
 			.notNull(),
 		roleId: smallint()
-			.references(() => role.id)
+			.references(() => role.id, { onDelete: "cascade" }) // note: but roles can be soft-deleted, so, will need to handle it there.
 			.notNull(),
-		...fields("common", "soft-delete"),
+		...fields("common"), // goes hard
 	},
-	(t) => [
-		uniqueIndex().on(t.roleId, t.permissionId).where(isNull(t.deletedAt)),
-	],
+	(t) => [unique().on(t.roleId, t.permissionId)],
 );
 
 export const rolePermissionRelations = relations(rolePermission, (r) => ({

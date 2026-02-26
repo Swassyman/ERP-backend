@@ -2,8 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { jwtVerify } from "jose";
 import { z } from "zod";
-import { db } from "../config/db.js";
-import * as schema from "../config/schema.js";
+import { db, schema } from "../config/db.js";
 import type { ApiResponse, IJWTPayload } from "../config/types.js";
 import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
 import { verifyPassword } from "../utilities/argon2.js";
@@ -115,7 +114,7 @@ export const userDetails = async (
 			// todo: return more info
 		},
 		with: {
-			organizationRoles: {
+			roles: {
 				columns: {},
 				with: {
 					role: {
@@ -145,12 +144,9 @@ export const userDetails = async (
 			eq(schema.rolePermission.permissionId, schema.permission.id),
 		)
 		.where(
-			and(
-				isNull(schema.rolePermission.deletedAt),
-				inArray(
-					schema.rolePermission.roleId,
-					user.organizationRoles.map(({ role }) => role.id),
-				),
+			inArray(
+				schema.rolePermission.roleId,
+				user.roles.map(({ role }) => role.id),
 			),
 		);
 

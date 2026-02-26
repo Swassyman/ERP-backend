@@ -44,16 +44,18 @@ export const authenticateToken: RequestHandler = async (
 			});
 		}
 
-		// todo: always fetch, or embed inside *very* short-lived access tokens?
-		// going with always fetch for now, for testing purposes.
+		// todo: always fetch permissions, or embed inside *very* short-lived access tokens?
+		// going with always fetch for now, for testing purposes. this is heavy though.
 
-		const userRoles = await db.query.organizationUserRole.findMany({
-			columns: { roleId: true },
-			where: and(
-				isNull(schema.organizationUserRole.deletedAt),
-				eq(schema.organizationUserRole.userId, payload.id),
-			),
-		});
+		const userRoles = await db
+			.selectDistinct({ roleId: schema.userRole.roleId }) // will probably have to scope it later; so might need to remove the distinct i think
+			.from(schema.userRole)
+			.where(
+				and(
+					isNull(schema.userRole.deletedAt),
+					eq(schema.userRole.userId, payload.id),
+				),
+			);
 		const permissions = await db
 			.selectDistinct({ code: schema.permission.code })
 			.from(schema.rolePermission)
@@ -62,12 +64,9 @@ export const authenticateToken: RequestHandler = async (
 				eq(schema.rolePermission.permissionId, schema.permission.id),
 			)
 			.where(
-				and(
-					isNull(schema.rolePermission.deletedAt),
-					inArray(
-						schema.rolePermission.roleId,
-						userRoles.map((role) => role.roleId),
-					),
+				inArray(
+					schema.rolePermission.roleId,
+					userRoles.map((role) => role.roleId),
 				),
 			);
 
