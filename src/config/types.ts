@@ -38,8 +38,8 @@ export type ApiSuccess<T> = {
 	// todo: meta and stuff
 };
 export type MaybePromise<T> = T | Promise<T>;
-export type ApiRequestHandler<T> = (
-	req: express.Request,
-	res: ApiResponse<T>,
-	next: express.NextFunction,
-) => MaybePromise<ApiResponse<T>>;
+
+export type ApiRequestHandler<T, P = unknown> = express.RequestHandler<
+	P,
+	ApiError | ApiSuccess<T>
+>;
