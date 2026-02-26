@@ -1,6 +1,9 @@
-import type { NextFunction, Request, RequestHandler, Response } from "express";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import type { NextFunction, Request, RequestHandler } from "express";
 import { jwtVerify } from "jose";
-import type { IJWTPayload } from "../config/types.js";
+import { db, schema } from "../config/db.js";
+import type { ApiResponse, IJWTPayload } from "../config/types.js";
+import { ERROR_CODES } from "../utilities/errors.js";
 import {
 	JWS_ALG_HEADER_PARAMETER,
 	JWT_ACCESS_SECRET_SIGN_KEY,
@@ -10,7 +13,7 @@ const BEARER_PREFIX = "Bearer ";
 
 export const authenticateToken: RequestHandler = async (
 	req: Request,
-	res: Response,
+	res: ApiResponse,
 	next: NextFunction,
 ) => {
 	const authHeader = req.headers.authorization;
@@ -20,7 +23,10 @@ export const authenticateToken: RequestHandler = async (
 		!authHeader.startsWith(BEARER_PREFIX) ||
 		authHeader.length <= BEARER_PREFIX.length
 	) {
-		return res.status(401).json({ message: "Unauthorised" });
+		return res.status(401).json({
+			code: ERROR_CODES.unauthorized,
+			message: "Unauthorized",
+		});
 	}
 
 	try {
@@ -32,15 +38,51 @@ export const authenticateToken: RequestHandler = async (
 		);
 
 		if (typeof payload.id !== "number") {
-			return res.status(401).json({ message: "Unauthorised" });
+			return res.status(401).json({
+				code: ERROR_CODES.unauthorized,
+				message: "Unauthorized",
+			});
 		}
+
+		// todo: always fetch, or embed inside *very* short-lived access tokens?
+		// going with always fetch for now, for testing purposes.
+
+		const userRoles = await db.query.organizationUserRole.findMany({
+			columns: { roleId: true },
+			where: and(
+				isNull(schema.organizationUserRole.deletedAt),
+				eq(schema.organizationUserRole.userId, payload.id),
+			),
+		});
+		const permissions = await db
+			.selectDistinct({ code: schema.permission.code })
+			.from(schema.rolePermission)
+			.innerJoin(
+				schema.permission,
+				eq(schema.rolePermission.permissionId, schema.permission.id),
+			)
+			.where(
+				and(
+					isNull(schema.rolePermission.deletedAt),
+					inArray(
+						schema.rolePermission.roleId,
+						userRoles.map((role) => role.roleId),
+					),
+				),
+			);
 
 		req.user = {
 			id: payload.id,
+			type: payload.type,
+			permissions: permissions.map((permission) => permission.code),
+			// .filter((permission) => isPermission(permission)),
 		};
 
 		next();
 	} catch {
-		return res.status(401).json({ message: "Unauthorised" });
+		return res.status(401).json({
+			code: ERROR_CODES.unauthorized,
+			message: "Unauthorized",
+		});
 	}
 };

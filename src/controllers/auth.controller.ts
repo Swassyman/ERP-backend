@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { jwtVerify } from "jose";
 import { z } from "zod";
@@ -44,7 +44,7 @@ export const login = async (
 	const { email, password } = parsed.data;
 
 	const user = await db.query.user.findFirst({
-		where: eq(schema.user.email, email),
+		where: and(eq(schema.user.email, email), isNull(schema.user.deletedAt)),
 	});
 
 	if (user == null) {
@@ -64,6 +64,7 @@ export const login = async (
 
 	const payload: IJWTPayload = {
 		id: user.id,
+		type: user.type,
 	};
 
 	const accessToken = await generateAccessToken(payload);
@@ -91,9 +92,11 @@ export const userDetails = async (
 			email: string;
 			fullName: string;
 		};
+		// roles: string[];
+		permissions: string[];
 	}>,
 ) => {
-	if (!req.user) {
+	if (req.user == null) {
 		return res.status(401).json({
 			code: ERROR_CODES.unauthorized,
 			message: "Unauthorised",
@@ -101,12 +104,28 @@ export const userDetails = async (
 	}
 
 	const user = await db.query.user.findFirst({
-		where: eq(schema.user.id, req.user.id),
+		where: and(
+			eq(schema.user.id, req.user.id),
+			isNull(schema.user.deletedAt),
+		),
 		columns: {
 			id: true,
 			email: true,
 			fullName: true,
 			// todo: return more info
+		},
+		with: {
+			organizationRoles: {
+				columns: {},
+				with: {
+					role: {
+						columns: {
+							code: true,
+							id: true,
+						},
+					},
+				},
+			},
 		},
 	});
 
@@ -118,9 +137,32 @@ export const userDetails = async (
 		});
 	}
 
+	const permissions = await db
+		.selectDistinct({ code: schema.permission.code })
+		.from(schema.rolePermission)
+		.innerJoin(
+			schema.permission,
+			eq(schema.rolePermission.permissionId, schema.permission.id),
+		)
+		.where(
+			and(
+				isNull(schema.rolePermission.deletedAt),
+				inArray(
+					schema.rolePermission.roleId,
+					user.organizationRoles.map(({ role }) => role.id),
+				),
+			),
+		);
+
 	return res.status(200).json({
 		data: {
-			user: user,
+			user: {
+				id: user.id,
+				email: user.email,
+				fullName: user.fullName,
+			},
+			// roles: user.organizationRoles.map(({ role }) => role.code),
+			permissions: permissions.map((permission) => permission.code),
 		},
 	});
 };
@@ -132,7 +174,10 @@ export const refresh = async (
 	try {
 		const refreshToken = req.cookies?.refreshToken;
 
-		if (typeof refreshToken !== "string" || refreshToken.trim().length === 0) {
+		if (
+			typeof refreshToken !== "string" ||
+			refreshToken.trim().length === 0
+		) {
 			return res.status(401).json({
 				code: ERROR_CODES.unauthorized,
 				message: "No refresh token",
@@ -144,9 +189,16 @@ export const refresh = async (
 			JWT_REFRESH_SECRET_SIGN_KEY,
 		);
 
-		const newAccessToken = await generateAccessToken({ id: payload.id });
-		const newRefreshToken = await generateRefreshToken({ id: payload.id });
+		// todo: fetch user details from database, and use that in new payload.
+		const newPayload = {
+			id: payload.id,
+			type: payload.type,
+		} satisfies IJWTPayload;
 
+		const newAccessToken = await generateAccessToken(newPayload);
+		const newRefreshToken = await generateRefreshToken(newPayload);
+
+		// todo: extract this into a constant
 		res.cookie("refreshToken", newRefreshToken, {
 			httpOnly: true,
 			secure: true,

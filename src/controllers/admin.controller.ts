@@ -2,9 +2,14 @@ import { isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
-import { organization, organizationUserRole, user } from "../config/schema.js";
+import {
+	ORGANIZATION_TYPES,
+	organization,
+	organizationUserRole,
+	user,
+} from "../config/schema.js";
 import type { ApiResponse, OrganizationType } from "../config/types.js";
-import { INSTITUTION_DOMAIN_REGEXP, ORGANIZATION_TYPES } from "../constants.js";
+import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
 import { hashPassword } from "../utilities/argon2.js";
 import { ERROR_CODES } from "../utilities/errors.js";
 import { getPgErrorCode, unreachable } from "../utilities/helpers.js";
@@ -51,6 +56,7 @@ export const createUser = async (
 		const [newUser] = await db
 			.insert(user)
 			.values({
+				type: "end_user",
 				email: parsed.data.email,
 				passwordHash: await hashPassword(parsed.data.password),
 				fullName: parsed.data.fullName,
@@ -168,14 +174,12 @@ export const createOrganization = async (
 	}
 
 	try {
-		const { name, type, parentOrganizationId } = parsed.data;
-
 		const [newOrg] = await db
 			.insert(organization)
 			.values({
-				name,
-				type,
-				parentOrganizationId: parentOrganizationId ?? null,
+				name: parsed.data.name,
+				type: parsed.data.type,
+				parentOrganizationId: parsed.data.parentOrganizationId ?? null,
 			})
 			.returning({
 				id: organization.id,
@@ -276,11 +280,13 @@ export const assignRole = async (
 	}
 
 	try {
-		const { userId, roleId, organizationId } = parsed.data;
-
 		const [assignment] = await db
 			.insert(organizationUserRole)
-			.values({ userId, roleId, organizationId })
+			.values({
+				userId: parsed.data.userId,
+				roleId: parsed.data.roleId,
+				organizationId: parsed.data.organizationId,
+			})
 			.returning({
 				id: organizationUserRole.id,
 				userId: organizationUserRole.userId,
@@ -324,14 +330,15 @@ export const getRoles = async (
 		roles: {
 			id: number;
 			createdAt: string;
-			roleName: string;
+			name: string;
 		}[];
 	}>,
 ) => {
 	const roles = await db.query.role.findMany({
+		where: isNull(schema.role.deletedAt),
 		columns: {
 			id: true,
-			roleName: true,
+			name: true,
 			createdAt: true,
 		},
 	});

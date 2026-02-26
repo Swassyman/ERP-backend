@@ -20,16 +20,14 @@ const SECOND = 1000,
 	MINUTE = 60 * SECOND,
 	HOUR = 60 * MINUTE,
 	DAY = 24 * HOUR;
-export const JWT_ACCESS_TOKEN_EXPIRY = 15 * DAY;
+export const JWT_ACCESS_TOKEN_EXPIRY = 5 * MINUTE;
 export const JWT_REFRESH_TOKEN_EXPIRY = 30 * DAY;
 export const JWS_ALG_HEADER_PARAMETER = "HS256";
 
-/**
- * @param {number} expiration Time in milliseconds
- * @param {Parameters<import("jose").SignJWT["sign"]>[0]} signKey
- * @returns
- */
-export function getJWTTokenGenerator(expiration: number, signKey: Uint8Array) {
+export function getJWTTokenGenerator(
+	expiration: number,
+	signKey: Parameters<SignJWT["sign"]>[0],
+) {
 	return async (payload: IJWTPayload) => {
 		const expires = new Date(Date.now() + expiration);
 
