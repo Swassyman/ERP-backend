@@ -13,7 +13,6 @@ export type Role = typeof schema.role.$inferSelect;
 export type Permission = typeof schema.permission.$inferSelect;
 
 // system types
-// export type RoleCode = keyof typeof ROLE;
 export type PermissionScope = keyof typeof PERMISSION;
 export type PermissionCode =
 	// | keyof typeof PERMISSION
@@ -36,21 +35,3 @@ export type ApiSuccess<T> = {
 	data: T;
 	// todo: meta and stuff
 };
-
-// Source - https://stackoverflow.com/a/64519702
-// Posted by Jan Sommer, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-02-24, License - CC BY-SA 4.0
-
-// export type UniqueArray<T> = T extends readonly [infer X, ...infer Rest]
-// 	? InArray<Rest, X> extends true
-// 		? ["Encountered value with duplicates:", X]
-// 		: readonly [X, ...UniqueArray<Rest>]
-// 	: T;
-
-// export type InArray<T, X> = T extends readonly [X, ...infer _Rest]
-// 	? true
-// 	: T extends readonly [X]
-// 		? true
-// 		: T extends readonly [infer _, ...infer Rest]
-// 			? InArray<Rest, X>
-// 			: false;
