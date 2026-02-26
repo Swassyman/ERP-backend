@@ -96,7 +96,7 @@ const addAllowedParentParamsSchema = z
 
 export const addAllowedParent: ApiRequestHandler<
 	{
-		user: {
+		allowedParent: {
 			parentTypeId: number;
 			childTypeId: number;
 		};
@@ -131,7 +131,7 @@ export const addAllowedParent: ApiRequestHandler<
 	return res.status(200).json({
 		success: true,
 		data: {
-			user: {
+			allowedParent: {
 				parentTypeId: inserted.parentTypeId,
 				childTypeId: inserted.childTypeId,
 			},

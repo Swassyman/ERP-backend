@@ -149,7 +149,7 @@ export const createOrganization: ApiRequestHandler<{
 	organization: {
 		id: number;
 		name: string;
-		type: number;
+		organizationTypeId: number;
 		parentOrganizationId: number | null;
 		createdAt: string;
 	};
@@ -175,7 +175,7 @@ export const createOrganization: ApiRequestHandler<{
 			.returning({
 				id: schema.organization.id,
 				name: schema.organization.name,
-				type: schema.organization.organizationTypeId,
+				organizationTypeId: schema.organization.organizationTypeId,
 				parentOrganizationId: schema.organization.parentOrganizationId,
 				createdAt: schema.organization.createdAt,
 			});

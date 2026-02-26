@@ -1,9 +1,66 @@
 import { confirm } from "@inquirer/prompts";
-import { inArray, type SQL, sql } from "drizzle-orm";
+import "dotenv/config";
+import { eq, inArray, type SQL, sql } from "drizzle-orm";
 import { db, schema } from "./src/config/db.js";
 import type { PermissionCode } from "./src/config/types.js";
 import { FLATTENED_PERMISSIONS } from "./src/constants.js";
-import { isPermission, unreachable } from "./src/utilities/helpers.js";
+import { hashPassword, verifyPassword } from "./src/utilities/argon2.js";
+import {
+	isPermission,
+	quickEnv,
+	unreachable,
+} from "./src/utilities/helpers.js";
+
+// ADMIN USER ACCOUNT
+
+const ADMIN_LOGIN_EMAIL = quickEnv("ADMIN_LOGIN_EMAIL");
+const ADMIN_LOGIN_PASSWORD = quickEnv("ADMIN_LOGIN_PASSWORD");
+
+console.log("Setting up administrator user account");
+
+const existingAdminAccounts = await db
+	.select()
+	.from(schema.user)
+	.where(eq(schema.user.type, "admin"));
+
+if (existingAdminAccounts.length === 0) {
+	console.log("Found no admin account, setting up one now");
+	await db.insert(schema.user).values({
+		type: "admin",
+		fullName: "System admin",
+		email: ADMIN_LOGIN_EMAIL,
+		passwordHash: await hashPassword(ADMIN_LOGIN_PASSWORD),
+	});
+} else if (existingAdminAccounts.length > 1) {
+	throw new Error(
+		"misconfiguration in database: more than one admin account",
+	);
+} else {
+	const account = existingAdminAccounts[0];
+	if (account == null) unreachable();
+	const emailMatch = account.email === ADMIN_LOGIN_EMAIL;
+	const passwordMatch = await verifyPassword(
+		account.passwordHash,
+		ADMIN_LOGIN_PASSWORD,
+	);
+	if (!emailMatch || !passwordMatch) {
+		console.log(
+			"mismatched credentials for admin account, setting them to config",
+		);
+		if (
+			await confirm({
+				message: "Set email and password of admin account to ENV vars?",
+			})
+		)
+			await db
+				.update(schema.user)
+				.set({
+					email: ADMIN_LOGIN_EMAIL,
+					passwordHash: await hashPassword(ADMIN_LOGIN_PASSWORD),
+				})
+				.where(eq(schema.user.type, "admin"));
+	}
+}
 
 // PERMISSIONS
 

@@ -1,4 +1,5 @@
 import {
+	eq,
 	type HasDefault,
 	isNull,
 	type NotNull,
