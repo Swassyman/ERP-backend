@@ -2,13 +2,7 @@ import { isNull } from "drizzle-orm";
 import type { Request } from "express";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
-import {
-	ORGANIZATION_TYPES,
-	organization,
-	organizationUserRole,
-	user,
-} from "../config/schema.js";
-import type { ApiResponse, OrganizationType } from "../config/types.js";
+import type { ApiRequestHandler, ApiResponse } from "../config/types.js";
 import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
 import { hashPassword } from "../utilities/argon2.js";
 import { ERROR_CODES } from "../utilities/errors.js";
@@ -54,7 +48,7 @@ export const createUser = async (
 
 	try {
 		const [newUser] = await db
-			.insert(user)
+			.insert(schema.user)
 			.values({
 				type: "end_user",
 				email: parsed.data.email,
@@ -62,10 +56,10 @@ export const createUser = async (
 				fullName: parsed.data.fullName,
 			})
 			.returning({
-				id: user.id,
-				fullName: user.fullName,
-				email: user.email,
-				createdAt: user.createdAt,
+				id: schema.user.id,
+				fullName: schema.user.fullName,
+				email: schema.user.email,
+				createdAt: schema.user.createdAt,
 			});
 
 		if (newUser == null) {
@@ -89,25 +83,22 @@ export const createUser = async (
 };
 
 // todo: protection
-export const getUsers = async (
-	_req: Request,
-	res: ApiResponse<{
-		users: {
-			email: string;
-			fullName: string;
+export const getUsers: ApiRequestHandler<{
+	users: {
+		email: string;
+		fullName: string;
+		id: number;
+		isActive: boolean;
+		createdAt: string;
+		roles: {
 			id: number;
 			isActive: boolean;
 			createdAt: string;
-			organizationRoles: {
-				id: number;
-				isActive: boolean;
-				createdAt: string;
-				roleId: number;
-				organizationId: number;
-			}[];
+			roleId: number;
+			managedEntityId: number;
 		}[];
-	}>,
-) => {
+	}[];
+}> = async (_req, res) => {
 	const users = await db.query.user.findMany({
 		where: isNull(schema.user.deletedAt),
 		columns: {
@@ -118,19 +109,19 @@ export const getUsers = async (
 			isActive: true,
 		},
 		with: {
-			organizationRoles: {
+			roles: {
 				columns: {
 					id: true,
 					isActive: true,
 					createdAt: true,
 					roleId: true,
-					organizationId: true,
+					managedEntityId: true,
 				},
 			},
 		},
 	});
 
-	res.status(200).json({
+	return res.status(200).json({
 		data: {
 			users: users,
 		},
@@ -143,27 +134,22 @@ const createOrganizationSchema = z
 			.string({ error: "Invalid name value" })
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
-		type: z.enum(ORGANIZATION_TYPES, {
-			error: "Invalid organization type",
-		}),
+		organizationTypeId: z.int({ error: "Invalid organization type ID" }),
 		parentOrganizationId: z
 			.int({ error: "Invalid organization ID" })
 			.optional(),
 	})
 	.strict();
 
-export const createOrganization = async (
-	req: Request,
-	res: ApiResponse<{
-		organization: {
-			id: number;
-			name: string;
-			type: OrganizationType;
-			parentOrganizationId: number | null;
-			createdAt: string;
-		};
-	}>,
-) => {
+export const createOrganization: ApiRequestHandler<{
+	organization: {
+		id: number;
+		name: string;
+		type: number;
+		parentOrganizationId: number | null;
+		createdAt: string;
+	};
+}> = async (req, res) => {
 	const parsed = createOrganizationSchema.safeParse(req.body);
 
 	if (!parsed.success) {
@@ -175,18 +161,18 @@ export const createOrganization = async (
 
 	try {
 		const [newOrg] = await db
-			.insert(organization)
+			.insert(schema.organization)
 			.values({
 				name: parsed.data.name,
-				type: parsed.data.type,
+				organizationTypeId: parsed.data.organizationTypeId,
 				parentOrganizationId: parsed.data.parentOrganizationId ?? null,
 			})
 			.returning({
-				id: organization.id,
-				name: organization.name,
-				type: organization.type,
-				parentOrganizationId: organization.parentOrganizationId,
-				createdAt: organization.createdAt,
+				id: schema.organization.id,
+				name: schema.organization.name,
+				type: schema.organization.organizationTypeId,
+				parentOrganizationId: schema.organization.parentOrganizationId,
+				createdAt: schema.organization.createdAt,
 			});
 
 		if (newOrg == null) {
@@ -222,7 +208,7 @@ export const getOrganizations = async (
 	_req: Request,
 	res: ApiResponse<{
 		organizations: {
-			type: OrganizationType;
+			organizationTypeId: number;
 			id: number;
 			name: string;
 			parentOrganizationId: number | null;
@@ -236,7 +222,7 @@ export const getOrganizations = async (
 		columns: {
 			id: true,
 			name: true,
-			type: true,
+			organizationTypeId: true,
 			parentOrganizationId: true,
 			isActive: true,
 			createdAt: true,
@@ -254,7 +240,7 @@ const assignRoleSchema = z
 	.object({
 		userId: z.int({ error: "Invalid user ID" }),
 		roleId: z.int({ error: "Invalid role ID" }),
-		organizationId: z.int({ error: "Invalid organization ID" }),
+		managedEntityId: z.int({ error: "Invalid managed entity ID" }),
 	})
 	.strict();
 
@@ -265,7 +251,7 @@ export const assignRole = async (
 			id: number;
 			userId: number;
 			roleId: number;
-			organizationId: number;
+			managedEntityId: number;
 			createdAt: string;
 		};
 	}>,
@@ -281,18 +267,18 @@ export const assignRole = async (
 
 	try {
 		const [assignment] = await db
-			.insert(organizationUserRole)
+			.insert(schema.userRole)
 			.values({
 				userId: parsed.data.userId,
 				roleId: parsed.data.roleId,
-				organizationId: parsed.data.organizationId,
+				managedEntityId: parsed.data.managedEntityId,
 			})
 			.returning({
-				id: organizationUserRole.id,
-				userId: organizationUserRole.userId,
-				roleId: organizationUserRole.roleId,
-				organizationId: organizationUserRole.organizationId,
-				createdAt: organizationUserRole.createdAt,
+				id: schema.userRole.id,
+				userId: schema.userRole.userId,
+				roleId: schema.userRole.roleId,
+				managedEntityId: schema.userRole.managedEntityId,
+				createdAt: schema.userRole.createdAt,
 			});
 
 		if (assignment == null) {
