@@ -15,6 +15,14 @@ export function unreachable(): never {
 	throw new Error("unreachable");
 }
 
+export function quickEnv(name: string) {
+	const value = process.env[name];
+	if (typeof value !== "string" || value.length === 0) {
+		throw new Error(`Environment variable '${name}' must be set`);
+	}
+	return value;
+}
+
 export function isPermissionScope(scope: string): scope is PermissionScope {
 	return (PERMISSION_SCOPES as string[]).includes(scope);
 }

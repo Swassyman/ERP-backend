@@ -72,6 +72,7 @@ const errorHandler: ErrorRequestHandler = (
 	console.error(error);
 
 	return res.status(500).json({
+		success: false,
 		code: ERROR_CODES.internal_server_error,
 		message: "Something went wrong",
 	});
