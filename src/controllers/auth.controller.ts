@@ -223,8 +223,6 @@ export const refresh = async (
 			JWT_REFRESH_SECRET_SIGN_KEY,
 		);
 
-		// todo: fetch user details from database, and use that in new payload.
-
 		const user = await db.query.user.findFirst({
 			where: and(
 				eq(schema.user.id, payload.id),
