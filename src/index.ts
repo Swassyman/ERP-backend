@@ -3,6 +3,7 @@ import express, { type ErrorRequestHandler } from "express";
 import type { ApiResponse } from "./config/types.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRouter from "./routes/auth.routes.js";
+import organizationTypesRoutes from "./routes/organization-types.routes.js";
 import { ERROR_CODES } from "./utilities/errors.js";
 
 const PORT = Number(process.env.PORT) || 3192;
@@ -35,7 +36,10 @@ app.use((req, res, next) => {
 			"Access-Control-Allow-Methods",
 			"GET,POST,PATCH,PUT,DELETE,OPTIONS",
 		);
-		res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+		res.setHeader(
+			"Access-Control-Allow-Headers",
+			"Content-Type,Authorization",
+		);
 	}
 	if (req.method === "OPTIONS") {
 		res.setHeader("Access-Control-Max-Age", "86400"); // cache pre-flight for 24h
@@ -51,6 +55,7 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRouter);
 app.use("/admin", adminRoutes);
+app.use("/organization-types", organizationTypesRoutes);
 
 // Health
 app.get("/", (_req, res) => {
