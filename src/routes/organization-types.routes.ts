@@ -1,16 +1,15 @@
 import { Router } from "express";
-import {
-	createOrganizationType,
-	getOrganizationTypes,
-} from "../controllers/organization-types.controller.js";
+import * as controller from "../controllers/organization-types.controller.js";
 
 const router: Router = Router();
 
-router.get("/organization-types", getOrganizationTypes);
+router.get("/", controller.getOrganizationTypes);
 router.post(
-	"/organization-types",
+	"/",
 	// requireUserType(["admin"]), todo: uncomment
-	createOrganizationType,
+	controller.createOrganizationType,
 );
+
+router.post("/:id/allow-children/:childId", controller.addAllowedParent);
 
 export default router;

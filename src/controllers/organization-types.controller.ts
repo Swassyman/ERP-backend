@@ -79,3 +79,57 @@ export const createOrganizationType: ApiRequestHandler<{
 		},
 	});
 };
+
+const addAllowedParentParamsSchema = z
+	.object({
+		id: z.coerce.number({
+			error: "Invalid organization type ID",
+		}),
+		childId: z.coerce.number({
+			error: "Invalid child organization type ID",
+		}),
+	})
+	.strict();
+
+export const addAllowedParent: ApiRequestHandler<
+	{
+		user: {
+			parentTypeId: number;
+			childTypeId: number;
+		};
+	},
+	{ id: string; childid: string }
+> = async (req, res) => {
+	const parsed = addAllowedParentParamsSchema.safeParse(req.params);
+
+	if (!parsed.success) {
+		return res.status(400).json({
+			code: ERROR_CODES.validation_error,
+			message: parsed.error.message,
+		});
+	}
+
+	const [inserted] = await db
+		.insert(schema.organizationTypeAllowedParent)
+		.values({
+			parentTypeId: parsed.data.id,
+			childTypeId: parsed.data.childId,
+		})
+		.returning({
+			parentTypeId: schema.organizationTypeAllowedParent.parentTypeId,
+			childTypeId: schema.organizationTypeAllowedParent.childTypeId,
+		});
+
+	if (inserted == null) {
+		unreachable();
+	}
+
+	return res.status(200).json({
+		data: {
+			user: {
+				parentTypeId: inserted.parentTypeId,
+				childTypeId: inserted.childTypeId,
+			},
+		},
+	});
+};
