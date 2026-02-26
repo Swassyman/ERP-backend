@@ -41,6 +41,7 @@ export const createUser = async (
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: "Invalid details",
 		});
@@ -67,12 +68,14 @@ export const createUser = async (
 		}
 
 		return res.status(201).json({
+			success: true,
 			data: { user: newUser },
 		});
 	} catch (error) {
 		const pgErrorCode = getPgErrorCode(error);
 		if (pgErrorCode === "23505") {
 			return res.status(409).json({
+				success: false,
 				code: ERROR_CODES.already_exists,
 				message: "A user with this email already exists.",
 			});
@@ -122,6 +125,7 @@ export const getUsers: ApiRequestHandler<{
 	});
 
 	return res.status(200).json({
+		success: true,
 		data: {
 			users: users,
 		},
@@ -154,6 +158,7 @@ export const createOrganization: ApiRequestHandler<{
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: "Invalid details",
 		});
@@ -180,6 +185,7 @@ export const createOrganization: ApiRequestHandler<{
 		}
 
 		return res.status(201).json({
+			success: true,
 			data: {
 				organization: newOrg,
 			},
@@ -188,12 +194,14 @@ export const createOrganization: ApiRequestHandler<{
 		const pgErrorCode = getPgErrorCode(error);
 		if (pgErrorCode === "23505") {
 			return res.status(409).json({
+				success: false,
 				code: ERROR_CODES.already_exists,
 				message: "An organization with the same name already exists",
 			});
 		}
 		if (pgErrorCode === "23503") {
 			return res.status(409).json({
+				success: false,
 				code: ERROR_CODES.already_exists,
 				message: "Invalid parent organization",
 			});
@@ -230,6 +238,7 @@ export const getOrganizations = async (
 	});
 
 	res.status(200).json({
+		success: true,
 		data: {
 			organizations: organizations,
 		},
@@ -260,6 +269,7 @@ export const assignRole = async (
 
 	if (!parsed.success) {
 		return res.status(400).json({
+			success: false,
 			code: ERROR_CODES.validation_error,
 			message: "Invalid details",
 		});
@@ -286,6 +296,7 @@ export const assignRole = async (
 		}
 
 		return res.status(201).json({
+			success: true,
 			data: {
 				roleAssignment: assignment,
 			},
@@ -294,6 +305,7 @@ export const assignRole = async (
 		const pgErrorCode = getPgErrorCode(error);
 		if (pgErrorCode === "23505") {
 			return res.status(409).json({
+				success: false,
 				code: ERROR_CODES.already_exists,
 				message:
 					"This role is already assigned to the user in this organization",
@@ -301,6 +313,7 @@ export const assignRole = async (
 		}
 		if (pgErrorCode === "23503") {
 			return res.status(400).json({
+				success: false,
 				code: ERROR_CODES.invalid_related_entity,
 				message: "Invalid user, role or organization IDs",
 			});
@@ -330,6 +343,7 @@ export const getRoles = async (
 	});
 
 	res.status(200).json({
+		success: true,
 		data: {
 			roles: roles,
 		},

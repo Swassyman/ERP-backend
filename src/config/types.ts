@@ -28,18 +28,20 @@ type FlattenPermission<T> = {
 export type ApiResponse<T = unknown> = express.Response<
 	ApiError | ApiSuccess<T>
 >;
+export type ApiSuccess<T> = {
+	success: true;
+	data: T;
+	// todo: meta and stuff
+};
 export type ApiError = {
+	success: false;
 	code: ERROR_CODES;
 	message: string;
 	// todo: details
 };
-export type ApiSuccess<T> = {
-	data: T;
-	// todo: meta and stuff
-};
 export type MaybePromise<T> = T | Promise<T>;
 
-export type ApiRequestHandler<T, P = unknown> = express.RequestHandler<
-	P,
-	ApiError | ApiSuccess<T>
->;
+export type ApiRequestHandler<
+	T = unknown,
+	P = unknown,
+> = express.RequestHandler<P, ApiResponse<T>>;
