@@ -1,8 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
-import type { Request } from "express";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
-import type { ApiRequestHandler, ApiResponse } from "../config/types.js";
+import type { ApiRequestHandler } from "../config/types.js";
 import { INSTITUTION_DOMAIN_REGEXP } from "../constants.js";
 import { hashPassword } from "../utilities/argon2.js";
 import { ERROR_CODES } from "../utilities/errors.js";
@@ -26,17 +25,14 @@ const createUserSchema = z
 	})
 	.strict();
 
-export const createUser = async (
-	req: Request,
-	res: ApiResponse<{
-		user: {
-			id: number;
-			fullName: string;
-			email: string;
-			createdAt: string;
-		};
-	}>,
-) => {
+export const createUser: ApiRequestHandler<{
+	user: {
+		id: number;
+		fullName: string;
+		email: string;
+		createdAt: string;
+	};
+}> = async (req, res) => {
 	const parsed = createUserSchema.safeParse(req.body);
 
 	if (!parsed.success) {
@@ -85,7 +81,6 @@ export const createUser = async (
 	}
 };
 
-// todo: protection
 export const getUsers: ApiRequestHandler<{
 	users: {
 		email: string;
@@ -214,20 +209,16 @@ export const createOrganization: ApiRequestHandler<{
 	}
 };
 
-// todo: protection
-export const getOrganizations = async (
-	_req: Request,
-	res: ApiResponse<{
-		organizations: {
-			organizationTypeId: number;
-			id: number;
-			name: string;
-			parentOrganizationId: number | null;
-			isActive: boolean;
-			createdAt: string;
-		}[];
-	}>,
-) => {
+export const getOrganizations: ApiRequestHandler<{
+	organizations: {
+		organizationTypeId: number;
+		id: number;
+		name: string;
+		parentOrganizationId: number | null;
+		isActive: boolean;
+		createdAt: string;
+	}[];
+}> = async (_req, res) => {
 	const organizations = await db.query.organization.findMany({
 		where: isNull(schema.organization.deletedAt),
 		columns: {
@@ -256,18 +247,15 @@ const assignRoleSchema = z
 	})
 	.strict();
 
-export const assignRole = async (
-	req: Request,
-	res: ApiResponse<{
-		roleAssignment: {
-			id: number;
-			userId: number;
-			roleId: number;
-			managedEntityId: number;
-			createdAt: string;
-		};
-	}>,
-) => {
+export const assignRole: ApiRequestHandler<{
+	roleAssignment: {
+		id: number;
+		userId: number;
+		roleId: number;
+		managedEntityId: number;
+		createdAt: string;
+	};
+}> = async (req, res) => {
 	const parsed = assignRoleSchema.safeParse(req.body);
 
 	if (!parsed.success) {
@@ -326,16 +314,13 @@ export const assignRole = async (
 	}
 };
 
-export const getRoles = async (
-	_req: Request,
-	res: ApiResponse<{
-		roles: {
-			id: number;
-			createdAt: string;
-			name: string;
-		}[];
-	}>,
-) => {
+export const getRoles: ApiRequestHandler<{
+	roles: {
+		id: number;
+		createdAt: string;
+		name: string;
+	}[];
+}> = async (_req, res) => {
 	const roles = await db.query.role.findMany({
 		where: isNull(schema.role.deletedAt),
 		columns: {
