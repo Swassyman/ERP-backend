@@ -138,3 +138,8 @@ export const addAllowedParent: ApiRequestHandler<
 		},
 	});
 };
+
+// todo: delete (soft) organization type
+// todo: delete parent-child organization type relations
+// todo: get parents for a organization type
+// todo: get children for a organization type

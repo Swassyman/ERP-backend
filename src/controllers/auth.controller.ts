@@ -1,13 +1,11 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import type { Request } from "express";
 import { jwtVerify } from "jose";
 import { z } from "zod";
 import { db, schema } from "../config/db.js";
 import type {
 	ApiRequestHandler,
-	ApiResponse,
+	Frontend,
 	IJWTPayload,
-	UserType,
 } from "../config/types.js";
 import {
 	INSTITUTION_DOMAIN_REGEXP,
@@ -35,10 +33,9 @@ const loginSchema = z
 	})
 	.strict();
 
-export const login = async (
-	req: Request,
-	res: ApiResponse<{ accessToken: string }>,
-) => {
+export const login: ApiRequestHandler<{
+	accessToken: string;
+}> = async (req, res) => {
 	const parsed = loginSchema.safeParse(req.body);
 
 	if (!parsed.success) {
@@ -82,8 +79,8 @@ export const login = async (
 
 	res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "strict",
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
 		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
 
@@ -98,25 +95,15 @@ export const login = async (
 export const logout: ApiRequestHandler = (_req, res) => {
 	res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "strict",
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
 	});
 	return res.sendStatus(200);
 };
 
-export const userDetails = async (
-	req: Request,
-	res: ApiResponse<{
-		user: {
-			id: number;
-			email: string;
-			fullName: string;
-			type: UserType;
-		};
-		// roles: string[];
-		permissions: string[];
-	}>,
-) => {
+export const userDetails: ApiRequestHandler<
+	Frontend.AuthenticatedUser
+> = async (req, res) => {
 	if (req.user == null) {
 		return res.status(401).json({
 			success: false,
@@ -125,35 +112,8 @@ export const userDetails = async (
 		});
 	}
 
-	const user = await db.query.user.findFirst({
-		where: and(
-			eq(schema.user.id, req.user.id),
-			isNull(schema.user.deletedAt),
-		),
-		columns: {
-			id: true,
-			email: true,
-			fullName: true,
-			type: true,
-			// todo: return more info
-		},
-		with: {
-			roles: {
-				columns: {},
-				with: {
-					role: {
-						columns: {
-							code: true,
-							id: true,
-						},
-					},
-				},
-			},
-		},
-	});
-
+	const user = await getUserWithPermissions(req.user.id);
 	if (user == null) {
-		// todo: revisit
 		return res.status(401).json({
 			success: false,
 			code: ERROR_CODES.unauthorized,
@@ -183,27 +143,18 @@ export const userDetails = async (
 				email: user.email,
 				fullName: user.fullName,
 				type: user.type,
+				permissions: permissions.map((permission) => permission.code),
+				// roles: user.organizationRoles.map(({ role }) => role.code), // todo: no need, right? confirm.
 			},
-			// roles: user.organizationRoles.map(({ role }) => role.code),
-			permissions: permissions.map((permission) => permission.code),
 		},
 	});
 };
 
-export const refresh = async (
-	req: Request,
-	res: ApiResponse<{
+export const refresh: ApiRequestHandler<
+	{
 		accessToken: string;
-		user: {
-			id: number;
-			email: string;
-			fullName: string;
-			type: UserType;
-		};
-		// roles: string[];
-		permissions: string[];
-	}>,
-) => {
+	} & Frontend.AuthenticatedUser
+> = async (req, res) => {
 	try {
 		const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
@@ -223,55 +174,14 @@ export const refresh = async (
 			JWT_REFRESH_SECRET_SIGN_KEY,
 		);
 
-		const user = await db.query.user.findFirst({
-			where: and(
-				eq(schema.user.id, payload.id),
-				isNull(schema.user.deletedAt),
-			),
-			columns: {
-				id: true,
-				email: true,
-				fullName: true,
-				type: true,
-				// todo: return more info
-			},
-			with: {
-				roles: {
-					columns: {},
-					with: {
-						role: {
-							columns: {
-								code: true,
-								id: true,
-							},
-						},
-					},
-				},
-			},
-		});
-
+		const user = await getUserWithPermissions(payload.id);
 		if (user == null) {
-			// todo: revisit
 			return res.status(401).json({
 				success: false,
 				code: ERROR_CODES.unauthorized,
 				message: "Unauthorised",
 			});
 		}
-
-		const permissions = await db
-			.selectDistinct({ code: schema.permission.code })
-			.from(schema.rolePermission)
-			.innerJoin(
-				schema.permission,
-				eq(schema.rolePermission.permissionId, schema.permission.id),
-			)
-			.where(
-				inArray(
-					schema.rolePermission.roleId,
-					user.roles.map(({ role }) => role.id),
-				),
-			);
 
 		const newPayload = {
 			id: user.id,
@@ -284,8 +194,8 @@ export const refresh = async (
 		// todo: extract this into a constant
 		res.cookie(REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, {
 			httpOnly: true,
-			secure: true,
-			sameSite: "strict",
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
 			maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 		});
 
@@ -293,13 +203,7 @@ export const refresh = async (
 			success: true,
 			data: {
 				accessToken: newAccessToken,
-				user: {
-					id: user.id,
-					type: user.type,
-					email: user.email,
-					fullName: user.fullName,
-				},
-				permissions: permissions.map((permission) => permission.code),
+				user: user,
 			},
 		});
 	} catch {
@@ -310,3 +214,53 @@ export const refresh = async (
 		});
 	}
 };
+
+async function getUserWithPermissions(id: number) {
+	const user = await db.query.user.findFirst({
+		where: and(eq(schema.user.id, id), isNull(schema.user.deletedAt)),
+		columns: {
+			id: true,
+			email: true,
+			fullName: true,
+			type: true,
+			// todo: return more info
+		},
+		with: {
+			roles: {
+				columns: {},
+				with: {
+					role: {
+						columns: {
+							code: true,
+							id: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (user == null) {
+		// todo: revisit
+		return null;
+	}
+
+	const permissions = await db
+		.selectDistinct({ code: schema.permission.code })
+		.from(schema.rolePermission)
+		.innerJoin(
+			schema.permission,
+			eq(schema.rolePermission.permissionId, schema.permission.id),
+		)
+		.where(
+			inArray(
+				schema.rolePermission.roleId,
+				user.roles.map(({ role }) => role.id),
+			),
+		);
+
+	return {
+		...user,
+		permissions: permissions.map((permission) => permission.code),
+	};
+}
