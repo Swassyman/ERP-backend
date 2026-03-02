@@ -20,8 +20,8 @@ const SECOND = 1000,
 	MINUTE = 60 * SECOND,
 	HOUR = 60 * MINUTE,
 	DAY = 24 * HOUR;
-export const JWT_ACCESS_TOKEN_EXPIRY = 1 * MINUTE; // for testing
-export const JWT_REFRESH_TOKEN_EXPIRY = 10 * MINUTE;
+export const JWT_ACCESS_TOKEN_EXPIRY = 1 * MINUTE; // todo: for testing, change it later
+export const JWT_REFRESH_TOKEN_EXPIRY = 10 * MINUTE; // todo: for testing, change it later
 export const JWS_ALG_HEADER_PARAMETER = "HS256";
 
 export function getJWTTokenGenerator(
