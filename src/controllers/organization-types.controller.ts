@@ -1,4 +1,4 @@
-import { isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import z from "zod";
 import { db, schema } from "../config/db.js";
 import type { ApiRequestHandler } from "../config/types.js";
@@ -139,7 +139,122 @@ export const addAllowedParent: ApiRequestHandler<
 	});
 };
 
-// todo: delete (soft) organization type
-// todo: delete parent-child organization type relations
-// todo: get parents for a organization type
-// todo: get children for a organization type
+const organizationTypeScopedSchema = z
+	.object({
+		id: z.coerce.number({ error: "Invalid organization type ID" }),
+	})
+	.strict();
+
+export const getOrganizationTypeRoles: ApiRequestHandler<
+	{
+		roles: {
+			id: number;
+			name: string;
+		}[];
+	},
+	{ id: string }
+> = async (req, res) => {
+	const parsedParams = organizationTypeScopedSchema.safeParse(req.params);
+
+	if (!parsedParams.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsedParams.error.message,
+		});
+	}
+
+	const organizationTypeRoles = await db
+		.select({
+			id: schema.role.id,
+			name: schema.role.name,
+		})
+		.from(schema.role)
+		.where(
+			and(
+				eq(schema.role.managedEntityType, "organization"),
+				eq(schema.role.typeRefId, parsedParams.data.id),
+				isNull(schema.role.deletedAt),
+			),
+		)
+		.orderBy(asc(schema.role.createdAt));
+
+	return res.status(200).json({
+		success: true,
+		data: {
+			roles: organizationTypeRoles,
+		},
+	});
+};
+
+const createOrganizationTypeRoleSchema = z
+	.object({
+		name: z
+			.string({ error: "Invalid role name" })
+			.trim()
+			.nonempty({ error: "Name must not be empty" })
+			.max(256, { error: "Name cannot be longer than 256 characters" }),
+	})
+	.strict();
+
+export const createOrganizationTypeRole: ApiRequestHandler<
+	{ id: number },
+	{ id: string }
+> = async (req, res) => {
+	const parsedParams = organizationTypeScopedSchema.safeParse(req.params);
+	const parsed = createOrganizationTypeRoleSchema.safeParse(req.body);
+
+	if (!parsedParams.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsedParams.error.message,
+		});
+	}
+	if (!parsed.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsed.error.message,
+		});
+	}
+
+	const [relatedOrgType] = await db
+		.select({ id: schema.organizationType.id })
+		.from(schema.organizationType)
+		.where(
+			and(
+				isNull(schema.organizationType.deletedAt),
+				eq(schema.organizationType.id, parsedParams.data.id),
+			),
+		)
+		.limit(1);
+
+	if (relatedOrgType == null) {
+		return res.status(404).json({
+			success: false,
+			code: ERROR_CODES.not_found,
+			message: "Linked organization type not found",
+		});
+	}
+
+	const [inserted] = await db
+		.insert(schema.role)
+		.values({
+			name: parsed.data.name,
+			managedEntityType: "organization",
+			typeRefId: parsedParams.data.id,
+		})
+		.returning({ id: schema.role.id });
+
+	if (inserted == null) {
+		unreachable();
+	}
+
+	return res.status(200).json({
+		success: true,
+		data: {
+			id: inserted.id,
+		},
+	});
+};

@@ -1,3 +1,4 @@
+// todo: make this a global types.d.ts
 import type * as express from "express";
 import type { JWTPayload } from "jose";
 import type { PERMISSION } from "../constants.js";
@@ -53,4 +54,5 @@ export type ApiError = {
 export type ApiRequestHandler<
 	T = unknown,
 	P = unknown,
-> = express.RequestHandler<P, ApiSuccess<T> | ApiError>;
+	B = unknown,
+> = express.RequestHandler<P, ApiSuccess<T> | ApiError, B>;

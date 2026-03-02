@@ -87,6 +87,10 @@ export const managedEntity = pgTable(
 	// soft-fk(ref_id) -> organization, venue
 );
 
+export const managedEntityRelations = relations(managedEntity, (r) => ({
+	members: r.many(userRole),
+}));
+
 export const organizationType = pgTable(
 	"organization_type",
 	{
@@ -105,6 +109,7 @@ export const organizationTypeRelations = relations(organizationType, (r) => ({
 	children: r.many(organizationTypeAllowedParent, {
 		relationName: "as_parent",
 	}),
+	// soft-fk(roles), roles that comes under this type of organization
 }));
 
 export const organizationTypeAllowedParent = pgTable(
@@ -199,14 +204,19 @@ export const role = pgTable(
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
-		code: text().notNull(),
 		managedEntityType: managedEntityTypeEnum() // to which type of managed entity this role belongs to.
 			.notNull(),
+		typeRefId: integer().notNull(), // soft-fk(organizationType, venueType), since roles belong under institution, dept, lab, hall, etc.
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		// uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: needed?
-		uniqueIndex().on(t.code).where(isNull(t.deletedAt)),
+		uniqueIndex()
+			.on(t.name, t.managedEntityType, t.typeRefId)
+			.where(isNull(t.deletedAt)),
+		// uniqueIndex()
+		// 	.on(t.code, t.managedEntityType, t.typeRefId)
+		// 	.where(isNull(t.deletedAt)),
+		// // check trigger to restrict updating 'code'.
 	],
 );
 

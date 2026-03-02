@@ -55,7 +55,7 @@ export const login: ApiRequestHandler<{
 	if (user == null) {
 		return res.status(400).json({
 			success: false,
-			code: ERROR_CODES.user_not_found,
+			code: ERROR_CODES.user_not_found, // todo: make a new code, invalid credentials
 			message: "Invalid credentials",
 		});
 	}
@@ -121,31 +121,10 @@ export const userDetails: ApiRequestHandler<
 		});
 	}
 
-	const permissions = await db
-		.selectDistinct({ code: schema.permission.code })
-		.from(schema.rolePermission)
-		.innerJoin(
-			schema.permission,
-			eq(schema.rolePermission.permissionId, schema.permission.id),
-		)
-		.where(
-			inArray(
-				schema.rolePermission.roleId,
-				user.roles.map(({ role }) => role.id),
-			),
-		);
-
 	return res.status(200).json({
 		success: true,
 		data: {
-			user: {
-				id: user.id,
-				email: user.email,
-				fullName: user.fullName,
-				type: user.type,
-				permissions: permissions.map((permission) => permission.code),
-				// roles: user.organizationRoles.map(({ role }) => role.code), // todo: no need, right? confirm.
-			},
+			user: user,
 		},
 	});
 };
@@ -231,7 +210,6 @@ async function getUserWithPermissions(id: number) {
 				with: {
 					role: {
 						columns: {
-							code: true,
 							id: true,
 						},
 					},

@@ -1,10 +1,14 @@
 import cookieParser from "cookie-parser";
 import express, { type ErrorRequestHandler } from "express";
 import type { ApiResponse } from "./config/types.js";
-import adminRoutes from "./routes/admin.routes.js";
-import authRouter from "./routes/auth.routes.js";
-import organizationTypesRoutes from "./routes/organization-types.routes.js";
 import { ERROR_CODES } from "./utilities/errors.js";
+// end of normal imports, and router imports follow:
+
+import authRouter from "./routes/auth.routes.js";
+import usersRouter from "./routes/users.routes.js";
+import rolesRouter from "./routes/roles.routes.js";
+import organizationRouter from "./routes/organizations.routes.js";
+import organizationTypesRouter from "./routes/organization-types.routes.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -52,15 +56,15 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 app.use(express.json());
 
+// Health
+app.get("/", (_req, res) => res.status(200).json({ status: "active" }));
+
 // Routes
 app.use("/auth", authRouter);
-app.use("/admin", adminRoutes);
-app.use("/organization-types", organizationTypesRoutes);
-
-// Health
-app.get("/", (_req, res) => {
-	res.status(200).json({ status: "active" });
-});
+app.use("/roles", rolesRouter);
+app.use("/users", usersRouter);
+app.use("/organizations", organizationRouter);
+app.use("/organization-types", organizationTypesRouter);
 
 // todo: revisit, also async-errors?
 const errorHandler: ErrorRequestHandler = (
