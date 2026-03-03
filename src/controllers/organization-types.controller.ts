@@ -9,29 +9,16 @@ export const getOrganizationTypes: ApiRequestHandler<{
 	organizationTypes: {
 		id: number;
 		name: string;
-		children: {
-			childTypeId: number;
-		}[];
 	}[];
 }> = async (_req, res) => {
-	const organizationTypes = await db.query.organizationType.findMany({
-		where: isNull(schema.organizationType.deletedAt),
-		columns: {
-			id: true,
-			name: true,
-			// createdAt: true,
-		},
-		with: {
-			children: {
-				columns: {
-					childTypeId: true,
-					// createdAt: true,
-				},
-				orderBy: schema.organizationTypeAllowedParent.createdAt,
-			},
-		},
-		orderBy: schema.organizationType.createdAt,
-	});
+	const organizationTypes = await db
+		.select({
+			id: schema.organizationType.id,
+			name: schema.organizationType.name,
+		})
+		.from(schema.organizationType)
+		.where(isNull(schema.organizationType.deletedAt))
+		.orderBy(schema.organizationType.createdAt);
 
 	return res.status(200).json({
 		success: true,
@@ -79,6 +66,61 @@ export const createOrganizationType: ApiRequestHandler<{
 		data: {
 			id: inserted.id,
 			name: parsed.data.name,
+		},
+	});
+};
+
+const organizationTypeScopedSchema = z
+	.object({
+		id: z.coerce.number({ error: "Invalid organization type ID" }),
+	})
+	.strict();
+
+export const getOrganizationTypeChildTypes: ApiRequestHandler<
+	{
+		childrenTypes: {
+			id: number;
+			name: string;
+		}[];
+	},
+	{ id: string }
+> = async (req, res) => {
+	const parsedParams = organizationTypeScopedSchema.safeParse(req.params);
+
+	if (!parsedParams.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsedParams.error.message,
+		});
+	}
+
+	const organizationTypeChildrenTypes = await db
+		.select({
+			id: schema.organizationTypeAllowedParent.childTypeId,
+			name: schema.organizationType.name,
+		})
+		.from(schema.organizationTypeAllowedParent)
+		.innerJoin(
+			schema.organizationType,
+			eq(
+				schema.organizationTypeAllowedParent.childTypeId,
+				schema.organizationType.id,
+			),
+		)
+		.where(
+			eq(
+				schema.organizationTypeAllowedParent.parentTypeId,
+				parsedParams.data.id,
+			),
+			// note: no need of work
+		)
+		.orderBy(schema.organizationTypeAllowedParent.createdAt);
+
+	return res.status(200).json({
+		success: true,
+		data: {
+			childrenTypes: organizationTypeChildrenTypes,
 		},
 	});
 };
@@ -138,12 +180,6 @@ export const addAllowedParent: ApiRequestHandler<
 		},
 	});
 };
-
-const organizationTypeScopedSchema = z
-	.object({
-		id: z.coerce.number({ error: "Invalid organization type ID" }),
-	})
-	.strict();
 
 export const getOrganizationTypeRoles: ApiRequestHandler<
 	{

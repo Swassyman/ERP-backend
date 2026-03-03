@@ -7,8 +7,9 @@ const router: Router = Router();
 router.get("/", controller.getOrganizationTypes);
 router.post("/", requireUserType(["admin"]), controller.createOrganizationType); // todo: permissions
 
+router.get("/:id/children", controller.getOrganizationTypeChildTypes);
 router.post(
-	"/:id/allow-children/:childId",
+	"/:id/children/:childId",
 	requireUserType(["admin"]),
 	controller.addAllowedParent,
 );
