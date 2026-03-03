@@ -68,7 +68,7 @@ app.use("/roles", rolesRouter);
 app.use("/organizations", organizationRouter);
 app.use("/organization-types", organizationTypesRouter);
 
-// todo: revisit, also async-errors?
+// todo: revisit as "error handling" update
 const errorHandler: ErrorRequestHandler = (
 	error: Error,
 	_req,
