@@ -6,6 +6,7 @@ import { ERROR_CODES } from "./utilities/errors.js";
 
 import authRouter from "./routes/auth.routes.js";
 import usersRouter from "./routes/users.routes.js";
+import permissionsRouter from "./routes/permissions.routes.js";
 import rolesRouter from "./routes/roles.routes.js";
 import organizationRouter from "./routes/organizations.routes.js";
 import organizationTypesRouter from "./routes/organization-types.routes.js";
@@ -61,8 +62,9 @@ app.get("/", (_req, res) => res.status(200).json({ status: "active" }));
 
 // Routes
 app.use("/auth", authRouter);
-app.use("/roles", rolesRouter);
 app.use("/users", usersRouter);
+app.use("/permissions", permissionsRouter);
+app.use("/roles", rolesRouter);
 app.use("/organizations", organizationRouter);
 app.use("/organization-types", organizationTypesRouter);
 
