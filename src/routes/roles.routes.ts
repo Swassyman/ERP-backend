@@ -4,6 +4,7 @@ import * as controller from "../controllers/roles.controller.js";
 const router: Router = Router();
 
 router.get("/:id/permissions", controller.getRolePermissions);
+router.put("/:id/permissions", controller.setRolePermissions);
 router.post(
 	"/:id/permissions/:permissionId",
 	controller.assignPermissionToRole,

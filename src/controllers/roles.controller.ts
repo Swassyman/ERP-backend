@@ -33,27 +33,85 @@ export const getRolePermissions: ApiRequestHandler<
 		});
 	}
 
-	const rolePermissions = await db.query.rolePermission.findMany({
-		where: and(
+	const permissions = await db
+		.select({
+			id: schema.permission.id,
+			code: schema.permission.code,
+			description: schema.permission.description,
+		})
+		.from(schema.rolePermission)
+		.innerJoin(
+			schema.permission,
+			eq(schema.rolePermission.permissionId, schema.permission.id),
+		)
+		.where(
 			eq(schema.rolePermission.roleId, parsedParams.data.id),
-			// no deletedAt here.
-		),
-		columns: {},
-		with: {
-			permission: {
-				columns: {
-					id: true,
-					code: true,
-					description: true,
-				},
-			},
-		},
-	});
+			// note: no deletedAt
+		);
 
 	return res.status(200).json({
 		success: true,
 		data: {
-			permissions: rolePermissions.map((rp) => rp.permission),
+			permissions: permissions,
+		},
+	});
+};
+
+const setRolePermissionsSchema = z
+	.object({
+		permissionIds: z.array(
+			z.coerce
+				.number({ error: "Invalid permission ID" })
+				.int({ error: "Invalid permission ID" }),
+			{ error: "Invalid set of permission IDs" },
+		),
+	})
+	.strict();
+
+export const setRolePermissions: ApiRequestHandler<
+	{
+		permissions: {};
+	},
+	{ id: string },
+	{ permissionIds: string[] }
+> = async (req, res) => {
+	const parsedParams = roleScopedSchema.safeParse(req.params);
+	const parsed = setRolePermissionsSchema.safeParse(req.body);
+
+	if (!parsedParams.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsedParams.error.message,
+		});
+	}
+	if (!parsed.success) {
+		return res.status(400).json({
+			success: false,
+			code: ERROR_CODES.validation_error,
+			message: parsed.error.message,
+		});
+	}
+
+	const inserted = await db
+		.insert(schema.rolePermission)
+		.values(
+			parsed.data.permissionIds.map(
+				(permissionId) =>
+					({
+						roleId: parsedParams.data.id,
+						permissionId: permissionId,
+					}) satisfies typeof schema.rolePermission.$inferInsert,
+			),
+		)
+		.returning({
+			id: schema.rolePermission.id,
+		});
+
+	return res.status(200).json({
+		success: true,
+		data: {
+			permissions: inserted.map((inserted) => ({ id: inserted.id })),
 		},
 	});
 };
