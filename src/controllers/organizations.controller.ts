@@ -92,7 +92,7 @@ export const createOrganization: ApiRequestHandler<{
 		if (pgErrorCode === "23503") {
 			return res.status(409).json({
 				success: false,
-				code: ERROR_CODES.already_exists,
+				code: ERROR_CODES.validation_error,
 				message: "Invalid parent organization",
 			});
 		}

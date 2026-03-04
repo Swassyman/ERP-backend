@@ -12,6 +12,8 @@ export type User = typeof schema.user.$inferSelect;
 export type UserType = (typeof schema.userTypeEnum.enumValues)[number];
 export type Role = typeof schema.role.$inferSelect;
 export type Permission = typeof schema.permission.$inferSelect;
+export type VenueAccessLevel =
+	(typeof schema.venueAccessLevelEnum.enumValues)[number];
 
 // system types
 export type PermissionScope = keyof typeof PERMISSION;
