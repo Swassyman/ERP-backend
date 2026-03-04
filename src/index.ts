@@ -1,9 +1,10 @@
+import { cors } from "@/middlewares/index.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
+import { quickEnv } from "@/utilities/helpers.js";
 import cookieParser from "cookie-parser";
 import express, { type ErrorRequestHandler } from "express";
-import { quickEnv } from "@/utilities/helpers.js";
-import { authenticateToken, cors } from "@/middlewares/index.js";
-import { styleText, inspect } from "node:util";
+import * as os from "node:os";
+import { styleText } from "node:util";
 // end of normal imports, and router imports follow:
 
 import authRouter from "@/modules/auth/routes.js";
@@ -96,6 +97,38 @@ const errorHandler: ErrorRequestHandler = (
 
 app.use(errorHandler);
 
-app.listen(PORT, "0.0.0.0", () => {
-	console.log(`Server listening on port ${PORT} at http://localhost:${PORT}`);
+const HAS_HOST = process.argv.includes("--host");
+const HOSTNAME = HAS_HOST
+	? "0.0.0.0"
+	: (quickEnv("HOSTNAME", false) ?? "localhost");
+
+app.listen(PORT, HOSTNAME, () => {
+	const hostnames = new Set<string>();
+
+	if (HOSTNAME === "0.0.0.0") {
+		const interfaces = os.networkInterfaces();
+		Object.values(interfaces)
+			.filter((addresses) => addresses != null)
+			.flatMap((addresses) => {
+				return addresses
+					.filter(
+						(address) =>
+							!address.internal && address.family === "IPv4",
+					)
+					.map((address) => address.address);
+			})
+			.forEach((hostname) => hostnames.add(hostname));
+		hostnames.add("localhost");
+	} else if (HOSTNAME !== "localhost") {
+		hostnames.add("localhost");
+	}
+
+	console.log("Server is now running in the following addresses:\n");
+	hostnames.forEach((hostname) => {
+		console.log(
+			"    -> Network:",
+			styleText("blue", `http://${hostname}:${PORT}`),
+		);
+	});
+	console.log();
 });

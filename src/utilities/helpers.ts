@@ -14,9 +14,11 @@ export function unreachable(): never {
 	throw new Error("unreachable");
 }
 
-export function quickEnv(name: string) {
+export function quickEnv(name: string, check: false): string | undefined;
+export function quickEnv(name: string, check?: true): string;
+export function quickEnv(name: string, check?: boolean): string | undefined {
 	const value = process.env[name];
-	if (typeof value !== "string" || value.length === 0) {
+	if (check && (typeof value !== "string" || value.length === 0)) {
 		throw new Error(`Environment variable '${name}' must be set`);
 	}
 	return value;
