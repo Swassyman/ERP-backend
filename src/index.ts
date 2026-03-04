@@ -103,30 +103,30 @@ const HOSTNAME = HAS_HOST
 	: (quickEnv("HOSTNAME", false) ?? "localhost");
 
 app.listen(PORT, HOSTNAME, () => {
-	const hostnames = new Set<string>();
+	const hostnames = new Map<string, boolean>();
 
 	if (HOSTNAME === "0.0.0.0") {
+		hostnames.set("localhost", true);
 		const interfaces = os.networkInterfaces();
 		Object.values(interfaces)
 			.filter((addresses) => addresses != null)
 			.flatMap((addresses) => {
 				return addresses
-					.filter(
+					.filter((address) => address.family === "IPv4")
+					.map(
 						(address) =>
-							!address.internal && address.family === "IPv4",
-					)
-					.map((address) => address.address);
+							[address.address, address.internal] as const,
+					);
 			})
-			.forEach((hostname) => hostnames.add(hostname));
-		hostnames.add("localhost");
-	} else if (HOSTNAME !== "localhost") {
-		hostnames.add("localhost");
+			.forEach(([hostname, internal]) =>
+				hostnames.set(hostname, internal),
+			);
 	}
 
 	console.log("Server is now running in the following addresses:\n");
-	hostnames.forEach((hostname) => {
+	hostnames.entries().forEach(([hostname, internal]) => {
 		console.log(
-			"    -> Network:",
+			"    -> " + (internal ? "Local" : "Network") + ":",
 			styleText("blue", `http://${hostname}:${PORT}`),
 		);
 	});
