@@ -8,12 +8,12 @@ import {
 	venueTypeScopedSchema,
 } from "./schema.js";
 
-export const getVenueTypes: ApiRequestHandler<{
-	venueTypes: {
+export const getVenueTypes: ApiRequestHandler<
+	{
 		id: number;
 		name: string;
-	}[];
-}> = async (_req, res) => {
+	}[]
+> = async (_req, res) => {
 	const venueTypes = await db
 		.select({
 			id: schema.venueType.id,
@@ -25,9 +25,7 @@ export const getVenueTypes: ApiRequestHandler<{
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			venueTypes: venueTypes,
-		},
+		data: venueTypes,
 	});
 };
 
@@ -63,11 +61,9 @@ export const createVenueType: ApiRequestHandler<{
 
 export const getVenueTypeRoles: ApiRequestHandler<
 	{
-		roles: {
-			id: number;
-			name: string;
-		}[];
-	},
+		id: number;
+		name: string;
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	const parsedParams = venueTypeScopedSchema.safeParse(req.params);
@@ -97,9 +93,7 @@ export const getVenueTypeRoles: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			roles: venueTypeRoles,
-		},
+		data: venueTypeRoles,
 	});
 };
 

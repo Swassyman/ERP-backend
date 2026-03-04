@@ -87,7 +87,7 @@ export const userDetails: ApiRequestHandler<
 		return res.status(401).json({
 			success: false,
 			code: ERROR_CODES.unauthorized,
-			message: "Unauthorised",
+			message: "Unauthorized",
 		});
 	}
 
@@ -96,23 +96,19 @@ export const userDetails: ApiRequestHandler<
 		return res.status(401).json({
 			success: false,
 			code: ERROR_CODES.unauthorized,
-			message: "Unauthorised",
+			message: "Unauthorized",
 		});
 	}
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			user: user,
-		},
+		data: user,
 	});
 };
 
-export const refresh: ApiRequestHandler<
-	{
-		accessToken: string;
-	} & Frontend.AuthenticatedUser
-> = async (req, res) => {
+export const refresh: ApiRequestHandler<{
+	accessToken: string;
+}> = async (req, res) => {
 	try {
 		const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
@@ -137,7 +133,7 @@ export const refresh: ApiRequestHandler<
 			return res.status(401).json({
 				success: false,
 				code: ERROR_CODES.unauthorized,
-				message: "Unauthorised",
+				message: "Unauthorized",
 			});
 		}
 
@@ -161,7 +157,6 @@ export const refresh: ApiRequestHandler<
 			success: true,
 			data: {
 				accessToken: newAccessToken,
-				user: user,
 			},
 		});
 	} catch {

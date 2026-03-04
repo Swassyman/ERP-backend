@@ -6,12 +6,10 @@ import { and, eq, isNull } from "drizzle-orm";
 import { createUserSchema } from "./schema.js";
 
 export const createUser: ApiRequestHandler<{
-	user: {
-		id: number;
-		fullName: string;
-		email: string;
-		createdAt: string;
-	};
+	id: number;
+	fullName: string;
+	email: string;
+	createdAt: string;
 }> = async (req, res) => {
 	const parsed = createUserSchema.safeParse(req.body);
 
@@ -45,7 +43,7 @@ export const createUser: ApiRequestHandler<{
 
 		return res.status(201).json({
 			success: true,
-			data: { user: newUser },
+			data: newUser,
 		});
 	} catch (error) {
 		const pgErrorCode = getPgErrorCode(error);
@@ -61,8 +59,8 @@ export const createUser: ApiRequestHandler<{
 	}
 };
 
-export const getUsers: ApiRequestHandler<{
-	users: {
+export const getUsers: ApiRequestHandler<
+	{
 		email: string;
 		fullName: string;
 		id: number;
@@ -75,8 +73,8 @@ export const getUsers: ApiRequestHandler<{
 			roleId: number;
 			managedEntityId: number;
 		}[];
-	}[];
-}> = async (_req, res) => {
+	}[]
+> = async (_req, res) => {
 	const users = await db.query.user.findMany({
 		where: and(
 			eq(schema.user.type, "end_user"),
@@ -104,8 +102,6 @@ export const getUsers: ApiRequestHandler<{
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			users: users,
-		},
+		data: users,
 	});
 };
