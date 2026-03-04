@@ -1,5 +1,3 @@
-import type { PermissionCode, PermissionScope } from "./config/types.js";
-
 export const INSTITUTION_NAME = "TKMCE";
 export const INSTITUTION_DOMAIN_REGEXP = /@tkmce\.ac\.in$/;
 

@@ -1,15 +1,10 @@
 import { confirm } from "@inquirer/prompts";
 import "dotenv/config";
 import { eq, inArray, type SQL, sql } from "drizzle-orm";
-import { db, schema } from "./src/config/db.js";
-import type { PermissionCode } from "./src/config/types.js";
-import { FLATTENED_PERMISSIONS } from "./src/constants.js";
-import { hashPassword, verifyPassword } from "./src/utilities/argon2.js";
-import {
-	isPermission,
-	quickEnv,
-	unreachable,
-} from "./src/utilities/helpers.js";
+import { db, schema } from "@/config/db.js";
+import { FLATTENED_PERMISSIONS } from "@/constants.js";
+import { hashPassword, verifyPassword } from "@/utilities/argon2.js";
+import { isPermission, quickEnv, unreachable } from "@/utilities/helpers.js";
 
 // ADMIN USER ACCOUNT
 

@@ -1,11 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm";
 import z from "zod";
-import { db, schema } from "../../config/db.js";
-import type { ApiRequestHandler } from "../../config/types.js";
-import { INSTITUTION_DOMAIN_REGEXP } from "../../constants.js";
-import { hashPassword } from "../../utilities/argon2.js";
-import { ERROR_CODES } from "../../utilities/errors.js";
-import { getPgErrorCode, unreachable } from "../../utilities/helpers.js";
+import { db, schema } from "@/config/db.js";
+import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
+import { hashPassword } from "@/utilities/argon2.js";
+import { ERROR_CODES } from "@/utilities/errors.js";
+import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
 
 const createUserSchema = z
 	.object({

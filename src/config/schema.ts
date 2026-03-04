@@ -1,27 +1,30 @@
 import {
-    type HasDefault,
-    isNull,
-    type NotNull,
-    relations,
-    sql,
+	type HasDefault,
+	isNull,
+	type NotNull,
+	relations,
+	sql,
 } from "drizzle-orm";
 import {
-    type AnyPgColumn,
-    bigint,
-    boolean,
-    check,
-    integer,
-    pgEnum,
-    pgTable,
-    primaryKey,
-    smallint,
-    text,
-    timestamp,
-    unique,
-    uniqueIndex,
+	type AnyPgColumn,
+	bigint,
+	boolean,
+	check,
+	integer,
+	pgEnum,
+	pgTable,
+	primaryKey,
+	smallint,
+	text,
+	timestamp,
+	unique,
+	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import type { PermissionCode } from "./types.js";
 
+// note: reasoning for not putting inside constants.ts:
+// These constants are values directly inside the database.
+// They are system-level, not application level.
+// actual reason: some drizzle-kit type issue (there are hacks tho)
 export const USER_TYPES = ["admin", "end_user"] as const;
 export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
 export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;

@@ -1,13 +1,12 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { NextFunction, Request, RequestHandler } from "express";
 import { jwtVerify } from "jose";
-import { db, schema } from "../config/db.js";
-import type { ApiResponse, IJWTPayload } from "../config/types.js";
-import { ERROR_CODES } from "../utilities/errors.js";
+import { db, schema } from "@/config/db.js";
+import { ERROR_CODES } from "@/utilities/errors.js";
 import {
 	JWS_ALG_HEADER_PARAMETER,
 	JWT_ACCESS_SECRET_SIGN_KEY,
-} from "../utilities/jwt.js";
+} from "@/utilities/jwt.js";
 
 const BEARER_PREFIX = "Bearer ";
 

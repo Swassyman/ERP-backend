@@ -1,12 +1,10 @@
 import { Router } from "express";
 import * as controller from "./controller.js";
-import { authenticateToken, requireUserType } from "../../middlewares/index.js";
+import { authenticateToken, requireUserType } from "@/middlewares/index.js";
 
 const router: Router = Router();
 
 // todo: enforce permissions
-
-router.use(authenticateToken);
 
 router.get("/", controller.getVenues);
 router.post("/", requireUserType(["admin"]), controller.createVenue);
