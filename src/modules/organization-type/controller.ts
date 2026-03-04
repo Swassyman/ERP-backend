@@ -9,12 +9,12 @@ import {
 	organizationTypeScopedSchema,
 } from "./schema.js";
 
-export const getOrganizationTypes: ApiRequestHandler<{
-	organizationTypes: {
+export const getOrganizationTypes: ApiRequestHandler<
+	{
 		id: number;
 		name: string;
-	}[];
-}> = async (_req, res) => {
+	}[]
+> = async (_req, res) => {
 	const organizationTypes = await db
 		.select({
 			id: schema.organizationType.id,
@@ -26,9 +26,7 @@ export const getOrganizationTypes: ApiRequestHandler<{
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			organizationTypes: organizationTypes,
-		},
+		data: organizationTypes,
 	});
 };
 
@@ -64,11 +62,9 @@ export const createOrganizationType: ApiRequestHandler<{
 
 export const getOrganizationTypeChildTypes: ApiRequestHandler<
 	{
-		childrenTypes: {
-			id: number;
-			name: string;
-		}[];
-	},
+		id: number;
+		name: string;
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	const parsedParams = organizationTypeScopedSchema.safeParse(req.params);
@@ -105,18 +101,14 @@ export const getOrganizationTypeChildTypes: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			childrenTypes: organizationTypeChildrenTypes,
-		},
+		data: organizationTypeChildrenTypes,
 	});
 };
 
 export const addAllowedParent: ApiRequestHandler<
 	{
-		allowedParent: {
-			parentTypeId: number;
-			childTypeId: number;
-		};
+		parentTypeId: number;
+		childTypeId: number;
 	},
 	{ id: string; childid: string }
 > = async (req, res) => {
@@ -148,21 +140,17 @@ export const addAllowedParent: ApiRequestHandler<
 	return res.status(200).json({
 		success: true,
 		data: {
-			allowedParent: {
-				parentTypeId: inserted.parentTypeId,
-				childTypeId: inserted.childTypeId,
-			},
+			parentTypeId: inserted.parentTypeId,
+			childTypeId: inserted.childTypeId,
 		},
 	});
 };
 
 export const getOrganizationTypeRoles: ApiRequestHandler<
 	{
-		roles: {
-			id: number;
-			name: string;
-		}[];
-	},
+		id: number;
+		name: string;
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	const parsedParams = organizationTypeScopedSchema.safeParse(req.params);
@@ -192,9 +180,7 @@ export const getOrganizationTypeRoles: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			roles: organizationTypeRoles,
-		},
+		data: organizationTypeRoles,
 	});
 };
 

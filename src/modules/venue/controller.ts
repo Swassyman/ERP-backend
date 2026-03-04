@@ -10,9 +10,7 @@ import {
 } from "./schema.js";
 
 export const createVenue: ApiRequestHandler<{
-	venue: {
-		id: number;
-	};
+	id: number;
 }> = async (req, res) => {
 	const parsed = createVenueSchema.safeParse(req.body);
 
@@ -59,9 +57,7 @@ export const createVenue: ApiRequestHandler<{
 
 		return res.status(201).json({
 			success: true,
-			data: {
-				venue: newVenue,
-			},
+			data: newVenue,
 		});
 	} catch (error) {
 		const pgErrorCode = getPgErrorCode(error);
@@ -84,8 +80,8 @@ export const createVenue: ApiRequestHandler<{
 	}
 };
 
-export const getVenues: ApiRequestHandler<{
-	venues: {
+export const getVenues: ApiRequestHandler<
+	{
 		name: string;
 		venueTypeId: number;
 		organizationId: number | null;
@@ -95,8 +91,8 @@ export const getVenues: ApiRequestHandler<{
 		unavailabilityReason: string | null;
 		id: number;
 		isActive: boolean;
-	}[];
-}> = async (_req, res) => {
+	}[]
+> = async (_req, res) => {
 	const venues = await db.query.venue.findMany({
 		where: isNull(schema.venue.deletedAt),
 		columns: {
@@ -114,25 +110,21 @@ export const getVenues: ApiRequestHandler<{
 
 	res.status(200).json({
 		success: true,
-		data: {
-			venues: venues,
-		},
+		data: venues,
 	});
 };
 
 export const getVenueMembers: ApiRequestHandler<
 	{
-		members: {
+		id: number;
+		isActive: boolean;
+		roleId: number;
+		user: {
 			id: number;
-			isActive: boolean;
-			roleId: number;
-			user: {
-				id: number;
-				fullName: string;
-				email: string;
-			};
-		}[];
-	},
+			fullName: string;
+			email: string;
+		};
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	// todo: extract zod parsing into middleware
@@ -189,9 +181,7 @@ export const getVenueMembers: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			members: venueMembers,
-		},
+		data: venueMembers,
 	});
 };
 

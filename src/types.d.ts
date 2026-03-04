@@ -26,10 +26,11 @@ declare global {
 	// frontend types:
 	// types that are re-used in frontend.
 	export namespace Frontend {
-		export type AuthenticatedUser = {
-			user: Pick<User, "id" | "fullName" | "email" | "type"> & {
-				permissions: PermissionCode[];
-			};
+		export type AuthenticatedUser = Pick<
+			User,
+			"id" | "fullName" | "email" | "type"
+		> & {
+			permissions: PermissionCode[];
 		};
 	}
 

@@ -1,10 +1,11 @@
 import { cors } from "@/middlewares/index.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
 import { quickEnv } from "@/utilities/helpers.js";
 import cookieParser from "cookie-parser";
-import express, { type ErrorRequestHandler } from "express";
+import express, { ErrorRequestHandler } from "express";
 import * as os from "node:os";
 import { styleText } from "node:util";
+import { nanoid } from "nanoid";
+import { ERROR_CODES } from "@/utilities/errors.js";
 // end of normal imports, and router imports follow:
 
 import authRouter from "@/modules/auth/routes.js";
@@ -28,7 +29,7 @@ const app = express();
 // todo: rate-limits
 
 app.use((req, res, next) => {
-	const id = crypto.randomUUID(); // note: store in req.id
+	const id = nanoid(10); // note: store in req.id
 	const path = req.path;
 	const timeStart = Date.now();
 	console.info(
@@ -108,7 +109,7 @@ app.listen(PORT, HOSTNAME, () => {
 	if (HOSTNAME === "0.0.0.0") {
 		hostnames.set("localhost", true);
 		const interfaces = os.networkInterfaces();
-		Object.values(interfaces)
+		const addresses = Object.values(interfaces)
 			.filter((addresses) => addresses != null)
 			.flatMap((addresses) => {
 				return addresses
@@ -117,10 +118,10 @@ app.listen(PORT, HOSTNAME, () => {
 						(address) =>
 							[address.address, address.internal] as const,
 					);
-			})
-			.forEach(([hostname, internal]) =>
-				hostnames.set(hostname, internal),
-			);
+			});
+		for (const [hostname, internal] of addresses) {
+			hostnames.set(hostname, internal);
+		}
 	}
 
 	console.log("Server is now running in the following addresses:\n");

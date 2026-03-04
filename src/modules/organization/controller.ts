@@ -9,13 +9,11 @@ import {
 } from "./schema.js";
 
 export const createOrganization: ApiRequestHandler<{
-	organization: {
-		id: number;
-		name: string;
-		organizationTypeId: number;
-		parentOrganizationId: number | null;
-		createdAt: string;
-	};
+	id: number;
+	name: string;
+	organizationTypeId: number;
+	parentOrganizationId: number | null;
+	createdAt: string;
 }> = async (req, res) => {
 	const parsed = createOrganizationSchema.safeParse(req.body);
 
@@ -66,9 +64,7 @@ export const createOrganization: ApiRequestHandler<{
 
 		return res.status(201).json({
 			success: true,
-			data: {
-				organization: newOrg,
-			},
+			data: newOrg,
 		});
 	} catch (error) {
 		const pgErrorCode = getPgErrorCode(error);
@@ -91,16 +87,16 @@ export const createOrganization: ApiRequestHandler<{
 	}
 };
 
-export const getOrganizations: ApiRequestHandler<{
-	organizations: {
+export const getOrganizations: ApiRequestHandler<
+	{
 		organizationTypeId: number;
 		id: number;
 		name: string;
 		parentOrganizationId: number | null;
 		isActive: boolean;
 		createdAt: string;
-	}[];
-}> = async (_req, res) => {
+	}[]
+> = async (_req, res) => {
 	const organizations = await db.query.organization.findMany({
 		where: isNull(schema.organization.deletedAt),
 		columns: {
@@ -115,25 +111,21 @@ export const getOrganizations: ApiRequestHandler<{
 
 	res.status(200).json({
 		success: true,
-		data: {
-			organizations: organizations,
-		},
+		data: organizations,
 	});
 };
 
 export const getOrganizationMembers: ApiRequestHandler<
 	{
-		members: {
+		id: number;
+		isActive: boolean;
+		roleId: number;
+		user: {
 			id: number;
-			isActive: boolean;
-			roleId: number;
-			user: {
-				id: number;
-				fullName: string;
-				email: string;
-			};
-		}[];
-	},
+			fullName: string;
+			email: string;
+		};
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	// todo: extract zod parsing into middleware
@@ -190,9 +182,7 @@ export const getOrganizationMembers: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			members: organizationMembers,
-		},
+		data: organizationMembers,
 	});
 };
 

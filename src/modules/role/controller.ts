@@ -10,12 +10,10 @@ import {
 
 export const getRolePermissions: ApiRequestHandler<
 	{
-		permissions: {
-			id: number;
-			code: PermissionCode;
-			description: string;
-		}[];
-	},
+		id: number;
+		code: PermissionCode;
+		description: string;
+	}[],
 	{ id: string }
 > = async (req, res) => {
 	const parsedParams = roleScopedSchema.safeParse(req.params);
@@ -46,16 +44,12 @@ export const getRolePermissions: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			permissions: permissions,
-		},
+		data: permissions,
 	});
 };
 
 export const setRolePermissions: ApiRequestHandler<
-	{
-		permissions: {};
-	},
+	{ id: number }[],
 	{ id: string },
 	{ permissionIds: string[] }
 > = async (req, res) => {
@@ -94,9 +88,7 @@ export const setRolePermissions: ApiRequestHandler<
 
 	return res.status(200).json({
 		success: true,
-		data: {
-			permissions: inserted.map((inserted) => ({ id: inserted.id })),
-		},
+		data: inserted.map((inserted) => ({ id: inserted.id })),
 	});
 };
 
@@ -135,7 +127,7 @@ export const assignPermissionToRole: ApiRequestHandler<
 };
 
 export const unassignPermissionToRole: ApiRequestHandler<
-	undefined,
+	{ id: number },
 	{ id: string; permissionId: string }
 > = async (req, res) => {
 	const parsedParams = rolePermissionScopedSchema.safeParse(req.params);
@@ -148,7 +140,7 @@ export const unassignPermissionToRole: ApiRequestHandler<
 		});
 	}
 
-	await db
+	const [deleted] = await db
 		.delete(schema.rolePermission)
 		.where(
 			and(
@@ -161,8 +153,14 @@ export const unassignPermissionToRole: ApiRequestHandler<
 		)
 		.returning({ id: schema.rolePermission.id });
 
+	if (deleted == null) {
+		unreachable();
+	}
+
 	return res.status(200).json({
 		success: true,
-		data: undefined,
+		data: {
+			id: deleted.id,
+		},
 	});
 };
