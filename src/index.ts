@@ -4,15 +4,15 @@ import type { ApiResponse } from "./config/types.js";
 import { ERROR_CODES } from "./utilities/errors.js";
 // end of normal imports, and router imports follow:
 
-import authRouter from "./routes/auth.routes.js";
-import facilitiesRouter from "./routes/facilities.routes.js";
-import organizationTypesRouter from "./routes/organization-types.routes.js";
-import organizationRouter from "./routes/organizations.routes.js";
-import permissionsRouter from "./routes/permissions.routes.js";
-import rolesRouter from "./routes/roles.routes.js";
-import usersRouter from "./routes/users.routes.js";
-import venueTypesRouter from "./routes/venue-types.routes.js";
-import venuesRouter from "./routes/venues.routes.js";
+import authRouter from "./modules/auth/routes.js";
+import facilitiesRouter from "./modules/facility/routes.js";
+import organizationTypesRouter from "./modules/organization-type/routes.js";
+import organizationRouter from "./modules/organization/routes.js";
+import permissionsRouter from "./modules/permission/routes.js";
+import rolesRouter from "./modules/role/routes.js";
+import usersRouter from "./modules/user/routes.js";
+import venueTypesRouter from "./modules/venue-type/routes.js";
+import venuesRouter from "./modules/venue/routes.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {

@@ -1,24 +1,24 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { jwtVerify } from "jose";
 import { z } from "zod";
-import { db, schema } from "../config/db.js";
+import { db, schema } from "../../config/db.js";
 import type {
 	ApiRequestHandler,
 	Frontend,
 	IJWTPayload,
-} from "../config/types.js";
+} from "../../config/types.js";
 import {
 	INSTITUTION_DOMAIN_REGEXP,
 	REFRESH_TOKEN_COOKIE_NAME,
-} from "../constants.js";
-import { verifyPassword } from "../utilities/argon2.js";
-import { ERROR_CODES } from "../utilities/errors.js";
+} from "../../constants.js";
+import { verifyPassword } from "../../utilities/argon2.js";
+import { ERROR_CODES } from "../../utilities/errors.js";
 import {
 	generateAccessToken,
 	generateRefreshToken,
 	JWT_REFRESH_SECRET_SIGN_KEY,
 	JWT_REFRESH_TOKEN_EXPIRY,
-} from "../utilities/jwt.js";
+} from "../../utilities/jwt.js";
 
 const loginSchema = z
 	.object({

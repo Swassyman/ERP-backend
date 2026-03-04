@@ -1,9 +1,9 @@
 import { isNull } from "drizzle-orm";
 import z from "zod";
-import { db, schema } from "../config/db.js";
-import { ApiRequestHandler } from "../config/types.js";
-import { ERROR_CODES } from "../utilities/errors.js";
-import { unreachable } from "../utilities/helpers.js";
+import { db, schema } from "../../config/db.js";
+import { ApiRequestHandler } from "../../config/types.js";
+import { ERROR_CODES } from "../../utilities/errors.js";
+import { unreachable } from "../../utilities/helpers.js";
 
 export const getFacilities: ApiRequestHandler<
 	{

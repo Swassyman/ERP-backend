@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { db, schema } from "../config/db.js";
-import { ApiRequestHandler, PermissionCode } from "../config/types.js";
+import { db, schema } from "../../config/db.js";
+import { ApiRequestHandler, PermissionCode } from "../../config/types.js";
 import z from "zod";
-import { ERROR_CODES } from "../utilities/errors.js";
+import { ERROR_CODES } from "../../utilities/errors.js";
 
 export const getPermissions: ApiRequestHandler<
 	{
