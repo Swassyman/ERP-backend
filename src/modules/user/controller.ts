@@ -1,28 +1,9 @@
-import { and, eq, isNull } from "drizzle-orm";
-import z from "zod";
 import { db, schema } from "@/config/db.js";
-import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
 import { hashPassword } from "@/utilities/argon2.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
-
-const createUserSchema = z
-	.object({
-		email: z
-			.email({ error: "Invalid email" })
-			.regex(INSTITUTION_DOMAIN_REGEXP, {
-				error: "Email must belong to the institution",
-			}),
-		password: z
-			.string({ error: "Invalid password input" })
-			.min(6, { error: "Password must be at least 6 characters long" }),
-
-		fullName: z
-			.string({ error: "Invalid name input" })
-			.nonempty({ error: "Name cannot be empty" })
-			.max(256, { error: "Name cannot exceed 256 characters" }),
-	})
-	.strict();
+import { and, eq, isNull } from "drizzle-orm";
+import { createUserSchema } from "./schema.js";
 
 export const createUser: ApiRequestHandler<{
 	user: {

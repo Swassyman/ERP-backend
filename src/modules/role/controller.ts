@@ -1,16 +1,12 @@
-import { and, eq } from "drizzle-orm";
-import { z } from "zod";
 import { db, schema } from "@/config/db.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { unreachable } from "@/utilities/helpers.js";
-
-const roleScopedSchema = z
-	.object({
-		id: z.coerce
-			.number({ error: "Invalid role ID" })
-			.int({ error: "Invalid role ID" }),
-	})
-	.strict();
+import { and, eq } from "drizzle-orm";
+import {
+	rolePermissionScopedSchema,
+	roleScopedSchema,
+	setRolePermissionsSchema,
+} from "./schema.js";
 
 export const getRolePermissions: ApiRequestHandler<
 	{
@@ -55,17 +51,6 @@ export const getRolePermissions: ApiRequestHandler<
 		},
 	});
 };
-
-const setRolePermissionsSchema = z
-	.object({
-		permissionIds: z.array(
-			z.coerce
-				.number({ error: "Invalid permission ID" })
-				.int({ error: "Invalid permission ID" }),
-			{ error: "Invalid set of permission IDs" },
-		),
-	})
-	.strict();
 
 export const setRolePermissions: ApiRequestHandler<
 	{
@@ -114,14 +99,6 @@ export const setRolePermissions: ApiRequestHandler<
 		},
 	});
 };
-
-const rolePermissionScopedSchema = roleScopedSchema
-	.extend({
-		permissionId: z.coerce
-			.number({ error: "Invalid permission ID" })
-			.int({ error: "Invalid permission ID" }),
-	})
-	.strict();
 
 export const assignPermissionToRole: ApiRequestHandler<
 	{ id: number },

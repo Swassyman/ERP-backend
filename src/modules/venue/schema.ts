@@ -1,0 +1,65 @@
+import { VENUE_ACCESS_LEVELS } from "@/config/schema.js";
+import z from "zod";
+
+export const createVenueSchema = z
+	.object({
+		name: z
+			.string({ error: "Invalid name value" })
+			.nonempty({ error: "Name cannot be empty" })
+			.max(256, { error: "Name cannot exceed 256 characters" }),
+		venueTypeId: z.int({ error: "Invalid venue type ID" }),
+		organizationId: z.int({ error: "Invalid organization ID" }).optional(),
+		maxCapacity: z
+			.int({ error: "Invalid capacity" })
+			.positive({ error: "Capacity must be a positive integer" }),
+		accessLevel: z.enum(VENUE_ACCESS_LEVELS, {
+			error: "Venue must specify its access level",
+		}),
+		isAvailable: z.boolean({
+			error: "Venue must specify whether it is availability",
+		}),
+		unavailabilityReason: z
+			.string({ error: "Invalid unavailability reason" })
+			.nonempty({ error: "Invalid unavailability reason" })
+			.max(512, { error: "Invalid unavailability reason" })
+			.optional(),
+	})
+	.refine(
+		(venue) =>
+			(venue.isAvailable && venue.unavailabilityReason == null) ||
+			(!venue.isAvailable && venue.unavailabilityReason != null),
+		{
+			error: "Venue must have reason for its unavailability if marked unavailable",
+		},
+	)
+	.strict();
+
+export const venueScopedSchema = z
+	.object({
+		id: z.coerce
+			.number({ error: "Invalid venue ID" })
+			.int({ error: "Invalid venue ID" }),
+	})
+	.strict();
+
+export const addMemberToVenueSchema = z
+	.object({
+		userId: z.coerce
+			.number({ error: "Invalid user ID" })
+			.int({ error: "Invalid user ID" }),
+		roleId: z.coerce
+			.number({ error: "Invalid role ID" })
+			.int({ error: "Invalid role ID" }),
+	})
+	.strict();
+
+export const assignFacilityToVenueSchema = z
+	.object({
+		id: z.coerce.number({
+			error: "Invalid venue ID",
+		}),
+		facilityId: z.coerce.number({
+			error: "Invalid facility ID",
+		}),
+	})
+	.strict();
