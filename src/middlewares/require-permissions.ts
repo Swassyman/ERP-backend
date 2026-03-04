@@ -1,6 +1,5 @@
 import type { NextFunction, Request, RequestHandler } from "express";
-import type { ApiResponse, PermissionCode } from "../config/types.js";
-import { ERROR_CODES } from "../utilities/errors.js";
+import { ERROR_CODES } from "@/utilities/errors.js";
 
 export function requirePermissions(
 	permissions: PermissionCode[],

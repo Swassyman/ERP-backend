@@ -1,9 +1,7 @@
-import type { NextFunction, Request, RequestHandler } from "express";
-import type { ApiResponse, UserType } from "../config/types.js";
-import { ERROR_CODES } from "../utilities/errors.js";
+import { ERROR_CODES } from "@/utilities/errors.js";
 
-export function requireUserType(userTypes: UserType[]): RequestHandler {
-	return (req: Request, res: ApiResponse, next: NextFunction) => {
+export function requireUserType(userTypes: UserType[]): ApiRequestHandler {
+	return (req, res, next) => {
 		if (req.user == null) {
 			return res.status(401).json({
 				success: false,

@@ -1,9 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db, schema } from "../../config/db.js";
-import type { ApiRequestHandler, PermissionCode } from "../../config/types.js";
-import { ERROR_CODES } from "../../utilities/errors.js";
-import { unreachable } from "../../utilities/helpers.js";
+import { db, schema } from "@/config/db.js";
+import { ERROR_CODES } from "@/utilities/errors.js";
+import { unreachable } from "@/utilities/helpers.js";
 
 const roleScopedSchema = z
 	.object({
