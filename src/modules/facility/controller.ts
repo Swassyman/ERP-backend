@@ -1,8 +1,8 @@
-import { isNull } from "drizzle-orm";
-import z from "zod";
 import { db, schema } from "@/config/db.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { unreachable } from "@/utilities/helpers.js";
+import { isNull } from "drizzle-orm";
+import { createFacilitySchema } from "./schema.js";
 
 export const getFacilities: ApiRequestHandler<
 	{
@@ -24,22 +24,11 @@ export const getFacilities: ApiRequestHandler<
 	});
 };
 
-export const createFacilitySchema = z.object({
-	name: z
-		.string({ error: "Invalid facility name" })
-		.trim()
-		.nonempty({ error: "Facility name cannot be empty" })
-		.max(256, {
-			error: "Facility name length cannot exceed 256 characters",
-		}),
-});
-
 export const createFacility: ApiRequestHandler<
 	{
 		id: number;
 	},
-	undefined,
-	z.infer<typeof createFacilitySchema>
+	undefined
 > = async (req, res) => {
 	const parsed = createFacilitySchema.safeParse(req.body);
 

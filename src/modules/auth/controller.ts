@@ -1,11 +1,5 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
-import { jwtVerify } from "jose";
-import { z } from "zod";
 import { db, schema } from "@/config/db.js";
-import {
-	INSTITUTION_DOMAIN_REGEXP,
-	REFRESH_TOKEN_COOKIE_NAME,
-} from "@/constants.js";
+import { REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
 import { verifyPassword } from "@/utilities/argon2.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import {
@@ -14,19 +8,9 @@ import {
 	JWT_REFRESH_SECRET_SIGN_KEY,
 	JWT_REFRESH_TOKEN_EXPIRY,
 } from "@/utilities/jwt.js";
-
-const loginSchema = z
-	.object({
-		email: z
-			.email({ error: "Invalid email format" })
-			.regex(INSTITUTION_DOMAIN_REGEXP, {
-				error: "Expected institution domain email",
-			}),
-		password: z
-			.string({ error: "Invalid password input" })
-			.min(6, { error: "Password must be at least 6 characters" }),
-	})
-	.strict();
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { jwtVerify } from "jose";
+import { loginSchema } from "./schema.js";
 
 export const login: ApiRequestHandler<{
 	accessToken: string;

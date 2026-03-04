@@ -1,8 +1,12 @@
-import { and, asc, eq, isNull } from "drizzle-orm";
-import z from "zod";
 import { db, schema } from "@/config/db.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { unreachable } from "@/utilities/helpers.js";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import {
+	createVenueTypeRoleSchema,
+	createVenueTypeSchema,
+	venueTypeScopedSchema,
+} from "./schema.js";
 
 export const getVenueTypes: ApiRequestHandler<{
 	venueTypes: {
@@ -26,16 +30,6 @@ export const getVenueTypes: ApiRequestHandler<{
 		},
 	});
 };
-
-const createVenueTypeSchema = z
-	.object({
-		name: z
-			.string({ error: "Invalid name type" })
-			.trim() // do this everywhere
-			.nonempty({ error: "Name must not be empty" })
-			.max(256, { error: "Name cannot be longer than 256 characters" }),
-	})
-	.strict();
 
 export const createVenueType: ApiRequestHandler<{
 	id: number;
@@ -66,12 +60,6 @@ export const createVenueType: ApiRequestHandler<{
 		},
 	});
 };
-
-const venueTypeScopedSchema = z
-	.object({
-		id: z.coerce.number({ error: "Invalid venue type ID" }),
-	})
-	.strict();
 
 export const getVenueTypeRoles: ApiRequestHandler<
 	{
@@ -114,16 +102,6 @@ export const getVenueTypeRoles: ApiRequestHandler<
 		},
 	});
 };
-
-const createVenueTypeRoleSchema = z
-	.object({
-		name: z
-			.string({ error: "Invalid role name" })
-			.trim()
-			.nonempty({ error: "Name must not be empty" })
-			.max(256, { error: "Name cannot be longer than 256 characters" }),
-	})
-	.strict();
 
 export const createVenueTypeRole: ApiRequestHandler<
 	{ id: number },

@@ -1,21 +1,12 @@
 import { and, eq, isNull } from "drizzle-orm";
-import z from "zod";
 import { db, schema } from "@/config/db.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
-
-const createOrganizationSchema = z
-	.object({
-		name: z
-			.string({ error: "Invalid name value" })
-			.nonempty({ error: "Name cannot be empty" })
-			.max(256, { error: "Name cannot exceed 256 characters" }),
-		organizationTypeId: z.int({ error: "Invalid organization type ID" }),
-		parentOrganizationId: z
-			.int({ error: "Invalid organization ID" })
-			.optional(),
-	})
-	.strict();
+import {
+	addMemberToOrganizationSchema,
+	createOrganizationSchema,
+	organizationScopedSchema,
+} from "./schema.js";
 
 export const createOrganization: ApiRequestHandler<{
 	organization: {
@@ -130,14 +121,6 @@ export const getOrganizations: ApiRequestHandler<{
 	});
 };
 
-const organizationScopedSchema = z
-	.object({
-		id: z.coerce
-			.number({ error: "Invalid organization ID" })
-			.int({ error: "Invalid organization ID" }),
-	})
-	.strict();
-
 export const getOrganizationMembers: ApiRequestHandler<
 	{
 		members: {
@@ -213,19 +196,9 @@ export const getOrganizationMembers: ApiRequestHandler<
 	});
 };
 
-const addMemberToOrganizationSchema = z.object({
-	userId: z.coerce
-		.number({ error: "Invalid user ID" })
-		.int({ error: "Invalid user ID" }),
-	roleId: z.coerce
-		.number({ error: "Invalid role ID" })
-		.int({ error: "Invalid role ID" }),
-});
-
 export const addMemberToOrganization: ApiRequestHandler<
 	{ memberId: number },
-	{ id: string },
-	z.infer<typeof addMemberToOrganizationSchema> // todo: add this everywhere concerned
+	{ id: string }
 > = async (req, res) => {
 	const parsedParams = organizationScopedSchema.safeParse(req.params);
 	const parsed = addMemberToOrganizationSchema.safeParse(req.body);

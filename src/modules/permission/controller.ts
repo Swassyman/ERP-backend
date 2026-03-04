@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
 import { db, schema } from "@/config/db.js";
-import z from "zod";
 import { ERROR_CODES } from "@/utilities/errors.js";
+import { eq } from "drizzle-orm";
+import { permissionScopedSchema } from "./schema.js";
 
 export const getPermissions: ApiRequestHandler<
 	{
@@ -24,14 +24,6 @@ export const getPermissions: ApiRequestHandler<
 	});
 };
 
-const permissionScope = z
-	.object({
-		id: z.coerce
-			.number({ error: "Invalid permission ID" })
-			.int({ error: "Invalid permission ID" }),
-	})
-	.strict();
-
 export const getPermission: ApiRequestHandler<
 	{
 		id: number;
@@ -40,7 +32,7 @@ export const getPermission: ApiRequestHandler<
 	},
 	{ id: string }
 > = async (req, res) => {
-	const parsedParams = permissionScope.safeParse(req.params);
+	const parsedParams = permissionScopedSchema.safeParse(req.params);
 
 	if (!parsedParams.success) {
 		return res.status(400).json({

@@ -1,42 +1,13 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
-import z from "zod";
 import { db, schema } from "@/config/db.js";
-import { VENUE_ACCESS_LEVELS } from "@/config/schema.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
-
-const createVenueSchema = z
-	.object({
-		name: z
-			.string({ error: "Invalid name value" })
-			.nonempty({ error: "Name cannot be empty" })
-			.max(256, { error: "Name cannot exceed 256 characters" }),
-		venueTypeId: z.int({ error: "Invalid venue type ID" }),
-		organizationId: z.int({ error: "Invalid organization ID" }).optional(),
-		maxCapacity: z
-			.int({ error: "Invalid capacity" })
-			.positive({ error: "Capacity must be a positive integer" }),
-		accessLevel: z.enum(VENUE_ACCESS_LEVELS, {
-			error: "Venue must specify its access level",
-		}),
-		isAvailable: z.boolean({
-			error: "Venue must specify whether it is availability",
-		}),
-		unavailabilityReason: z
-			.string({ error: "Invalid unavailability reason" })
-			.nonempty({ error: "Invalid unavailability reason" })
-			.max(512, { error: "Invalid unavailability reason" })
-			.optional(),
-	})
-	.refine(
-		(venue) =>
-			(venue.isAvailable && venue.unavailabilityReason == null) ||
-			(!venue.isAvailable && venue.unavailabilityReason != null),
-		{
-			error: "Venue must have reason for its unavailability if marked unavailable",
-		},
-	)
-	.strict();
+import { and, eq, isNull, sql } from "drizzle-orm";
+import {
+	addMemberToVenueSchema,
+	assignFacilityToVenueSchema,
+	createVenueSchema,
+	venueScopedSchema,
+} from "./schema.js";
 
 export const createVenue: ApiRequestHandler<{
 	venue: {
@@ -149,14 +120,6 @@ export const getVenues: ApiRequestHandler<{
 	});
 };
 
-const venueScopedSchema = z
-	.object({
-		id: z.coerce
-			.number({ error: "Invalid venue ID" })
-			.int({ error: "Invalid venue ID" }),
-	})
-	.strict();
-
 export const getVenueMembers: ApiRequestHandler<
 	{
 		members: {
@@ -232,19 +195,9 @@ export const getVenueMembers: ApiRequestHandler<
 	});
 };
 
-const addMemberToVenueSchema = z.object({
-	userId: z.coerce
-		.number({ error: "Invalid user ID" })
-		.int({ error: "Invalid user ID" }),
-	roleId: z.coerce
-		.number({ error: "Invalid role ID" })
-		.int({ error: "Invalid role ID" }),
-});
-
 export const addMemberToVenue: ApiRequestHandler<
 	{ memberId: number },
-	{ id: string },
-	z.infer<typeof addMemberToVenueSchema> // todo: add this everywhere concerned
+	{ id: string }
 > = async (req, res) => {
 	const parsedParams = venueScopedSchema.safeParse(req.params);
 	const parsed = addMemberToVenueSchema.safeParse(req.body);
@@ -340,15 +293,6 @@ export const getVenueFacilities: ApiRequestHandler<
 		data: facilities,
 	});
 };
-
-const assignFacilityToVenueSchema = z.object({
-	id: z.coerce.number({
-		error: "Invalid venue ID",
-	}),
-	facilityId: z.coerce.number({
-		error: "Invalid facility ID",
-	}),
-});
 
 export const assignFacilityToVenue: ApiRequestHandler<
 	{ id: number },

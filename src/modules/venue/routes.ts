@@ -1,6 +1,6 @@
+import { requireUserType } from "@/middlewares/index.js";
 import { Router } from "express";
 import * as controller from "./controller.js";
-import { authenticateToken, requireUserType } from "@/middlewares/index.js";
 
 const router: Router = Router();
 
