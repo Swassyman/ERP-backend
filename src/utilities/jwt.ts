@@ -1,13 +1,9 @@
 import { SignJWT } from "jose";
+import { quickEnv } from "./helpers.js";
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
-if (typeof JWT_ACCESS_SECRET !== "string" || JWT_ACCESS_SECRET.length === 0) {
-	throw new Error("Invalid JWT_ACCESS_SECRET environment variable");
-}
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-if (typeof JWT_REFRESH_SECRET !== "string" || JWT_REFRESH_SECRET.length === 0) {
-	throw new Error("Invalid JWT_REFRESH_SECRET environment variable");
-}
+const JWT_ACCESS_SECRET = quickEnv("JWT_ACCESS_SECRET");
+const JWT_REFRESH_SECRET = quickEnv("JWT_REFRESH_SECRET");
+
 export const JWT_ACCESS_SECRET_SIGN_KEY = new TextEncoder().encode(
 	JWT_ACCESS_SECRET,
 );
