@@ -1,29 +1,30 @@
 import {
-	type HasDefault,
-	isNull,
-	type NotNull,
-	relations,
-	sql,
+    type HasDefault,
+    isNull,
+    type NotNull,
+    relations,
+    sql,
 } from "drizzle-orm";
 import {
-	type AnyPgColumn,
-	bigint,
-	boolean,
-	check,
-	integer,
-	pgEnum,
-	pgTable,
-	primaryKey,
-	smallint,
-	text,
-	timestamp,
-	unique,
-	uniqueIndex,
+    type AnyPgColumn,
+    bigint,
+    boolean,
+    check,
+    integer,
+    pgEnum,
+    pgTable,
+    primaryKey,
+    smallint,
+    text,
+    timestamp,
+    unique,
+    uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { PermissionCode } from "./types.js";
 
 export const USER_TYPES = ["admin", "end_user"] as const;
 export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
+export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;
 
 // todo: how about switching to string based ids?
 
@@ -32,6 +33,10 @@ export const userTypeEnum = pgEnum("user_type", USER_TYPES);
 export const managedEntityTypeEnum = pgEnum(
 	"managed_entity_type",
 	MANAGED_ENTITY_TYPES,
+);
+export const venueAccessLevelEnum = pgEnum(
+	"venue_access_level",
+	VENUE_ACCESS_LEVELS,
 );
 
 // Common fields
@@ -305,4 +310,99 @@ export const organizationRelations = relations(organization, (r) => ({
 		relationName: "parent",
 	}),
 	// soft-fk(managed_entity)
+}));
+
+export const venueType = pgTable(
+	"venue_type",
+	{
+		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(), // lab, hall, auditorium, seminar hall
+		...fields("common", "soft-delete"),
+	},
+	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
+);
+
+export const venueTypeRelations = relations(venueType, (r) => ({
+	venues: r.many(venue),
+	// soft-fk(roles), roles that comes under this type of venue
+}));
+
+export const venue = pgTable(
+	"venue",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(),
+		venueTypeId: smallint()
+			.references(() => venueType.id)
+			.notNull(),
+		organizationId: integer().references(
+			(): AnyPgColumn => organization.id,
+		),
+		accessLevel: venueAccessLevelEnum().notNull(),
+		isAvailable: boolean().notNull(),
+		unavailabilityReason: text(),
+		maxCapacity: integer().notNull(),
+		isActive: boolean().notNull().default(true),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: discuss whether to add 'venueTypeId' to unique
+	],
+);
+
+export const venueRelations = relations(venue, (r) => ({
+	userRoles: r.many(userRole),
+	type: r.one(venueType, {
+		fields: [venue.venueTypeId],
+		references: [venueType.id],
+	}),
+	organization: r.one(organization, {
+		fields: [venue.organizationId],
+		references: [organization.id],
+	}),
+	facilities: r.many(venueFacility),
+	// soft-fk(managed_entity)
+}));
+
+export const facility = pgTable(
+	"facility",
+	{
+		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
+);
+
+export const facilityRelations = relations(facility, (r) => ({
+	venues: r.many(venueFacility),
+}));
+
+export const venueFacility = pgTable(
+	"venue_facility",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		venueId: integer()
+			.references(() => venue.id)
+			.notNull(),
+		facilityId: smallint()
+			.references(() => facility.id)
+			.notNull(),
+		isActive: boolean().notNull().default(true),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex().on(t.venueId, t.facilityId).where(isNull(t.deletedAt)),
+	],
+);
+
+export const venueFacilityRelations = relations(venueFacility, (r) => ({
+	venue: r.one(venue, {
+		fields: [venueFacility.venueId],
+		references: [venue.id],
+	}),
+	facility: r.one(facility, {
+		fields: [venueFacility.facilityId],
+		references: [facility.id],
+	}),
 }));

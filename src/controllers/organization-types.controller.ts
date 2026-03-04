@@ -40,7 +40,6 @@ const createOrganizationTypeSchema = z
 
 export const createOrganizationType: ApiRequestHandler<{
 	id: number;
-	name: string;
 }> = async (req, res) => {
 	const parsed = createOrganizationTypeSchema.safeParse(req.body);
 
@@ -65,7 +64,6 @@ export const createOrganizationType: ApiRequestHandler<{
 		success: true,
 		data: {
 			id: inserted.id,
-			name: parsed.data.name,
 		},
 	});
 };

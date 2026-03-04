@@ -5,11 +5,14 @@ import { ERROR_CODES } from "./utilities/errors.js";
 // end of normal imports, and router imports follow:
 
 import authRouter from "./routes/auth.routes.js";
-import usersRouter from "./routes/users.routes.js";
+import facilitiesRouter from "./routes/facilities.routes.js";
+import organizationTypesRouter from "./routes/organization-types.routes.js";
+import organizationRouter from "./routes/organizations.routes.js";
 import permissionsRouter from "./routes/permissions.routes.js";
 import rolesRouter from "./routes/roles.routes.js";
-import organizationRouter from "./routes/organizations.routes.js";
-import organizationTypesRouter from "./routes/organization-types.routes.js";
+import usersRouter from "./routes/users.routes.js";
+import venueTypesRouter from "./routes/venue-types.routes.js";
+import venuesRouter from "./routes/venues.routes.js";
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -67,6 +70,9 @@ app.use("/permissions", permissionsRouter);
 app.use("/roles", rolesRouter);
 app.use("/organizations", organizationRouter);
 app.use("/organization-types", organizationTypesRouter);
+app.use("/venues", venuesRouter);
+app.use("/venue-types", venueTypesRouter);
+app.use("/facilities", facilitiesRouter);
 
 // todo: revisit as "error handling" update
 const errorHandler: ErrorRequestHandler = (
