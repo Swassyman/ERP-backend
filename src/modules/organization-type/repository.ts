@@ -41,10 +41,7 @@ export async function getOrganizationTypeChildrenTypes(
 			),
 		)
 		.where(
-			eq(
-				schema.organizationTypeAllowedParent.parentTypeId,
-				organizationTypeId,
-			),
+			eq(schema.organizationTypeAllowedParent.parentTypeId, organizationTypeId),
 			// note: no need of soft-check
 		)
 		.orderBy(schema.organizationTypeAllowedParent.createdAt);

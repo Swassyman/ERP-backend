@@ -20,9 +20,7 @@ export async function createOrganizationType(
 export async function getOrganizationTypeChildTypes(
 	organizationTypeId: number,
 ) {
-	return await repository.getOrganizationTypeChildrenTypes(
-		organizationTypeId,
-	);
+	return await repository.getOrganizationTypeChildrenTypes(organizationTypeId);
 }
 
 export async function addAllowedChildType(input: AddAllowedParentParamsSchema) {

@@ -23,9 +23,7 @@ export function requirePermissions(
 		const userPermissions = req.user.permissions;
 
 		if (
-			permissions.some((permission) =>
-				userPermissions.includes(permission),
-			)
+			permissions.some((permission) => userPermissions.includes(permission))
 		) {
 			return next();
 		} else {

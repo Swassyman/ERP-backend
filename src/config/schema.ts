@@ -88,9 +88,7 @@ export const managedEntity = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex()
-			.on(t.managedEntityType, t.refId)
-			.where(isNull(t.deletedAt)),
+		uniqueIndex().on(t.managedEntityType, t.refId).where(isNull(t.deletedAt)),
 	],
 	// soft-fk(ref_id) -> organization, venue
 );
@@ -125,8 +123,9 @@ export const role = pgTable(
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
-		managedEntityType: managedEntityTypeEnum() // to which type of managed entity this role belongs to.
-			.notNull(),
+		managedEntityType:
+			managedEntityTypeEnum() // to which type of managed entity this role belongs to.
+				.notNull(),
 		typeRefId: integer().notNull(), // soft-fk(organizationType, venueType), since roles belong under institution, dept, lab, hall, etc.
 		...fields("common", "soft-delete"),
 	},
@@ -337,9 +336,7 @@ export const venue = pgTable(
 		venueTypeId: smallint()
 			.references(() => venueType.id)
 			.notNull(),
-		organizationId: integer().references(
-			(): AnyPgColumn => organization.id,
-		),
+		organizationId: integer().references((): AnyPgColumn => organization.id),
 		accessLevel: venueAccessLevelEnum().notNull(),
 		isAvailable: boolean().notNull(),
 		unavailabilityReason: text(),

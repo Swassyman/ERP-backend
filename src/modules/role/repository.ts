@@ -56,10 +56,7 @@ export async function setRolePermissions(
 				.where(
 					and(
 						eq(schema.rolePermission.roleId, roleId),
-						notInArray(
-							schema.rolePermission.permissionId,
-							data.permissionIds,
-						),
+						notInArray(schema.rolePermission.permissionId, data.permissionIds),
 					),
 				),
 		);

@@ -27,9 +27,7 @@ if (existingAdminAccounts.length === 0) {
 		passwordHash: await hashPassword(ADMIN_LOGIN_PASSWORD),
 	});
 } else if (existingAdminAccounts.length > 1) {
-	throw new Error(
-		"misconfiguration in database: more than one admin account",
-	);
+	throw new Error("misconfiguration in database: more than one admin account");
 } else {
 	const account = existingAdminAccounts[0];
 	if (account == null) unreachable();
@@ -64,9 +62,7 @@ console.log("Setting up permissions");
 const existingPermissions = await db
 	.select()
 	.from(schema.permission)
-	.then((perms) =>
-		Object.fromEntries(perms.map((perm) => [perm.code, perm])),
-	);
+	.then((perms) => Object.fromEntries(perms.map((perm) => [perm.code, perm])));
 
 const permissionsToInsert: PermissionCode[] = [];
 const permissionsToUpdate: PermissionCode[] = [];
@@ -157,9 +153,7 @@ if (
 
 	const hardDeletedRolePermissions = await db
 		.delete(schema.rolePermission)
-		.where(
-			inArray(schema.rolePermission.permissionId, permissionsToDelete),
-		);
+		.where(inArray(schema.rolePermission.permissionId, permissionsToDelete));
 	console.log(
 		"hard-deleted",
 		hardDeletedRolePermissions.rowCount,

@@ -46,10 +46,7 @@ app.use((req, res, next) => {
 	console.info(
 		styleText("magenta", new Date().toISOString()),
 		styleText("dim", id),
-		styleText(
-			[resOk ? "bgGreen" : "bgRed"],
-			` ${res.statusCode.toString()} `,
-		),
+		styleText([resOk ? "bgGreen" : "bgRed"], ` ${res.statusCode.toString()} `),
 		// path,
 		styleText("yellow", `${Date.now() - timeStart}ms`),
 	);
@@ -102,10 +99,7 @@ app.listen(PORT, HOSTNAME, () => {
 			.flatMap((addresses) => {
 				return addresses
 					.filter((address) => address.family === "IPv4")
-					.map(
-						(address) =>
-							[address.address, address.internal] as const,
-					);
+					.map((address) => [address.address, address.internal] as const);
 			});
 		for (const [hostname, internal] of addresses) {
 			hostnames.set(hostname, internal);

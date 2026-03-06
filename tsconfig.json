@@ -6,7 +6,7 @@
 		"outDir": "./out",
 		"baseUrl": "./",
 		"paths": {
-			"@/*": ["src/*"],
+			"@/*": ["src/*"]
 		},
 		// Environment Settings
 		// See also https://aka.ms/tsconfig/module
@@ -36,7 +36,7 @@
 		"isolatedModules": false, // this too
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
-		"skipLibCheck": true,
+		"skipLibCheck": true
 	},
-	"exclude": ["./db-playground.ts"],
+	"exclude": ["./db-playground.ts"]
 }

@@ -23,8 +23,7 @@ export async function getVenues() {
 }
 
 export async function getVenueMembers(venueId: number) {
-	const relatedManagedEntity =
-		await repository.findVenueManagedEntity(venueId);
+	const relatedManagedEntity = await repository.findVenueManagedEntity(venueId);
 
 	if (relatedManagedEntity == null)
 		throw new NotFoundError("Could not find the venue");
@@ -36,8 +35,7 @@ export async function addMemberToVenue(
 	venueId: number,
 	input: AddMemberToVenueSchema,
 ) {
-	const relatedManagedEntity =
-		await repository.findVenueManagedEntity(venueId);
+	const relatedManagedEntity = await repository.findVenueManagedEntity(venueId);
 
 	if (relatedManagedEntity == null)
 		throw new NotFoundError("Could not find the venue");
