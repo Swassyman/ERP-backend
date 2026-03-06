@@ -1,60 +1,26 @@
-import { db, schema } from "@/config/db.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
-import { unreachable } from "@/utilities/helpers.js";
-import { isNull } from "drizzle-orm";
+import { asyncHandler } from "@/utilities/async-handler.js";
+import { ok } from "@/utilities/helpers.js";
 import { createFacilitySchema } from "./schema.js";
+import * as service from "./service.js";
 
-export const getFacilities: ApiRequestHandler<
+export const getFacilities = asyncHandler<
 	{
 		id: number;
 		name: string;
 	}[]
-> = async (_req, res) => {
-	const facilities = await db
-		.select({
-			id: schema.facility.id,
-			name: schema.facility.name,
-		})
-		.from(schema.facility)
-		.where(isNull(schema.facility.deletedAt));
+>(async (_req, res) => {
+	const result = await service.getFacilities();
+	return ok(res, result);
+});
 
-	return res.status(200).json({
-		success: true,
-		data: facilities,
+export const createFacility = asyncHandler<{
+	id: number;
+}>(async (req, res) => {
+	const body = createFacilitySchema.parse(req.body);
+
+	const result = await service.createFacility({
+		name: body.name,
 	});
-};
 
-export const createFacility: ApiRequestHandler<
-	{
-		id: number;
-	},
-	undefined
-> = async (req, res) => {
-	const parsed = createFacilitySchema.safeParse(req.body);
-
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsed.error.message,
-		});
-	}
-
-	const [inserted] = await db
-		.insert(schema.facility)
-		.values({
-			name: parsed.data.name,
-		})
-		.returning({ id: schema.facility.id });
-
-	if (inserted == null) {
-		unreachable();
-	}
-
-	return res.status(200).json({
-		success: true,
-		data: {
-			id: inserted.id,
-		},
-	});
-};
+	return ok(res, result);
+});

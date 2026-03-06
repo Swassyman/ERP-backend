@@ -1,6 +1,7 @@
 import { NeonDbError } from "@neondatabase/serverless";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/constants.js";
+import { UnauthorizedError, UnreachableError } from "./errors.js";
 
 export function getPgErrorCode(error: unknown): string | undefined {
 	return error instanceof DrizzleQueryError &&
@@ -11,7 +12,7 @@ export function getPgErrorCode(error: unknown): string | undefined {
 
 export function unreachable(): never {
 	console.error("never supposed to reach here");
-	throw new Error("unreachable");
+	throw new UnreachableError();
 }
 
 export function quickEnv(name: string, check: false): string | undefined;
@@ -30,4 +31,17 @@ export function isPermissionScope(scope: string): scope is PermissionScope {
 
 export function isPermission(permission: string): permission is PermissionCode {
 	return permission in FLATTENED_PERMISSIONS;
+}
+
+export function getAuthenticatedUser(
+	req: Express.Request,
+): Pick<User, "id" | "type"> & { permissions: PermissionCode[] } {
+	if (req.user == null) {
+		throw new UnauthorizedError("Authentication required");
+	}
+	return req.user;
+}
+
+export function ok<T>(res: ApiResponse<T>, data: T, statusCode: number = 200) {
+	return res.status(statusCode).json({ success: true, data: data });
 }

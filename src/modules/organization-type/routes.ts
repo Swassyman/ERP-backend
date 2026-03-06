@@ -1,6 +1,6 @@
 import { Router } from "express";
-import * as controller from "./controller.js";
 import { requireUserType } from "@/middlewares/index.js";
+import * as controller from "./controller.js";
 
 const router: Router = Router();
 
@@ -11,7 +11,7 @@ router.get("/:id/children", controller.getOrganizationTypeChildTypes);
 router.post(
 	"/:id/children/:childId",
 	requireUserType(["admin"]),
-	controller.addAllowedParent,
+	controller.addAllowedChildType,
 );
 
 // todo: delete (soft) organization type

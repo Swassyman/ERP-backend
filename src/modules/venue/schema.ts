@@ -1,5 +1,5 @@
-import { VENUE_ACCESS_LEVELS } from "@/config/schema.js";
 import z from "zod";
+import { VENUE_ACCESS_LEVELS } from "@/config/schema.js";
 
 export const createVenueSchema = z
 	.object({
@@ -53,13 +53,20 @@ export const addMemberToVenueSchema = z
 	})
 	.strict();
 
-export const assignFacilityToVenueSchema = z
+export const setVenueFacilitiesSchema = z
 	.object({
-		id: z.coerce.number({
-			error: "Invalid venue ID",
-		}),
-		facilityId: z.coerce.number({
-			error: "Invalid facility ID",
-		}),
+		facilityId: z.array(
+			z.coerce
+				.number({ error: "Invalid facility ID" })
+				.int({ error: "Invalid facility ID" }),
+			{ error: "Invalid set of facility IDs" },
+		),
 	})
 	.strict();
+
+export type CreateVenueSchema = z.output<typeof createVenueSchema>;
+export type VenueScopedSchema = z.output<typeof venueScopedSchema>;
+export type AddMemberToVenueSchema = z.output<typeof addMemberToVenueSchema>;
+export type SetVenueFacilitiesSchema = z.output<
+	typeof setVenueFacilitiesSchema
+>;

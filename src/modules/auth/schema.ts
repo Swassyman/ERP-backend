@@ -1,5 +1,5 @@
-import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
 import z from "zod";
+import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
 
 export const loginSchema = z
 	.object({
@@ -13,3 +13,5 @@ export const loginSchema = z
 			.min(6, { error: "Password must be at least 6 characters" }),
 	})
 	.strict();
+
+export type LoginSchema = z.output<typeof loginSchema>;

@@ -1,11 +1,10 @@
-import { cors } from "@/middlewares/index.js";
+import { cors, errorHandler } from "@/middlewares/index.js";
 import { quickEnv } from "@/utilities/helpers.js";
 import cookieParser from "cookie-parser";
-import express, { ErrorRequestHandler } from "express";
+import express from "express";
+import { nanoid } from "nanoid";
 import * as os from "node:os";
 import { styleText } from "node:util";
-import { nanoid } from "nanoid";
-import { ERROR_CODES } from "@/utilities/errors.js";
 // end of normal imports, and router imports follow:
 
 import authRouter from "@/modules/auth/routes.js";
@@ -17,6 +16,9 @@ import rolesRouter from "@/modules/role/routes.js";
 import usersRouter from "@/modules/user/routes.js";
 import venueTypesRouter from "@/modules/venue-type/routes.js";
 import venuesRouter from "@/modules/venue/routes.js";
+
+// todo: make prepare checks
+// e.g.: check permissions defined in code vs. in db. if mistmatch, throw.
 
 const PORT = Number(process.env.PORT) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -80,22 +82,6 @@ app.use("/venues", venuesRouter);
 app.use("/venue-types", venueTypesRouter);
 app.use("/facilities", facilitiesRouter);
 
-// todo: revisit as "error handling" update
-const errorHandler: ErrorRequestHandler = (
-	error: Error,
-	_req,
-	res: ApiResponse,
-	_next,
-) => {
-	console.error(error);
-
-	return res.status(500).json({
-		success: false,
-		code: ERROR_CODES.internal_server_error,
-		message: "Something went wrong",
-	});
-};
-
 app.use(errorHandler);
 
 const HAS_HOST = process.argv.includes("--host");
@@ -106,7 +92,9 @@ const HOSTNAME = HAS_HOST
 app.listen(PORT, HOSTNAME, () => {
 	const hostnames = new Map<string, boolean>();
 
-	if (HOSTNAME === "0.0.0.0") {
+	if (HOSTNAME === "localhost") {
+		hostnames.set("localhost", true);
+	} else if (HOSTNAME === "0.0.0.0") {
 		hostnames.set("localhost", true);
 		const interfaces = os.networkInterfaces();
 		const addresses = Object.values(interfaces)

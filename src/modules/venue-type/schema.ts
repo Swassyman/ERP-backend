@@ -25,3 +25,9 @@ export const createVenueTypeRoleSchema = z
 			.max(256, { error: "Name cannot be longer than 256 characters" }),
 	})
 	.strict();
+
+export type CreateVenueTypeSchema = z.output<typeof createVenueTypeSchema>;
+export type VenueTypeScopedSchema = z.output<typeof venueTypeScopedSchema>;
+export type CreateVenueTypeRoleSchema = z.output<
+	typeof createVenueTypeRoleSchema
+>;

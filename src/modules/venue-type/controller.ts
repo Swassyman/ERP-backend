@@ -1,160 +1,46 @@
-import { db, schema } from "@/config/db.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
-import { unreachable } from "@/utilities/helpers.js";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { asyncHandler } from "@/utilities/async-handler.js";
+import { ok } from "@/utilities/helpers.js";
 import {
 	createVenueTypeRoleSchema,
 	createVenueTypeSchema,
 	venueTypeScopedSchema,
 } from "./schema.js";
+import * as service from "./service.js";
 
-export const getVenueTypes: ApiRequestHandler<
+export const getVenueTypes = asyncHandler<
 	{
 		id: number;
 		name: string;
 	}[]
-> = async (_req, res) => {
-	const venueTypes = await db
-		.select({
-			id: schema.venueType.id,
-			name: schema.venueType.name,
-		})
-		.from(schema.venueType)
-		.where(isNull(schema.venueType.deletedAt))
-		.orderBy(schema.venueType.createdAt);
+>(async (_req, res) => {
+	const result = await service.getVenueTypes();
+	return ok(res, result);
+});
 
-	return res.status(200).json({
-		success: true,
-		data: venueTypes,
-	});
-};
-
-export const createVenueType: ApiRequestHandler<{
+export const createVenueType = asyncHandler<{
 	id: number;
-}> = async (req, res) => {
-	const parsed = createVenueTypeSchema.safeParse(req.body);
+}>(async (req, res) => {
+	const body = createVenueTypeSchema.parse(req.body);
+	const result = await service.createVenueType(body);
+	return ok(res, result);
+});
 
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsed.error.message,
-		});
-	}
-
-	const [inserted] = await db
-		.insert(schema.venueType)
-		.values({ name: parsed.data.name })
-		.returning({ id: schema.venueType.id });
-
-	if (inserted == null) {
-		unreachable();
-	}
-
-	return res.status(200).json({
-		success: true,
-		data: {
-			id: inserted.id,
-		},
-	});
-};
-
-export const getVenueTypeRoles: ApiRequestHandler<
+export const getVenueTypeRoles = asyncHandler<
 	{
 		id: number;
 		name: string;
-	}[],
-	{ id: string }
-> = async (req, res) => {
-	const parsedParams = venueTypeScopedSchema.safeParse(req.params);
+	}[]
+>(async (req, res) => {
+	const params = venueTypeScopedSchema.parse(req.params);
+	const result = await service.getVenueTypeRoles(params.id);
+	return ok(res, result);
+});
 
-	if (!parsedParams.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsedParams.error.message,
-		});
-	}
-
-	const venueTypeRoles = await db
-		.select({
-			id: schema.role.id,
-			name: schema.role.name,
-		})
-		.from(schema.role)
-		.where(
-			and(
-				eq(schema.role.managedEntityType, "venue"),
-				eq(schema.role.typeRefId, parsedParams.data.id),
-				isNull(schema.role.deletedAt),
-			),
-		)
-		.orderBy(asc(schema.role.createdAt));
-
-	return res.status(200).json({
-		success: true,
-		data: venueTypeRoles,
-	});
-};
-
-export const createVenueTypeRole: ApiRequestHandler<
-	{ id: number },
-	{ id: string }
-> = async (req, res) => {
-	const parsedParams = venueTypeScopedSchema.safeParse(req.params);
-	const parsed = createVenueTypeRoleSchema.safeParse(req.body);
-
-	if (!parsedParams.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsedParams.error.message,
-		});
-	}
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsed.error.message,
-		});
-	}
-
-	const [relatedVenueType] = await db
-		.select({ id: schema.venueType.id })
-		.from(schema.venueType)
-		.where(
-			and(
-				isNull(schema.venueType.deletedAt),
-				eq(schema.venueType.id, parsedParams.data.id),
-			),
-		)
-		.limit(1);
-
-	if (relatedVenueType == null) {
-		return res.status(404).json({
-			success: false,
-			code: ERROR_CODES.not_found,
-			message: "Linked venue type not found",
-		});
-	}
-
-	const [inserted] = await db
-		.insert(schema.role)
-		.values({
-			name: parsed.data.name,
-			managedEntityType: "venue",
-			typeRefId: parsedParams.data.id,
-		})
-		.returning({ id: schema.role.id });
-
-	if (inserted == null) {
-		unreachable();
-	}
-
-	return res.status(200).json({
-		success: true,
-		data: {
-			id: inserted.id,
-		},
-	});
-};
+export const createVenueTypeRole = asyncHandler<{ id: number }>(
+	async (req, res) => {
+		const params = venueTypeScopedSchema.parse(req.params);
+		const body = createVenueTypeRoleSchema.parse(req.body);
+		const result = await service.createVenueTypeRole(params.id, body);
+		return ok(res, result);
+	},
+);

@@ -299,7 +299,6 @@ export const organization = pgTable(
 );
 
 export const organizationRelations = relations(organization, (r) => ({
-	userRoles: r.many(userRole),
 	type: r.one(organizationType, {
 		fields: [organization.organizationTypeId],
 		references: [organizationType.id],
@@ -354,7 +353,6 @@ export const venue = pgTable(
 );
 
 export const venueRelations = relations(venue, (r) => ({
-	userRoles: r.many(userRole),
 	type: r.one(venueType, {
 		fields: [venue.venueTypeId],
 		references: [venueType.id],
@@ -392,11 +390,9 @@ export const venueFacility = pgTable(
 			.references(() => facility.id)
 			.notNull(),
 		isActive: boolean().notNull().default(true),
-		...fields("common", "soft-delete"),
+		...fields("common"), // todo: soft-delete or no?
 	},
-	(t) => [
-		uniqueIndex().on(t.venueId, t.facilityId).where(isNull(t.deletedAt)),
-	],
+	(t) => [unique().on(t.venueId, t.facilityId)],
 );
 
 export const venueFacilityRelations = relations(venueFacility, (r) => ({
