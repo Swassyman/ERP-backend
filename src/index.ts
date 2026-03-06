@@ -109,7 +109,7 @@ app.listen(PORT, HOSTNAME, () => {
 	console.log("Server is now running in the following addresses:\n");
 	hostnames.entries().forEach(([hostname, internal]) => {
 		console.log(
-			"    -> " + (internal ? "Local" : "Network") + ":",
+			`    -> ${internal ? "Local" : "Network"}:`,
 			styleText("blue", `http://${hostname}:${PORT}`),
 		);
 	});
