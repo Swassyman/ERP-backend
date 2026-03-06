@@ -26,10 +26,7 @@ export async function insertUser(data: {
 
 export async function getUsers() {
 	return await db.query.user.findMany({
-		where: and(
-			eq(schema.user.type, "end_user"),
-			isNull(schema.user.deletedAt),
-		),
+		where: and(eq(schema.user.type, "end_user"), isNull(schema.user.deletedAt)),
 		columns: {
 			id: true,
 			fullName: true,

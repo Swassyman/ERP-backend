@@ -7,9 +7,7 @@ export const createOrganizationSchema = z
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
 		organizationTypeId: z.int({ error: "Invalid organization type ID" }),
-		parentOrganizationId: z
-			.int({ error: "Invalid organization ID" })
-			.nullish(), // todo: do this everywhere
+		parentOrganizationId: z.int({ error: "Invalid organization ID" }).nullish(), // todo: do this everywhere
 	})
 	.strict();
 

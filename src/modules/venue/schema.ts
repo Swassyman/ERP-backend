@@ -29,7 +29,8 @@ export const createVenueSchema = z
 			(venue.isAvailable && venue.unavailabilityReason == null) ||
 			(!venue.isAvailable && venue.unavailabilityReason != null),
 		{
-			error: "Venue must have reason for its unavailability if marked unavailable",
+			error:
+				"Venue must have reason for its unavailability if marked unavailable",
 		},
 	)
 	.strict();

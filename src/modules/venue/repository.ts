@@ -149,10 +149,7 @@ export async function setVenueFacilities(
 				),
 			)
 			.onConflictDoNothing({
-				target: [
-					schema.venueFacility.venueId,
-					schema.venueFacility.facilityId,
-				],
+				target: [schema.venueFacility.venueId, schema.venueFacility.facilityId],
 			})
 			.returning({ id: schema.venueFacility.id }),
 	);
@@ -165,10 +162,7 @@ export async function setVenueFacilities(
 				.where(
 					and(
 						eq(schema.venueFacility.venueId, venueId),
-						notInArray(
-							schema.venueFacility.facilityId,
-							data.facilityIds,
-						),
+						notInArray(schema.venueFacility.facilityId, data.facilityIds),
 					),
 				),
 		);
