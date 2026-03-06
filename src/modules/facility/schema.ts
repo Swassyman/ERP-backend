@@ -9,3 +9,5 @@ export const createFacilitySchema = z.object({
 			error: "Facility name length cannot exceed 256 characters",
 		}),
 });
+
+export type CreateFacilitySchema = z.output<typeof createFacilitySchema>;

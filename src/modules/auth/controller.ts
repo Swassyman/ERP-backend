@@ -1,218 +1,64 @@
-import { db, schema } from "@/config/db.js";
 import { REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
-import { verifyPassword } from "@/utilities/argon2.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
-import {
-	generateAccessToken,
-	generateRefreshToken,
-	JWT_REFRESH_SECRET_SIGN_KEY,
-	JWT_REFRESH_TOKEN_EXPIRY,
-} from "@/utilities/jwt.js";
-import { and, eq, inArray, isNull } from "drizzle-orm";
-import { jwtVerify } from "jose";
+import { asyncHandler } from "@/utilities/async-handler.js";
+import { UnauthorizedError } from "@/utilities/errors.js";
+import { getAuthenticatedUser, ok } from "@/utilities/helpers.js";
+import { JWT_REFRESH_TOKEN_EXPIRY } from "@/utilities/jwt.js";
 import { loginSchema } from "./schema.js";
+import * as service from "./service.js";
 
-export const login: ApiRequestHandler<{
+export const login = asyncHandler<{
 	accessToken: string;
-}> = async (req, res) => {
-	const parsed = loginSchema.safeParse(req.body);
+}>(async (req, res) => {
+	const body = loginSchema.parse(req.body);
+	const result = await service.login(body.email, body.password);
 
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: "Invalid credentials",
-		});
-	}
-
-	const { email, password } = parsed.data;
-
-	const user = await db.query.user.findFirst({
-		where: and(eq(schema.user.email, email), isNull(schema.user.deletedAt)),
-	});
-
-	if (user == null) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.user_not_found, // todo: make a new code, invalid credentials
-			message: "Invalid credentials",
-		});
-	}
-
-	const isValid = await verifyPassword(user.passwordHash, password);
-	if (!isValid) {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.user_not_found,
-			message: "Invalid credentials",
-		});
-	}
-
-	const payload: IJWTPayload = {
-		id: user.id,
-		type: user.type,
-	};
-
-	const accessToken = await generateAccessToken(payload);
-	const refreshToken = await generateRefreshToken(payload);
-
-	res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+	res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax",
 		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
 
-	return res.status(200).json({
-		success: true,
-		data: {
-			accessToken: accessToken,
-		},
+	return ok(res, {
+		accessToken: result.accessToken,
 	});
-};
+});
 
-export const logout: ApiRequestHandler = (_req, res) => {
+export const logout = asyncHandler((_req, res) => {
 	res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax",
 	});
 	return res.sendStatus(200);
-};
+});
 
-export const userDetails: ApiRequestHandler<
-	Frontend.AuthenticatedUser
-> = async (req, res) => {
-	if (req.user == null) {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.unauthorized,
-			message: "Unauthorized",
-		});
-	}
+export const userDetails = asyncHandler<Frontend.AuthenticatedUser>(
+	async (req, res) => {
+		const user = getAuthenticatedUser(req);
+		const result = await service.getUserDetails(user.id);
+		return ok(res, result);
+	},
+);
 
-	const user = await getUserWithPermissions(req.user.id);
-	if (user == null) {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.unauthorized,
-			message: "Unauthorized",
-		});
-	}
-
-	return res.status(200).json({
-		success: true,
-		data: user,
-	});
-};
-
-export const refresh: ApiRequestHandler<{
+export const refresh = asyncHandler<{
 	accessToken: string;
-}> = async (req, res) => {
-	try {
-		const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
-
-		if (
-			typeof refreshToken !== "string" ||
-			refreshToken.trim().length === 0
-		) {
-			return res.status(401).json({
-				success: false,
-				code: ERROR_CODES.unauthorized,
-				message: "No refresh token",
-			});
-		}
-
-		const { payload } = await jwtVerify<IJWTPayload>(
-			refreshToken,
-			JWT_REFRESH_SECRET_SIGN_KEY,
-		);
-
-		const user = await getUserWithPermissions(payload.id);
-		if (user == null) {
-			return res.status(401).json({
-				success: false,
-				code: ERROR_CODES.unauthorized,
-				message: "Unauthorized",
-			});
-		}
-
-		const newPayload = {
-			id: user.id,
-			type: user.type,
-		} satisfies IJWTPayload;
-
-		const newAccessToken = await generateAccessToken(newPayload);
-		const newRefreshToken = await generateRefreshToken(newPayload);
-
-		// todo: extract this into a constant
-		res.cookie(REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			maxAge: JWT_REFRESH_TOKEN_EXPIRY,
-		});
-
-		return res.status(200).json({
-			success: true,
-			data: {
-				accessToken: newAccessToken,
-			},
-		});
-	} catch {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.unauthorized,
-			message: "Invalid or expired refresh token",
-		});
+}>(async (req, res) => {
+	const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
+	if (typeof refreshToken !== "string" || refreshToken.trim().length === 0) {
+		throw new UnauthorizedError("No refresh token");
 	}
-};
 
-async function getUserWithPermissions(id: number) {
-	const user = await db.query.user.findFirst({
-		where: and(eq(schema.user.id, id), isNull(schema.user.deletedAt)),
-		columns: {
-			id: true,
-			email: true,
-			fullName: true,
-			type: true,
-			// todo: return more info
-		},
-		with: {
-			roles: {
-				columns: {},
-				with: {
-					role: {
-						columns: {
-							id: true,
-						},
-					},
-				},
-			},
-		},
+	const tokens = await service.createNewTokens(refreshToken);
+
+	res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
 
-	if (user == null) {
-		// todo: revisit
-		return null;
-	}
-
-	const permissions = await db
-		.selectDistinct({ code: schema.permission.code })
-		.from(schema.rolePermission)
-		.innerJoin(
-			schema.permission,
-			eq(schema.rolePermission.permissionId, schema.permission.id),
-		)
-		.where(
-			inArray(
-				schema.rolePermission.roleId,
-				user.roles.map(({ role }) => role.id),
-			),
-		);
-
-	return {
-		...user,
-		permissions: permissions.map((permission) => permission.code),
-	};
-}
+	return ok(res, {
+		accessToken: tokens.accessToken,
+	});
+});

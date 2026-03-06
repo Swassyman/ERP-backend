@@ -1,65 +1,17 @@
-import { db, schema } from "@/config/db.js";
-import { hashPassword } from "@/utilities/argon2.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
-import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
-import { and, eq, isNull } from "drizzle-orm";
+import { asyncHandler } from "@/utilities/async-handler.js";
+import { ok } from "@/utilities/helpers.js";
 import { createUserSchema } from "./schema.js";
+import * as service from "./service.js";
 
-export const createUser: ApiRequestHandler<{
+export const createUser = asyncHandler<{
 	id: number;
-	fullName: string;
-	email: string;
-	createdAt: string;
-}> = async (req, res) => {
-	const parsed = createUserSchema.safeParse(req.body);
+}>(async (req, res) => {
+	const body = createUserSchema.parse(req.body);
+	const result = await service.createUser(body);
+	return ok(res, result);
+});
 
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: "Invalid details",
-		});
-	}
-
-	try {
-		const [newUser] = await db
-			.insert(schema.user)
-			.values({
-				type: "end_user",
-				email: parsed.data.email,
-				passwordHash: await hashPassword(parsed.data.password),
-				fullName: parsed.data.fullName,
-			})
-			.returning({
-				id: schema.user.id,
-				fullName: schema.user.fullName,
-				email: schema.user.email,
-				createdAt: schema.user.createdAt,
-			});
-
-		if (newUser == null) {
-			unreachable();
-		}
-
-		return res.status(201).json({
-			success: true,
-			data: newUser,
-		});
-	} catch (error) {
-		const pgErrorCode = getPgErrorCode(error);
-		if (pgErrorCode === "23505") {
-			return res.status(409).json({
-				success: false,
-				code: ERROR_CODES.already_exists,
-				message: "A user with this email already exists.",
-			});
-		}
-
-		throw error;
-	}
-};
-
-export const getUsers: ApiRequestHandler<
+export const getUsers = asyncHandler<
 	{
 		email: string;
 		fullName: string;
@@ -74,34 +26,7 @@ export const getUsers: ApiRequestHandler<
 			managedEntityId: number;
 		}[];
 	}[]
-> = async (_req, res) => {
-	const users = await db.query.user.findMany({
-		where: and(
-			eq(schema.user.type, "end_user"),
-			isNull(schema.user.deletedAt),
-		),
-		columns: {
-			id: true,
-			fullName: true,
-			email: true,
-			createdAt: true,
-			isActive: true,
-		},
-		with: {
-			roles: {
-				columns: {
-					id: true,
-					isActive: true,
-					createdAt: true,
-					roleId: true,
-					managedEntityId: true,
-				},
-			},
-		},
-	});
-
-	return res.status(200).json({
-		success: true,
-		data: users,
-	});
-};
+>(async (_req, res) => {
+	const result = await service.getUsers();
+	return ok(res, result);
+});

@@ -1,5 +1,5 @@
-import { requireUserType } from "@/middlewares/index.js";
 import { Router } from "express";
+import { requireUserType } from "@/middlewares/index.js";
 import * as controller from "./controller.js";
 
 const router: Router = Router();
@@ -17,15 +17,8 @@ router.post(
 );
 
 router.get("/:id/facilities", controller.getVenueFacilities);
-router.post(
-	"/:id/facilities/:facilityId",
-	requireUserType(["admin"]),
-	controller.assignFacilityToVenue,
-);
-router.delete(
-	"/:id/facilities/:facilityId",
-	requireUserType(["admin"]),
-	controller.unassignFacilityToVenue,
-);
+router.put("/:id/facilities", controller.setVenueFacilities);
+
+// todo: [un]assign single facility to venue
 
 export default router;

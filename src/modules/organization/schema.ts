@@ -9,7 +9,7 @@ export const createOrganizationSchema = z
 		organizationTypeId: z.int({ error: "Invalid organization type ID" }),
 		parentOrganizationId: z
 			.int({ error: "Invalid organization ID" })
-			.optional(),
+			.nullish(), // todo: do this everywhere
 	})
 	.strict();
 
@@ -29,3 +29,13 @@ export const addMemberToOrganizationSchema = z.object({
 		.number({ error: "Invalid role ID" })
 		.int({ error: "Invalid role ID" }),
 });
+
+export type CreateOrganizationSchema = z.output<
+	typeof createOrganizationSchema
+>;
+export type OrganizationScopedSchema = z.output<
+	typeof organizationScopedSchema
+>;
+export type AddMemberToOrganizationSchema = z.output<
+	typeof addMemberToOrganizationSchema
+>;

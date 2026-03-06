@@ -36,3 +36,16 @@ export const createOrganizationTypeRoleSchema = z
 			.max(256, { error: "Name cannot be longer than 256 characters" }),
 	})
 	.strict();
+
+export type CreateOrganizationTypeSchema = z.output<
+	typeof createOrganizationTypeSchema
+>;
+export type OrganizationTypeScopedSchema = z.output<
+	typeof organizationTypeScopedSchema
+>;
+export type AddAllowedParentParamsSchema = z.output<
+	typeof addAllowedParentParamsSchema
+>;
+export type CreateOrganizationTypeRoleSchema = z.output<
+	typeof createOrganizationTypeRoleSchema
+>;

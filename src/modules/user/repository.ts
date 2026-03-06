@@ -1,0 +1,52 @@
+import { and, eq, isNull } from "drizzle-orm";
+import { db, schema } from "@/config/db.js";
+import { unreachable } from "@/utilities/helpers.js";
+
+export async function insertUser(data: {
+	email: string;
+	passwordHash: string;
+	fullName: string;
+}) {
+	const [inserted] = await db
+		.insert(schema.user)
+		.values({
+			type: "end_user",
+			email: data.email,
+			passwordHash: data.passwordHash,
+			fullName: data.fullName,
+		})
+		.returning({
+			id: schema.user.id,
+		});
+
+	if (inserted == null) unreachable();
+
+	return inserted;
+}
+
+export async function getUsers() {
+	return await db.query.user.findMany({
+		where: and(
+			eq(schema.user.type, "end_user"),
+			isNull(schema.user.deletedAt),
+		),
+		columns: {
+			id: true,
+			fullName: true,
+			email: true,
+			createdAt: true,
+			isActive: true,
+		},
+		with: {
+			roles: {
+				columns: {
+					id: true,
+					isActive: true,
+					createdAt: true,
+					roleId: true,
+					managedEntityId: true,
+				},
+			},
+		},
+	});
+}

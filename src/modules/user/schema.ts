@@ -1,5 +1,5 @@
-import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
 import z from "zod";
+import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
 
 export const createUserSchema = z
 	.object({
@@ -17,3 +17,5 @@ export const createUserSchema = z
 			.max(256, { error: "Name cannot exceed 256 characters" }),
 	})
 	.strict();
+
+export type CreateUserSchema = z.output<typeof createUserSchema>;

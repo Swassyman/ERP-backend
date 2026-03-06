@@ -1,121 +1,35 @@
-import { and, eq, isNull } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
-import { getPgErrorCode, unreachable } from "@/utilities/helpers.js";
+import { asyncHandler } from "@/utilities/async-handler.js";
+import { ok } from "@/utilities/helpers.js";
 import {
 	addMemberToOrganizationSchema,
 	createOrganizationSchema,
 	organizationScopedSchema,
 } from "./schema.js";
+import * as service from "./service.js";
 
-export const createOrganization: ApiRequestHandler<{
+export const createOrganization = asyncHandler<{
 	id: number;
-	name: string;
-	organizationTypeId: number;
-	parentOrganizationId: number | null;
-	createdAt: string;
-}> = async (req, res) => {
-	const parsed = createOrganizationSchema.safeParse(req.body);
+}>(async (req, res) => {
+	const body = createOrganizationSchema.parse(req.body);
+	// todo: handle problems with unique and foregin constraints
+	const result = await service.createOrganization(body);
+	return ok(res, result, 201);
+});
 
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: "Invalid details",
-		});
-	}
-
-	try {
-		const newOrg = await db.transaction(async (tx) => {
-			const [newOrg] = await tx
-				.insert(schema.organization)
-				.values({
-					name: parsed.data.name,
-					organizationTypeId: parsed.data.organizationTypeId,
-					parentOrganizationId:
-						parsed.data.parentOrganizationId ?? null,
-				})
-				.returning({
-					id: schema.organization.id,
-					name: schema.organization.name,
-					organizationTypeId: schema.organization.organizationTypeId,
-					parentOrganizationId:
-						schema.organization.parentOrganizationId,
-					createdAt: schema.organization.createdAt,
-				});
-
-			if (newOrg == null) {
-				tx.rollback();
-				return null;
-			}
-
-			// note: just as important as inserting an organization
-			await tx.insert(schema.managedEntity).values({
-				managedEntityType: "organization",
-				refId: newOrg.id,
-			});
-
-			return newOrg;
-		});
-
-		if (newOrg == null) {
-			unreachable();
-		}
-
-		return res.status(201).json({
-			success: true,
-			data: newOrg,
-		});
-	} catch (error) {
-		const pgErrorCode = getPgErrorCode(error);
-		if (pgErrorCode === "23505") {
-			return res.status(409).json({
-				success: false,
-				code: ERROR_CODES.already_exists,
-				message: "An organization with the same name already exists",
-			});
-		}
-		if (pgErrorCode === "23503") {
-			return res.status(409).json({
-				success: false,
-				code: ERROR_CODES.validation_error,
-				message: "Invalid parent organization",
-			});
-		}
-
-		throw error;
-	}
-};
-
-export const getOrganizations: ApiRequestHandler<
+export const getOrganizations = asyncHandler<
 	{
 		organizationTypeId: number;
 		id: number;
 		name: string;
 		parentOrganizationId: number | null;
 		isActive: boolean;
-		createdAt: string;
 	}[]
-> = async (_req, res) => {
-	const organizations = await db.query.organization.findMany({
-		where: isNull(schema.organization.deletedAt),
-		columns: {
-			id: true,
-			name: true,
-			organizationTypeId: true,
-			parentOrganizationId: true,
-			isActive: true,
-			createdAt: true,
-		},
-	});
+>(async (_req, res) => {
+	const result = await service.getOrganizations();
+	return ok(res, result);
+});
 
-	res.status(200).json({
-		success: true,
-		data: organizations,
-	});
-};
-
-export const getOrganizationMembers: ApiRequestHandler<
+export const getOrganizationMembers = asyncHandler<
 	{
 		id: number;
 		isActive: boolean;
@@ -125,126 +39,18 @@ export const getOrganizationMembers: ApiRequestHandler<
 			fullName: string;
 			email: string;
 		};
-	}[],
-	{ id: string }
-> = async (req, res) => {
-	// todo: extract zod parsing into middleware
-	const parsedParams = organizationScopedSchema.safeParse(req.params);
+	}[]
+>(async (req, res) => {
+	const params = organizationScopedSchema.parse(req.params);
+	const result = await service.getOrganizationMembers(params.id);
+	return ok(res, result);
+});
 
-	if (!parsedParams.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsedParams.error.message,
-		});
-	}
-
-	const [relatedManagedEntity] = await db
-		.select({ id: schema.managedEntity.id })
-		.from(schema.managedEntity)
-		.where(
-			and(
-				eq(schema.managedEntity.managedEntityType, "organization"),
-				eq(schema.managedEntity.refId, parsedParams.data.id),
-				isNull(schema.managedEntity.deletedAt),
-			),
-		)
-		.limit(1);
-
-	if (relatedManagedEntity == null) {
-		return res.status(404).json({
-			success: false,
-			code: ERROR_CODES.not_found,
-			message: "Linked organization not found",
-		});
-	}
-
-	const organizationMembers = await db.query.userRole.findMany({
-		where: and(
-			eq(schema.userRole.managedEntityId, relatedManagedEntity.id),
-			isNull(schema.userRole.deletedAt),
-		),
-		columns: {
-			id: true,
-			isActive: true,
-			roleId: true,
-		},
-		with: {
-			user: {
-				columns: {
-					id: true,
-					fullName: true,
-					email: true,
-				},
-			},
-		},
-	});
-
-	return res.status(200).json({
-		success: true,
-		data: organizationMembers,
-	});
-};
-
-export const addMemberToOrganization: ApiRequestHandler<
-	{ memberId: number },
-	{ id: string }
-> = async (req, res) => {
-	const parsedParams = organizationScopedSchema.safeParse(req.params);
-	const parsed = addMemberToOrganizationSchema.safeParse(req.body);
-
-	if (!parsedParams.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsedParams.error.message,
-		});
-	}
-	if (!parsed.success) {
-		return res.status(400).json({
-			success: false,
-			code: ERROR_CODES.validation_error,
-			message: parsed.error.message,
-		});
-	}
-
-	const [relatedManagedEntity] = await db
-		.select({ id: schema.managedEntity.id })
-		.from(schema.managedEntity)
-		.where(
-			and(
-				eq(schema.managedEntity.managedEntityType, "organization"),
-				eq(schema.managedEntity.refId, parsedParams.data.id),
-				isNull(schema.managedEntity.deletedAt),
-			),
-		)
-		.limit(1);
-
-	if (relatedManagedEntity == null) {
-		return res.status(404).json({
-			success: false,
-			code: ERROR_CODES.not_found,
-			message: "Linked organization not found",
-		});
-	}
-
-	const [inserted] = await db
-		.insert(schema.userRole)
-		.values({
-			roleId: parsed.data.roleId,
-			userId: parsed.data.userId,
-			managedEntityId: parsedParams.data.id,
-		})
-		.returning({ id: schema.userRole.id });
-
-	if (inserted == null) {
-		unreachable();
-	}
-
-	return res.status(200).json({
-		success: true,
-		data: {
-			memberId: inserted.id,
-		},
-	});
-};
+export const addMemberToOrganization = asyncHandler<{ id: number }>(
+	async (req, res) => {
+		const params = organizationScopedSchema.parse(req.params);
+		const body = addMemberToOrganizationSchema.parse(req.body);
+		const result = await service.addMemberToOrganization(params.id, body);
+		return ok(res, result);
+	},
+);

@@ -26,3 +26,9 @@ export const rolePermissionScopedSchema = roleScopedSchema
 			.int({ error: "Invalid permission ID" }),
 	})
 	.strict();
+
+export type RoleScopedSchema = z.output<typeof roleScopedSchema>;
+export type SetRolePermissionSchema = z.output<typeof setRolePermissionsSchema>;
+export type RolePermissionScopedSchema = z.output<
+	typeof rolePermissionScopedSchema
+>;

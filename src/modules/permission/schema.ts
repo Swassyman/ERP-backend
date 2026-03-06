@@ -7,3 +7,5 @@ export const permissionScopedSchema = z
 			.int({ error: "Invalid permission ID" }),
 	})
 	.strict();
+
+export type PermissionScopedSchema = z.output<typeof permissionScopedSchema>;
