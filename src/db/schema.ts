@@ -20,6 +20,7 @@ import {
 	unique,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { INSTITUTION_DOMAIN } from "@/lib/constants.js";
 
 // note: reasoning for not putting inside constants.ts:
 // These constants are values directly inside the database.
@@ -74,7 +75,10 @@ export const user = pgTable(
 	},
 	(t) => [
 		uniqueIndex().on(t.email).where(isNull(t.deletedAt)),
-		check("email_check", sql`${t.email} LIKE '%@tkmce.ac.in'`), // todo: fix constraint with constant
+		check(
+			"email_check",
+			sql`${t.email} LIKE '%@${sql.raw(INSTITUTION_DOMAIN)}`,
+		),
 	],
 );
 

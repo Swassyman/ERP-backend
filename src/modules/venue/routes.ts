@@ -4,8 +4,6 @@ import * as controller from "./controller.js";
 
 const router: Router = Router();
 
-// todo: enforce permissions
-
 router.get("/", controller.getVenues);
 router.post("/", requireUserType(["admin"]), controller.createVenue);
 

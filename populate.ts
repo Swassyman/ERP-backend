@@ -1,7 +1,7 @@
 import { confirm } from "@inquirer/prompts";
-import { FLATTENED_PERMISSIONS } from "@/constants.js";
 import { db, schema } from "@/db/index.js";
 import { hashPassword, verifyPassword } from "@/lib/argon2.js";
+import { FLATTENED_PERMISSIONS } from "@/lib/constants.js";
 import { isPermission, quickEnv, unreachable } from "@/lib/helpers.js";
 import "dotenv/config";
 import { eq, inArray, type SQL, sql } from "drizzle-orm";

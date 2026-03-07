@@ -5,7 +5,7 @@ import * as controller from "./controller.js";
 const router: Router = Router();
 
 router.get("/", controller.getOrganizationTypes);
-router.post("/", requireUserType(["admin"]), controller.createOrganizationType); // todo: permissions
+router.post("/", requireUserType(["admin"]), controller.createOrganizationType);
 
 router.get("/:id/children", controller.getOrganizationTypeChildTypes);
 router.post(

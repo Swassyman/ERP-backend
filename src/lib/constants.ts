@@ -1,9 +1,9 @@
-import { quickEnv } from "./lib/helpers.js";
+import { quickEnv } from "./helpers.js";
 
 export const IS_PROD = quickEnv("NODE_ENV") === "production";
 
 export const INSTITUTION_NAME = "TKMCE";
-export const INSTITUTION_DOMAIN_REGEXP = /@tkmce\.ac\.in$/;
+export const INSTITUTION_DOMAIN = "tkmce.ac.in";
 
 export const REFRESH_TOKEN_COOKIE_NAME = "refresh-token";
 
