@@ -2,7 +2,6 @@ import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError, ERROR_CODES, UnreachableError } from "@/lib/errors.js";
 
-// todo: revisit as "error handling" update
 export const errorHandler: ErrorRequestHandler = (
 	error: Error,
 	_req,

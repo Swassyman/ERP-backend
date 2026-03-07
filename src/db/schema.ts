@@ -155,10 +155,7 @@ export const permission = pgTable(
 		description: text().notNull(),
 		...fields("common"), // hard delete
 	},
-	(t) => [
-		// unique().on(t.name), // todo: needed?
-		unique().on(t.code),
-	],
+	(t) => [unique().on(t.code)],
 );
 
 export const permissionRelations = relations(permission, (r) => ({
