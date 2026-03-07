@@ -5,10 +5,16 @@ export const createVenueSchema = z
 	.object({
 		name: z
 			.string({ error: "Invalid name value" })
+			.trim()
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
-		venueTypeId: z.int({ error: "Invalid venue type ID" }),
-		organizationId: z.int({ error: "Invalid organization ID" }).optional(),
+		venueTypeId: z.coerce
+			.number({ error: "Invalid venue type ID" })
+			.int({ error: "Invalid venue type ID" }),
+		organizationId: z.coerce
+			.number({ error: "Invalid organization ID" })
+			.int({ error: "Invalid organization ID" })
+			.nullish(), // note: never forget the power of nullish
 		maxCapacity: z
 			.int({ error: "Invalid capacity" })
 			.positive({ error: "Capacity must be a positive integer" }),
@@ -16,10 +22,11 @@ export const createVenueSchema = z
 			error: "Venue must specify its access level",
 		}),
 		isAvailable: z.boolean({
-			error: "Venue must specify whether it is availability",
+			error: "Venue must specify whether it is available or not",
 		}),
 		unavailabilityReason: z
 			.string({ error: "Invalid unavailability reason" })
+			.trim()
 			.nonempty({ error: "Invalid unavailability reason" })
 			.max(512, { error: "Invalid unavailability reason" })
 			.optional(),

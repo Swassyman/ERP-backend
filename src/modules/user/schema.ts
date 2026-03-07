@@ -13,6 +13,7 @@ export const createUserSchema = z
 			.min(6, { error: "Password must be at least 6 characters long" }),
 		fullName: z
 			.string({ error: "Invalid name input" })
+			.trim()
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
 	})

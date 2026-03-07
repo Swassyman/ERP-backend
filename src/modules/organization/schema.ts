@@ -4,6 +4,7 @@ export const createOrganizationSchema = z
 	.object({
 		name: z
 			.string({ error: "Invalid name value" })
+			.trim()
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
 		organizationTypeId: z.int({ error: "Invalid organization type ID" }),
