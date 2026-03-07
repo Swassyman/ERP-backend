@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/utilities/errors.js";
+import { NotFoundError } from "@/lib/errors.js";
 import * as repository from "./repository.js";
 
 export async function getPermissions() {

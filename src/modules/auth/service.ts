@@ -1,11 +1,11 @@
 import { jwtVerify } from "jose";
-import { verifyPassword } from "@/utilities/argon2.js";
-import { NotFoundError, UnauthorizedError } from "@/utilities/errors.js";
+import { verifyPassword } from "@/lib/argon2.js";
+import { NotFoundError, UnauthorizedError } from "@/lib/errors.js";
 import {
 	generateAccessToken,
 	generateRefreshToken,
 	JWT_REFRESH_SECRET_SIGN_KEY,
-} from "@/utilities/jwt.js";
+} from "@/lib/jwt.js";
 import * as repository from "./repository.js";
 
 export async function login(

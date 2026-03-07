@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { quickEnv } from "@/utilities/helpers.js";
+import { quickEnv } from "@/lib/helpers.js";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema.js";

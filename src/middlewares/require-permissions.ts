@@ -1,5 +1,5 @@
 import type { NextFunction, Request, RequestHandler } from "express";
-import { ERROR_CODES } from "@/utilities/errors.js";
+import { ERROR_CODES } from "@/lib/errors.js";
 
 export function requirePermissions(
 	permissions: PermissionCode[],

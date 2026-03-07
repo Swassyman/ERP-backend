@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/utilities/helpers.js";
+import { unreachable } from "@/lib/helpers.js";
 
 export async function getOrganizationTypes() {
 	return await db
@@ -41,10 +41,7 @@ export async function getOrganizationTypeChildrenTypes(
 			),
 		)
 		.where(
-			eq(
-				schema.organizationTypeAllowedParent.parentTypeId,
-				organizationTypeId,
-			),
+			eq(schema.organizationTypeAllowedParent.parentTypeId, organizationTypeId),
 			// note: no need of soft-check
 		)
 		.orderBy(schema.organizationTypeAllowedParent.createdAt);

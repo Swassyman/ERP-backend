@@ -1,4 +1,4 @@
-import { hashPassword } from "@/utilities/argon2.js";
+import { hashPassword } from "@/lib/argon2.js";
 import * as repository from "./repository.js";
 import type { CreateUserSchema } from "./schema.js";
 
