@@ -5,6 +5,8 @@ import express from "express";
 import { nanoid } from "nanoid";
 import { quickEnv } from "@/lib/helpers.js";
 import { authenticateToken, cors, errorHandler } from "@/middlewares/index.js";
+import { IS_PROD } from "./constants.js";
+import { prepare } from "./prepare.js";
 // end of normal imports, and router imports follow:
 
 import authRouter from "@/modules/auth/routes.js";
@@ -17,8 +19,14 @@ import usersRouter from "@/modules/user/routes.js";
 import venuesRouter from "@/modules/venue/routes.js";
 import venueTypesRouter from "@/modules/venue-type/routes.js";
 
-// todo: make prepare checks
-// e.g.: check permissions defined in code vs. in db. if mistmatch, throw.
+console.info(
+	"[i] starting in",
+	styleText("magenta", IS_PROD ? "production" : "development"),
+	"mode",
+);
+
+console.log("[i] running prepare checks...");
+await prepare();
 
 const PORT = Number(quickEnv("PORT")) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
@@ -42,7 +50,7 @@ app.use((req, res, next) => {
 	);
 	next();
 
-	const resOk = res.statusCode === 200;
+	const resOk = res.statusCode >= 200 && res.statusCode < 300;
 	console.info(
 		styleText("magenta", new Date().toISOString()),
 		styleText("dim", id),
@@ -63,10 +71,10 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-// Health
+// === Health
 app.get("/", (_req, res) => res.status(200).json({ status: "active" }));
 
-// Routes
+// === Routes
 app.use("/auth", authRouter);
 
 app.use(authenticateToken);
@@ -106,10 +114,10 @@ app.listen(PORT, HOSTNAME, () => {
 		}
 	}
 
-	console.log("Server is now running in the following addresses:\n");
+	console.log("\nserver is now running in the following addresses:\n");
 	hostnames.entries().forEach(([hostname, internal]) => {
 		console.log(
-			`    -> ${internal ? "Local" : "Network"}:`,
+			`    > ${internal ? "Local" : "Network"}:`,
 			styleText("blue", `http://${hostname}:${PORT}`),
 		);
 	});

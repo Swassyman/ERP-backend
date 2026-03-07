@@ -1,4 +1,4 @@
-import { REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
+import { IS_PROD, REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
 import { asyncHandler } from "@/lib/async-handler.js";
 import { UnauthorizedError } from "@/lib/errors.js";
 import { getAuthenticatedUser, ok } from "@/lib/helpers.js";
@@ -14,7 +14,7 @@ export const login = asyncHandler<{
 
 	res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
+		secure: IS_PROD,
 		sameSite: "lax",
 		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
@@ -27,7 +27,7 @@ export const login = asyncHandler<{
 export const logout = asyncHandler((_req, res) => {
 	res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
+		secure: IS_PROD,
 		sameSite: "lax",
 	});
 	return res.sendStatus(200);
@@ -53,7 +53,7 @@ export const refresh = asyncHandler<{
 
 	res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
+		secure: IS_PROD,
 		sameSite: "lax",
 		maxAge: JWT_REFRESH_TOKEN_EXPIRY,
 	});
