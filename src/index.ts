@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import { nanoid } from "nanoid";
 import { quickEnv } from "@/lib/helpers.js";
-import { cors, errorHandler } from "@/middlewares/index.js";
+import { authenticateToken, cors, errorHandler } from "@/middlewares/index.js";
 // end of normal imports, and router imports follow:
 
 import authRouter from "@/modules/auth/routes.js";
@@ -69,7 +69,7 @@ app.get("/", (_req, res) => res.status(200).json({ status: "active" }));
 // Routes
 app.use("/auth", authRouter);
 
-// app.use(authenticateToken);
+app.use(authenticateToken);
 app.use("/users", usersRouter);
 app.use("/permissions", permissionsRouter);
 app.use("/roles", rolesRouter);
