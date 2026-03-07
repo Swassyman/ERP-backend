@@ -95,6 +95,8 @@ const HOSTNAME = HAS_HOST
 	: (quickEnv("HOSTNAME", false) ?? "localhost");
 
 app.listen(PORT, HOSTNAME, () => {
+	console.log(styleText("green", "\nserver is now running"));
+
 	const hostnames = new Map<string, boolean>();
 
 	if (HOSTNAME === "localhost") {
@@ -114,10 +116,13 @@ app.listen(PORT, HOSTNAME, () => {
 		}
 	}
 
-	console.log("\nserver is now running in the following addresses:\n");
+	console.log(
+		"\nactive addresses",
+		HAS_HOST ? "(exposed to all):" : "(use --host to expose):",
+	);
 	hostnames.entries().forEach(([hostname, internal]) => {
 		console.log(
-			`    > ${internal ? "Local" : "Network"}:`,
+			`  * ${internal ? "Local" : "Network"}:`,
 			styleText("blue", `http://${hostname}:${PORT}`),
 		);
 	});
