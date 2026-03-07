@@ -12,13 +12,19 @@ export const errorHandler: ErrorRequestHandler = (
 		return res.status(422).json({
 			success: false,
 			code: ERROR_CODES.validation_error,
-			message: error.message, // todo: handle this more gracefully, add meta and return all errors
+			message: "Validation failed",
+			errors: error.issues.map((issue) => ({
+				path: issue.path,
+				message: issue.message,
+				code: issue.code,
+			})),
 		});
 	} else if (error instanceof AppError) {
 		return res.status(error.statusCode).json({
 			success: false,
 			code: error.errorCode,
 			message: error.message,
+			errors: [],
 		});
 	}
 
@@ -27,6 +33,7 @@ export const errorHandler: ErrorRequestHandler = (
 			"To have triggered this, that means something really horrible happened.",
 			"Check into this and fix this and this has to be fixed application-wide.",
 		);
+		throw error;
 	}
 
 	console.error(error);
@@ -35,5 +42,6 @@ export const errorHandler: ErrorRequestHandler = (
 		success: false,
 		code: ERROR_CODES.internal_server_error,
 		message: "Something went wrong",
+		errors: [],
 	});
 };

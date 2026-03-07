@@ -1,17 +1,16 @@
-import { asyncHandler } from "@/lib/async-handler.js";
 import { ok } from "@/lib/helpers.js";
 import { createUserSchema } from "./schema.js";
 import * as service from "./service.js";
 
-export const createUser = asyncHandler<{
+export const createUser: ApiRequestHandler<{
 	id: number;
-}>(async (req, res) => {
+}> = async (req, res) => {
 	const body = createUserSchema.parse(req.body);
 	const result = await service.createUser(body);
 	return ok(res, result);
-});
+};
 
-export const getUsers = asyncHandler<
+export const getUsers: ApiRequestHandler<
 	{
 		email: string;
 		fullName: string;
@@ -26,7 +25,7 @@ export const getUsers = asyncHandler<
 			managedEntityId: number;
 		}[];
 	}[]
->(async (_req, res) => {
+> = async (_req, res) => {
 	const result = await service.getUsers();
 	return ok(res, result);
-});
+};

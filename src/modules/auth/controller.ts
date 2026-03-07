@@ -1,14 +1,13 @@
 import { IS_PROD, REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
-import { asyncHandler } from "@/lib/async-handler.js";
 import { UnauthorizedError } from "@/lib/errors.js";
 import { getAuthenticatedUser, ok } from "@/lib/helpers.js";
 import { JWT_REFRESH_TOKEN_EXPIRY } from "@/lib/jwt.js";
 import { loginSchema } from "./schema.js";
 import * as service from "./service.js";
 
-export const login = asyncHandler<{
+export const login: ApiRequestHandler<{
 	accessToken: string;
-}>(async (req, res) => {
+}> = async (req, res) => {
 	const body = loginSchema.parse(req.body);
 	const result = await service.login(body.email, body.password);
 
@@ -22,28 +21,28 @@ export const login = asyncHandler<{
 	return ok(res, {
 		accessToken: result.accessToken,
 	});
-});
+};
 
-export const logout = asyncHandler((_req, res) => {
+export const logout: ApiRequestHandler = (_req, res) => {
 	res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
 		httpOnly: true,
 		secure: IS_PROD,
 		sameSite: "lax",
 	});
 	return res.sendStatus(200);
-});
+};
 
-export const userDetails = asyncHandler<Frontend.AuthenticatedUser>(
-	async (req, res) => {
-		const user = getAuthenticatedUser(req);
-		const result = await service.getUserDetails(user.id);
-		return ok(res, result);
-	},
-);
+export const userDetails: ApiRequestHandler<
+	Frontend.AuthenticatedUser
+> = async (req, res) => {
+	const user = getAuthenticatedUser(req);
+	const result = await service.getUserDetails(user.id);
+	return ok(res, result);
+};
 
-export const refresh = asyncHandler<{
+export const refresh: ApiRequestHandler<{
 	accessToken: string;
-}>(async (req, res) => {
+}> = async (req, res) => {
 	const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 	if (typeof refreshToken !== "string" || refreshToken.trim().length === 0) {
 		throw new UnauthorizedError("No refresh token");
@@ -61,4 +60,4 @@ export const refresh = asyncHandler<{
 	return ok(res, {
 		accessToken: tokens.accessToken,
 	});
-});
+};

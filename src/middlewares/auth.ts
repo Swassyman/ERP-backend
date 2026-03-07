@@ -1,8 +1,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import type { NextFunction, Request, RequestHandler } from "express";
 import { jwtVerify } from "jose";
 import { db, schema } from "@/db/index.js";
-import { ERROR_CODES } from "@/lib/errors.js";
+import { UnauthorizedError } from "@/lib/errors.js";
 import {
 	JWS_ALG_HEADER_PARAMETER,
 	JWT_ACCESS_SECRET_SIGN_KEY,
@@ -10,11 +9,7 @@ import {
 
 const BEARER_PREFIX = "Bearer ";
 
-export const authenticateToken: RequestHandler = async (
-	req: Request,
-	res: ApiResponse,
-	next: NextFunction,
-) => {
+export const authenticateToken: ApiRequestHandler = async (req, _res, next) => {
 	const authHeader = req.headers.authorization;
 
 	if (
@@ -22,11 +17,7 @@ export const authenticateToken: RequestHandler = async (
 		!authHeader.startsWith(BEARER_PREFIX) ||
 		authHeader.length <= BEARER_PREFIX.length
 	) {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.unauthorized,
-			message: "Unauthorized",
-		});
+		throw new UnauthorizedError("No authentication token");
 	}
 
 	try {
@@ -38,11 +29,7 @@ export const authenticateToken: RequestHandler = async (
 		);
 
 		if (typeof payload.id !== "number") {
-			return res.status(401).json({
-				success: false,
-				code: ERROR_CODES.unauthorized,
-				message: "Unauthorized",
-			});
+			throw new UnauthorizedError("Expired token");
 		}
 
 		// todo: always fetch permissions, or embed inside *very* short-lived access tokens?
@@ -75,15 +62,10 @@ export const authenticateToken: RequestHandler = async (
 			id: payload.id,
 			type: payload.type,
 			permissions: permissions.map((permission) => permission.code),
-			// .filter((permission) => isPermission(permission)),
 		};
 
 		next();
 	} catch {
-		return res.status(401).json({
-			success: false,
-			code: ERROR_CODES.unauthorized,
-			message: "Unauthorized",
-		});
+		throw new UnauthorizedError("Expired token");
 	}
 };

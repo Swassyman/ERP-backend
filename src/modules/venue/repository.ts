@@ -8,7 +8,7 @@ export async function createVenue(data: {
 	maxCapacity: number;
 	accessLevel: VenueAccessLevel;
 	isAvailable: boolean;
-	organizationId?: number | undefined;
+	organizationId?: number | null | undefined;
 	unavailabilityReason?: string | undefined;
 }) {
 	// todo: replicate the db checks here.
