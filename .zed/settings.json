@@ -6,12 +6,31 @@
 	"format_on_save": "on",
 	"languages": {
 		"TypeScript": {
-			"formatter": "language_server"
+			"formatter": {
+				"language_server": {
+					"name": "biome"
+				}
+			}
+		},
+		"JSON": {
+			"formatter": {
+				"language_server": {
+					"name": "biome"
+				}
+			}
+		},
+		"JSONC": {
+			"formatter": {
+				"language_server": {
+					"name": "biome"
+				}
+			}
 		}
 	},
 	"lsp": {
 		"biome": {
 			"settings": {
+				"config_path": "biome.json",
 				"require_config_file": true
 			}
 		}
