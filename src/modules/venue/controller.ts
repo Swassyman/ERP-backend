@@ -1,4 +1,3 @@
-import { asyncHandler } from "@/lib/async-handler.js";
 import { ok } from "@/lib/helpers.js";
 import {
 	addMemberToVenueSchema,
@@ -8,16 +7,16 @@ import {
 } from "./schema.js";
 import * as service from "./service.js";
 
-export const createVenue = asyncHandler<{
+export const createVenue: ApiRequestHandler<{
 	id: number;
-}>(async (req, res) => {
+}> = async (req, res) => {
 	const body = createVenueSchema.parse(req.body);
 	// todo: handle problems with unique and foregin constraints
 	const result = await service.createVenue(body);
 	return ok(res, result, 201);
-});
+};
 
-export const getVenues = asyncHandler<
+export const getVenues: ApiRequestHandler<
 	{
 		name: string;
 		venueTypeId: number;
@@ -29,12 +28,12 @@ export const getVenues = asyncHandler<
 		id: number;
 		isActive: boolean;
 	}[]
->(async (_req, res) => {
+> = async (_req, res) => {
 	const result = await service.getVenues();
 	return ok(res, result);
-});
+};
 
-export const getVenueMembers = asyncHandler<
+export const getVenueMembers: ApiRequestHandler<
 	{
 		id: number;
 		isActive: boolean;
@@ -45,38 +44,39 @@ export const getVenueMembers = asyncHandler<
 			email: string;
 		};
 	}[]
->(async (req, res) => {
+> = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
 	const result = await service.getVenueMembers(params.id);
 	return ok(res, result);
-});
+};
 
-export const addMemberToVenue = asyncHandler<{ id: number }>(
-	async (req, res) => {
-		const params = venueScopedSchema.parse(req.params);
-		const body = addMemberToVenueSchema.parse(req.body);
-		const result = await service.addMemberToVenue(params.id, body);
-		return ok(res, result);
-	},
-);
+export const addMemberToVenue: ApiRequestHandler<{ id: number }> = async (
+	req,
+	res,
+) => {
+	const params = venueScopedSchema.parse(req.params);
+	const body = addMemberToVenueSchema.parse(req.body);
+	const result = await service.addMemberToVenue(params.id, body);
+	return ok(res, result);
+};
 
-export const getVenueFacilities = asyncHandler<
+export const getVenueFacilities: ApiRequestHandler<
 	{
 		id: number;
 		facilityId: number;
 		facilityName: string;
 	}[]
->(async (req, res) => {
+> = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
 	const result = await service.getVenueFacilities(params.id);
 	return ok(res, result);
-});
+};
 
-export const setVenueFacilities = asyncHandler<{ facilityId: number }[]>(
-	async (req, res) => {
-		const params = venueScopedSchema.parse(req.params);
-		const body = setVenueFacilitiesSchema.parse(req.body);
-		const result = await service.setVenueFacilities(params.id, body);
-		return ok(res, result);
-	},
-);
+export const setVenueFacilities: ApiRequestHandler<
+	{ facilityId: number }[]
+> = async (req, res) => {
+	const params = venueScopedSchema.parse(req.params);
+	const body = setVenueFacilitiesSchema.parse(req.body);
+	const result = await service.setVenueFacilities(params.id, body);
+	return ok(res, result);
+};

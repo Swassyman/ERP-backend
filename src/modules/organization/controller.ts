@@ -1,4 +1,3 @@
-import { asyncHandler } from "@/lib/async-handler.js";
 import { ok } from "@/lib/helpers.js";
 import {
 	addMemberToOrganizationSchema,
@@ -7,16 +6,16 @@ import {
 } from "./schema.js";
 import * as service from "./service.js";
 
-export const createOrganization = asyncHandler<{
+export const createOrganization: ApiRequestHandler<{
 	id: number;
-}>(async (req, res) => {
+}> = async (req, res) => {
 	const body = createOrganizationSchema.parse(req.body);
 	// todo: handle problems with unique and foregin constraints
 	const result = await service.createOrganization(body);
 	return ok(res, result, 201);
-});
+};
 
-export const getOrganizations = asyncHandler<
+export const getOrganizations: ApiRequestHandler<
 	{
 		organizationTypeId: number;
 		id: number;
@@ -24,12 +23,12 @@ export const getOrganizations = asyncHandler<
 		parentOrganizationId: number | null;
 		isActive: boolean;
 	}[]
->(async (_req, res) => {
+> = async (_req, res) => {
 	const result = await service.getOrganizations();
 	return ok(res, result);
-});
+};
 
-export const getOrganizationMembers = asyncHandler<
+export const getOrganizationMembers: ApiRequestHandler<
 	{
 		id: number;
 		isActive: boolean;
@@ -40,17 +39,17 @@ export const getOrganizationMembers = asyncHandler<
 			email: string;
 		};
 	}[]
->(async (req, res) => {
+> = async (req, res) => {
 	const params = organizationScopedSchema.parse(req.params);
 	const result = await service.getOrganizationMembers(params.id);
 	return ok(res, result);
-});
+};
 
-export const addMemberToOrganization = asyncHandler<{ id: number }>(
-	async (req, res) => {
-		const params = organizationScopedSchema.parse(req.params);
-		const body = addMemberToOrganizationSchema.parse(req.body);
-		const result = await service.addMemberToOrganization(params.id, body);
-		return ok(res, result);
-	},
-);
+export const addMemberToOrganization: ApiRequestHandler<{
+	id: number;
+}> = async (req, res) => {
+	const params = organizationScopedSchema.parse(req.params);
+	const body = addMemberToOrganizationSchema.parse(req.body);
+	const result = await service.addMemberToOrganization(params.id, body);
+	return ok(res, result);
+};

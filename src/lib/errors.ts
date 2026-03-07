@@ -1,14 +1,15 @@
-export enum ERROR_CODES {
-	// todo: sort
-	validation_error = "VALIDATION_ERROR",
-	invalid_credentials = "INVALID_CREDENTIALS",
-	not_found = "NOT_FOUND",
-	unauthorized = "UNAUTHORIZED",
-	already_exists = "ALREADY_EXISTS",
-	internal_server_error = "INTERNAL_SERVER_ERROR",
-	forbidden = "FORBIDDEN",
-	conflict = "CONFLICT",
-}
+export const ERROR_CODES = {
+	validation_error: "VALIDATION_ERROR",
+	invalid_credentials: "INVALID_CREDENTIALS",
+	not_found: "NOT_FOUND",
+	unauthorized: "UNAUTHORIZED",
+	already_exists: "ALREADY_EXISTS",
+	internal_server_error: "INTERNAL_SERVER_ERROR",
+	forbidden: "FORBIDDEN",
+	conflict: "CONFLICT",
+} as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 export class UnreachableError extends Error {
 	constructor() {
@@ -19,7 +20,7 @@ export class UnreachableError extends Error {
 export class AppError extends Error {
 	constructor(
 		public statusCode: number,
-		public errorCode: ERROR_CODES,
+		public errorCode: ErrorCode,
 		message: string,
 	) {
 		super(message);

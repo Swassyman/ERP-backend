@@ -1,8 +1,8 @@
 import type * as express from "express";
 import type { JWTPayload } from "jose";
 import type { PERMISSION } from "./constants.ts";
-import type { ERROR_CODES } from "./lib/errors.ts";
 import type { schema } from "./db/index.ts";
+import type { ErrorCode } from "./lib/errors.ts";
 
 declare global {
 	// schema types
@@ -48,12 +48,18 @@ declare global {
 		data: T;
 		// todo: meta and stuff
 	};
+
 	export type ApiError = {
 		success: false;
-		code: ERROR_CODES;
+		code: ErrorCode;
 		message: string;
-		// todo: details
+		errors: {
+			path: PropertyKey[];
+			message: string;
+			code: string;
+		}[];
 	};
+
 	export type ApiRequestHandler<
 		T = unknown,
 		P = unknown,

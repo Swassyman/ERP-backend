@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import { nanoid } from "nanoid";
 import { quickEnv } from "@/lib/helpers.js";
-import { authenticateToken, cors, errorHandler } from "@/middlewares/index.js";
+import { cors, errorHandler } from "@/middlewares/index.js";
 import { IS_PROD } from "./constants.js";
 import { prepare } from "./prepare.js";
 // end of normal imports, and router imports follow:
@@ -48,16 +48,21 @@ app.use((req, res, next) => {
 		styleText(["bgCyan", "black"], ` ${req.method} `),
 		path,
 	);
-	next();
 
-	const resOk = res.statusCode >= 200 && res.statusCode < 300;
-	console.info(
-		styleText("magenta", new Date().toISOString()),
-		styleText("dim", id),
-		styleText([resOk ? "bgGreen" : "bgRed"], ` ${res.statusCode.toString()} `),
-		// path,
-		styleText("yellow", `${Date.now() - timeStart}ms`),
-	);
+	function l() {
+		const resOk = res.statusCode >= 200 && res.statusCode < 300;
+		console.info(
+			styleText("magenta", new Date().toISOString()),
+			styleText("dim", id),
+			styleText([resOk ? "bgGreen" : "bgRed"], ` ${res.statusCode} `),
+			// path,
+			styleText("yellow", `${Date.now() - timeStart}ms`),
+		);
+	}
+
+	res.once("finish", l);
+
+	next();
 });
 app.use(
 	cors({
@@ -77,7 +82,7 @@ app.get("/", (_req, res) => res.status(200).json({ status: "active" }));
 // === Routes
 app.use("/auth", authRouter);
 
-app.use(authenticateToken);
+// app.use(authenticateToken); // todo: uncomment it
 app.use("/users", usersRouter);
 app.use("/permissions", permissionsRouter);
 app.use("/roles", rolesRouter);
