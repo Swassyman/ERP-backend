@@ -1,5 +1,5 @@
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/utilities/helpers.js";
+import { unreachable } from "@/lib/helpers.js";
 import * as repository from "./repository.js";
 import type { CreateFacilitySchema } from "./schema.js";
 

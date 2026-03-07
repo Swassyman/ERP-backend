@@ -2,11 +2,11 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { NextFunction, Request, RequestHandler } from "express";
 import { jwtVerify } from "jose";
 import { db, schema } from "@/db/index.js";
-import { ERROR_CODES } from "@/utilities/errors.js";
+import { ERROR_CODES } from "@/lib/errors.js";
 import {
 	JWS_ALG_HEADER_PARAMETER,
 	JWT_ACCESS_SECRET_SIGN_KEY,
-} from "@/utilities/jwt.js";
+} from "@/lib/jwt.js";
 
 const BEARER_PREFIX = "Bearer ";
 

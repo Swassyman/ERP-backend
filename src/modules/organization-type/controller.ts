@@ -1,5 +1,5 @@
-import { asyncHandler } from "@/utilities/async-handler.js";
-import { ok } from "@/utilities/helpers.js";
+import { asyncHandler } from "@/lib/async-handler.js";
+import { ok } from "@/lib/helpers.js";
 import {
 	addAllowedParentParamsSchema,
 	createOrganizationTypeRoleSchema,

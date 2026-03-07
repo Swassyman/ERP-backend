@@ -1,4 +1,4 @@
-import { ERROR_CODES } from "@/utilities/errors.js";
+import { ERROR_CODES } from "@/lib/errors.js";
 
 export function requireUserType(userTypes: UserType[]): ApiRequestHandler {
 	return (req, res, next) => {

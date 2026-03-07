@@ -1,8 +1,8 @@
 import { REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
-import { asyncHandler } from "@/utilities/async-handler.js";
-import { UnauthorizedError } from "@/utilities/errors.js";
-import { getAuthenticatedUser, ok } from "@/utilities/helpers.js";
-import { JWT_REFRESH_TOKEN_EXPIRY } from "@/utilities/jwt.js";
+import { asyncHandler } from "@/lib/async-handler.js";
+import { UnauthorizedError } from "@/lib/errors.js";
+import { getAuthenticatedUser, ok } from "@/lib/helpers.js";
+import { JWT_REFRESH_TOKEN_EXPIRY } from "@/lib/jwt.js";
 import { loginSchema } from "./schema.js";
 import * as service from "./service.js";
 
