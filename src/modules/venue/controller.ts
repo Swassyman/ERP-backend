@@ -11,7 +11,6 @@ export const createVenue: ApiRequestHandler<{
 	id: number;
 }> = async (req, res) => {
 	const body = createVenueSchema.parse(req.body);
-	// todo: handle problems with unique and foregin constraints
 	const result = await service.createVenue(body);
 	return ok(res, result, 201);
 };

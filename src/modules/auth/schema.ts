@@ -1,11 +1,11 @@
 import z from "zod";
-import { INSTITUTION_DOMAIN_REGEXP } from "@/constants.js";
+import { INSTITUTION_DOMAIN } from "@/lib/constants.js";
 
 export const loginSchema = z
 	.object({
 		email: z
 			.email({ error: "Invalid email format" })
-			.regex(INSTITUTION_DOMAIN_REGEXP, {
+			.endsWith(INSTITUTION_DOMAIN, {
 				error: "Expected institution domain email",
 			}),
 		password: z

@@ -1,4 +1,4 @@
-import { IS_PROD, REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
+import { IS_PROD, REFRESH_TOKEN_COOKIE_NAME } from "@/lib/constants.js";
 import { UnauthorizedError } from "@/lib/errors.js";
 import { getAuthenticatedUser, ok } from "@/lib/helpers.js";
 import { JWT_REFRESH_TOKEN_EXPIRY } from "@/lib/jwt.js";

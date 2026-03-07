@@ -75,7 +75,6 @@ export async function findVenueManagedEntity(venueId: number) {
 }
 
 export async function getVenueMembers(managedEntityId: number) {
-	// todo: do I need to check whether the venue exist? think
 	return await db.query.userRole.findMany({
 		where: and(
 			eq(schema.userRole.managedEntityId, managedEntityId),

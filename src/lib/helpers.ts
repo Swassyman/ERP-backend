@@ -1,6 +1,6 @@
 import { NeonDbError } from "@neondatabase/serverless";
 import { DrizzleQueryError } from "drizzle-orm/errors";
-import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/constants.js";
+import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/lib/constants.js";
 import { UnauthorizedError, UnreachableError } from "./errors.js";
 
 export function getPgErrorCode(error: unknown): string | undefined {

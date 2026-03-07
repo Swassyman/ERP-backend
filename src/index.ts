@@ -5,7 +5,7 @@ import express from "express";
 import { nanoid } from "nanoid";
 import { quickEnv } from "@/lib/helpers.js";
 import { cors, errorHandler } from "@/middlewares/index.js";
-import { IS_PROD } from "./constants.js";
+import { IS_PROD } from "./lib/constants.js";
 import { prepare } from "./prepare.js";
 // end of normal imports, and router imports follow:
 

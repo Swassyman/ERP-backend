@@ -4,8 +4,6 @@ import * as controller from "./controller.js";
 
 const router: Router = Router();
 
-// todo: enforce permissions
-
 router.use(authenticateToken);
 router.use(requireUserType(["admin"]));
 
