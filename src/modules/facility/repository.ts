@@ -1,5 +1,5 @@
 import { isNull } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 import { unreachable } from "@/utilities/helpers.js";
 
 export async function findFacilities() {

@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 
 export async function findUserByEmail(email: string) {
 	return await db.query.user.findFirst({

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 
 export async function getPermissions() {
 	return await db

@@ -1,5 +1,5 @@
 import { and, eq, notInArray } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 
 export async function getRolePermissions(rolePermissionId: number) {
 	return await db
@@ -56,7 +56,10 @@ export async function setRolePermissions(
 				.where(
 					and(
 						eq(schema.rolePermission.roleId, roleId),
-						notInArray(schema.rolePermission.permissionId, data.permissionIds),
+						notInArray(
+							schema.rolePermission.permissionId,
+							data.permissionIds,
+						),
 					),
 				),
 		);

@@ -1,5 +1,5 @@
 import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 import { unreachable } from "@/utilities/helpers.js";
 
 export async function createVenue(data: {
@@ -149,7 +149,10 @@ export async function setVenueFacilities(
 				),
 			)
 			.onConflictDoNothing({
-				target: [schema.venueFacility.venueId, schema.venueFacility.facilityId],
+				target: [
+					schema.venueFacility.venueId,
+					schema.venueFacility.facilityId,
+				],
 			})
 			.returning({ id: schema.venueFacility.id }),
 	);
@@ -162,7 +165,10 @@ export async function setVenueFacilities(
 				.where(
 					and(
 						eq(schema.venueFacility.venueId, venueId),
-						notInArray(schema.venueFacility.facilityId, data.facilityIds),
+						notInArray(
+							schema.venueFacility.facilityId,
+							data.facilityIds,
+						),
 					),
 				),
 		);

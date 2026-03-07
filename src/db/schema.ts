@@ -31,7 +31,7 @@ export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;
 
 // todo: how about switching to string based ids?
 
-// Enums
+// === Enums
 export const userTypeEnum = pgEnum("user_type", USER_TYPES);
 export const managedEntityTypeEnum = pgEnum(
 	"managed_entity_type",
@@ -42,43 +42,7 @@ export const venueAccessLevelEnum = pgEnum(
 	VENUE_ACCESS_LEVELS,
 );
 
-// Common fields
-type PgStringTimestamp = ReturnType<typeof timestamp<"string">>;
-type Scope = "common" | "soft-delete";
-type CommonFields = {
-	createdAt: NotNull<HasDefault<PgStringTimestamp>>;
-	updatedAt: NotNull<HasDefault<PgStringTimestamp>>;
-};
-type SoftDeleteFields = {
-	deletedAt: PgStringTimestamp;
-};
-type FieldsFor<T extends readonly Scope[]> = ("common" extends T[number]
-	? CommonFields
-	: Record<never, never>) &
-	("soft-delete" extends T[number] ? SoftDeleteFields : Record<never, never>);
-
-function fields<const T extends readonly Scope[]>(...scopes: T): FieldsFor<T> {
-	return {
-		...(scopes.includes("common") && {
-			createdAt: timestamp({ mode: "string", withTimezone: true })
-				.defaultNow()
-				.notNull(),
-			updatedAt: timestamp({ mode: "string", withTimezone: true })
-				.defaultNow()
-				.$onUpdate(() => sql`now()`)
-				.notNull(),
-		}),
-		...(scopes.includes("soft-delete") && {
-			deletedAt: timestamp({
-				mode: "string",
-				withTimezone: true,
-			}),
-		}),
-	} as FieldsFor<T>;
-}
-
-// Tables
-
+// === Tables
 export const managedEntity = pgTable(
 	"managed_entity",
 	{
@@ -88,7 +52,9 @@ export const managedEntity = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex().on(t.managedEntityType, t.refId).where(isNull(t.deletedAt)),
+		uniqueIndex()
+			.on(t.managedEntityType, t.refId)
+			.where(isNull(t.deletedAt)),
 	],
 	// soft-fk(ref_id) -> organization, venue
 );
@@ -123,9 +89,8 @@ export const role = pgTable(
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
-		managedEntityType:
-			managedEntityTypeEnum() // to which type of managed entity this role belongs to.
-				.notNull(),
+		managedEntityType: managedEntityTypeEnum() // to which type of managed entity this role belongs to.
+			.notNull(),
 		typeRefId: integer().notNull(), // soft-fk(organizationType, venueType), since roles belong under institution, dept, lab, hall, etc.
 		...fields("common", "soft-delete"),
 	},
@@ -336,7 +301,9 @@ export const venue = pgTable(
 		venueTypeId: smallint()
 			.references(() => venueType.id)
 			.notNull(),
-		organizationId: integer().references((): AnyPgColumn => organization.id),
+		organizationId: integer().references(
+			(): AnyPgColumn => organization.id,
+		),
 		accessLevel: venueAccessLevelEnum().notNull(),
 		isAvailable: boolean().notNull(),
 		unavailabilityReason: text(),
@@ -402,3 +369,38 @@ export const venueFacilityRelations = relations(venueFacility, (r) => ({
 		references: [facility.id],
 	}),
 }));
+
+// === Common fields
+type PgStringTimestamp = ReturnType<typeof timestamp<"string">>;
+type Scope = "common" | "soft-delete";
+type CommonFields = {
+	createdAt: NotNull<HasDefault<PgStringTimestamp>>;
+	updatedAt: NotNull<HasDefault<PgStringTimestamp>>;
+};
+type SoftDeleteFields = {
+	deletedAt: PgStringTimestamp;
+};
+type FieldsFor<T extends readonly Scope[]> = ("common" extends T[number]
+	? CommonFields
+	: Record<never, never>) &
+	("soft-delete" extends T[number] ? SoftDeleteFields : Record<never, never>);
+
+function fields<const T extends readonly Scope[]>(...scopes: T): FieldsFor<T> {
+	return {
+		...(scopes.includes("common") && {
+			createdAt: timestamp({ mode: "string", withTimezone: true })
+				.defaultNow()
+				.notNull(),
+			updatedAt: timestamp({ mode: "string", withTimezone: true })
+				.defaultNow()
+				.$onUpdate(() => sql`now()`)
+				.notNull(),
+		}),
+		...(scopes.includes("soft-delete") && {
+			deletedAt: timestamp({
+				mode: "string",
+				withTimezone: true,
+			}),
+		}),
+	} as FieldsFor<T>;
+}
