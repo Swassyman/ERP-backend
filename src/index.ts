@@ -20,7 +20,7 @@ import venueTypesRouter from "@/modules/venue-type/routes.js";
 // todo: make prepare checks
 // e.g.: check permissions defined in code vs. in db. if mistmatch, throw.
 
-const PORT = Number(process.env.PORT) || 3192;
+const PORT = Number(quickEnv("PORT")) || 3192;
 if (Number.isNaN(PORT) || !Number.isInteger(PORT)) {
 	throw new Error("Invalid PORT specified");
 }
