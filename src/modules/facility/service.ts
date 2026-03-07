@@ -1,4 +1,4 @@
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 import { unreachable } from "@/utilities/helpers.js";
 import * as repository from "./repository.js";
 import type { CreateFacilitySchema } from "./schema.js";

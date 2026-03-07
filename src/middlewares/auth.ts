@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { NextFunction, Request, RequestHandler } from "express";
 import { jwtVerify } from "jose";
-import { db, schema } from "@/config/db.js";
+import { db, schema } from "@/db/index.js";
 import { ERROR_CODES } from "@/utilities/errors.js";
 import {
 	JWS_ALG_HEADER_PARAMETER,

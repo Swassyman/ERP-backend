@@ -2,7 +2,7 @@ import type * as express from "express";
 import type { JWTPayload } from "jose";
 import type { PERMISSION } from "./constants.ts";
 import type { ERROR_CODES } from "./utilities/errors.ts";
-import type { schema } from "./config/db.ts";
+import type { schema } from "./db/index.ts";
 
 declare global {
 	// schema types

@@ -1,5 +1,5 @@
 import z from "zod";
-import { VENUE_ACCESS_LEVELS } from "@/config/schema.js";
+import { VENUE_ACCESS_LEVELS } from "@/db/schema.js";
 
 export const createVenueSchema = z
 	.object({
@@ -29,8 +29,7 @@ export const createVenueSchema = z
 			(venue.isAvailable && venue.unavailabilityReason == null) ||
 			(!venue.isAvailable && venue.unavailabilityReason != null),
 		{
-			error:
-				"Venue must have reason for its unavailability if marked unavailable",
+			error: "Venue must have reason for its unavailability if marked unavailable",
 		},
 	)
 	.strict();
