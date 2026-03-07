@@ -74,7 +74,7 @@ export const user = pgTable(
 		uniqueIndex().on(t.email).where(isNull(t.deletedAt)),
 		check(
 			"email_check",
-			sql`${t.email} LIKE '%@${sql.raw(INSTITUTION_DOMAIN)}`,
+			sql`${t.email} LIKE '%@${sql.raw(INSTITUTION_DOMAIN)}'`,
 		),
 	],
 );
