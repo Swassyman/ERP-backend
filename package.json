@@ -9,10 +9,10 @@
 		"check": "tsc --noEmit && biome check",
 		"lint": "biome lint",
 		"fmt": "biome format --write",
-		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate",
+		"db:push": "tsx node_modules/drizzle-kit/bin.cjs push",
+		"db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
 		"db:populate": "tsx populate.ts",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "tsx node_modules/drizzle-kit/bin.cjs studio"
 	},
 	"keywords": [],
 	"author": "",

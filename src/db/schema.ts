@@ -20,15 +20,12 @@ import {
 	unique,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { INSTITUTION_DOMAIN } from "@/lib/constants.js";
-
-// note: reasoning for not putting inside constants.ts:
-// These constants are values directly inside the database.
-// They are system-level, not application level.
-// actual reason: some drizzle-kit type issue (there are hacks tho)
-export const USER_TYPES = ["admin", "end_user"] as const;
-export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
-export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;
+import {
+	INSTITUTION_DOMAIN,
+	MANAGED_ENTITY_TYPES,
+	USER_TYPES,
+	VENUE_ACCESS_LEVELS,
+} from "@/lib/constants.js";
 
 // todo: how about switching to string based ids?
 

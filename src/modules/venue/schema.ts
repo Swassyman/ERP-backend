@@ -1,5 +1,5 @@
 import z from "zod";
-import { VENUE_ACCESS_LEVELS } from "@/db/schema.js";
+import { VENUE_ACCESS_LEVELS } from "@/lib/constants.js";
 
 export const createVenueSchema = z
 	.object({
