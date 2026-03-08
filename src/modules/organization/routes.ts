@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireUserType } from "@/middlewares/index.js";
+import { requirePermissions } from "@/middlewares/index.js";
 import * as controller from "./controller.js";
 
 const router: Router = Router();
@@ -7,12 +7,16 @@ const router: Router = Router();
 // todo: enforce permissions
 
 router.get("/", controller.getOrganizations);
-router.post("/", requireUserType(["admin"]), controller.createOrganization);
+router.post(
+	"/",
+	requirePermissions(["organization:create"]),
+	controller.createOrganization,
+);
 
 router.get("/:id/members", controller.getOrganizationMembers);
 router.post(
 	"/:id/members",
-	requireUserType(["admin"]),
+	requirePermissions(["organization:add_member"]),
 	controller.addMemberToOrganization,
 );
 
