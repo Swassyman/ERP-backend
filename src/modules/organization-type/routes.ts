@@ -1,16 +1,20 @@
 import { Router } from "express";
-import { requireUserType } from "@/middlewares/index.js";
+import { requirePermissions } from "@/middlewares/index.js";
 import * as controller from "./controller.js";
 
 const router: Router = Router();
 
 router.get("/", controller.getOrganizationTypes);
-router.post("/", requireUserType(["admin"]), controller.createOrganizationType);
+router.post(
+	"/",
+	requirePermissions(["organization_type:create"]),
+	controller.createOrganizationType,
+);
 
 router.get("/:id/children", controller.getOrganizationTypeChildTypes);
 router.post(
 	"/:id/children/:childId",
-	requireUserType(["admin"]),
+	requirePermissions(["organization_type:modify_hierarchy"]),
 	controller.addAllowedChildType,
 );
 
@@ -22,7 +26,7 @@ router.post(
 router.get("/:id/roles", controller.getOrganizationTypeRoles);
 router.post(
 	"/:id/roles",
-	requireUserType(["admin"]),
+	requirePermissions(["organization_type:create_role"]),
 	controller.createOrganizationTypeRole,
 );
 

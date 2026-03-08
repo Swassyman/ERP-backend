@@ -13,19 +13,35 @@ export const USER_TYPES = ["admin", "end_user"] as const;
 export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
 export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;
 
-// todo: fill
-// NOTE: keep it sorted like the schema:
+// note: keep it sorted like the schema:
 export const PERMISSION = {
-	user: {
-		create: "Create users",
-		modify: "Modify users",
-		delete: "Delete users",
+	facility: {
+		create: "Create facility",
 	},
 	organization: {
 		create: "Create organizations",
-		modify: "Modify organizations",
-		delete: "Delete organizations",
-		assign_users: "Assign users to organizations",
+		// get_members: "Get organization members", // todo: think hmmm
+		add_member: "Add users to organizations",
+	},
+	organization_type: {
+		create: "Create organization types",
+		modify_hierarchy: "Modify hierarchy of organization types",
+		create_role: "Create roles under organization types",
+	},
+	role: {
+		modify_permissions: "Modify permissions of roles",
+	},
+	user: {
+		create: "Create users",
+	},
+	venue: {
+		create: "Create venues",
+		add_member: "Add users to organizations",
+		modify_facilities: "Modify facilities of venues",
+	},
+	venue_type: {
+		create: "Create venue types",
+		create_role: "Create roles under venue types",
 	},
 } as const;
 
