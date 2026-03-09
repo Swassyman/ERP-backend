@@ -255,7 +255,7 @@ export const organization = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: discuss whether to add 'organizationTypeId' to unique
+		uniqueIndex().on(t.organizationTypeId, t.name).where(isNull(t.deletedAt)),
 	],
 );
 
@@ -307,7 +307,7 @@ export const venue = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: discuss whether to add 'venueTypeId' to unique
+		uniqueIndex().on(t.venueTypeId, t.name).where(isNull(t.deletedAt)),
 		check(
 			"availability_details",
 			sql`(${t.isAvailable} = TRUE AND ${t.unavailabilityReason} IS NULL) OR
