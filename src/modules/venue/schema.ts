@@ -34,7 +34,9 @@ export const createVenueSchema = z
 	.refine(
 		(venue) =>
 			(venue.isAvailable && venue.unavailabilityReason == null) ||
-			(!venue.isAvailable && venue.unavailabilityReason != null),
+			(!venue.isAvailable &&
+				venue.unavailabilityReason != null &&
+				venue.unavailabilityReason.length > 0),
 		{
 			error:
 				"Venue must have reason for its unavailability if marked unavailable",

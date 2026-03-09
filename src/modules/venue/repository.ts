@@ -11,8 +11,6 @@ export async function createVenue(data: {
 	organizationId?: number | null | undefined;
 	unavailabilityReason?: string | undefined;
 }) {
-	// todo: replicate the db checks here.
-	// e.g.: isAvailable === (unavailabilityReason == null)
 	const [inserted] = await db
 		.insert(schema.venue)
 		.values({
