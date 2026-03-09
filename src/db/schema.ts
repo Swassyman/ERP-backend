@@ -46,7 +46,7 @@ export const managedEntity = pgTable(
 	{
 		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
 		managedEntityType: managedEntityTypeEnum().notNull(),
-		refId: integer().notNull(), // todo: make trigger for check
+		refId: integer().notNull(),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
@@ -308,6 +308,11 @@ export const venue = pgTable(
 	},
 	(t) => [
 		uniqueIndex().on(t.name).where(isNull(t.deletedAt)), // todo: discuss whether to add 'venueTypeId' to unique
+		check(
+			"availability_details",
+			sql`(${t.isAvailable} = TRUE AND ${t.unavailabilityReason} IS NULL) OR
+			(${t.isAvailable} = FALSE AND ${t.unavailabilityReason} IS NOT NULL AND LENGTH(${t.unavailabilityReason}) > 0)`,
+		),
 	],
 );
 

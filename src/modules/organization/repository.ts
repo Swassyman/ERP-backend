@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { unreachable } from "@/lib/helpers.js";
 
@@ -7,24 +7,14 @@ export async function createOrganization(data: {
 	organizationTypeId: number;
 	parentOrganizationId: number | null | undefined;
 }) {
-	const newOrg = db.$with("new_org").as(
-		db
-			.insert(schema.organization)
-			.values({
-				name: data.name,
-				organizationTypeId: data.organizationTypeId,
-				parentOrganizationId: data.parentOrganizationId ?? null,
-			})
-			.returning({ id: schema.organization.id }),
-	);
 	const [inserted] = await db
-		.with(newOrg)
-		.insert(schema.managedEntity)
+		.insert(schema.organization)
 		.values({
-			managedEntityType: "organization",
-			refId: sql`(select id from ${newOrg})`,
+			name: data.name,
+			organizationTypeId: data.organizationTypeId,
+			parentOrganizationId: data.parentOrganizationId ?? null,
 		})
-		.returning({ id: newOrg.id });
+		.returning({ id: schema.organization.id });
 
 	if (inserted == null) unreachable();
 

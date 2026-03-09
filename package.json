@@ -11,7 +11,8 @@
 		"fmt": "biome format --write",
 		"db:push": "tsx node_modules/drizzle-kit/bin.cjs push",
 		"db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
-		"db:populate": "tsx populate.ts",
+		"db:populate": "tsx src/db/scripts/populate.ts",
+		"db:triggers": "tsx src/db/scripts/apply-triggers.ts",
 		"db:studio": "tsx node_modules/drizzle-kit/bin.cjs studio"
 	},
 	"keywords": [],

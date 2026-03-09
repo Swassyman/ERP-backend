@@ -18,10 +18,11 @@ router.post(
 	controller.addAllowedChildType,
 );
 
-// todo: delete (soft) organization type
-// todo: delete parent-child organization type relations
-// todo: get parents for a organization type
-// todo: get children for a organization type
+// todo:
+// * delete (soft) organization type
+// * delete parent-child organization type relations
+// * get parents for a organization type
+// * get children for a organization types
 
 router.get("/:id/roles", controller.getOrganizationTypeRoles);
 router.post(

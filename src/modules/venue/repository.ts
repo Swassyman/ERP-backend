@@ -1,4 +1,4 @@
-import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { unreachable } from "@/lib/helpers.js";
 
@@ -13,28 +13,18 @@ export async function createVenue(data: {
 }) {
 	// todo: replicate the db checks here.
 	// e.g.: isAvailable === (unavailabilityReason == null)
-	const newVenue = db.$with("new_venue").as(
-		db
-			.insert(schema.venue)
-			.values({
-				name: data.name,
-				venueTypeId: data.venueTypeId,
-				organizationId: data.organizationId,
-				accessLevel: data.accessLevel,
-				isAvailable: data.isAvailable,
-				unavailabilityReason: data.unavailabilityReason,
-				maxCapacity: data.maxCapacity,
-			})
-			.returning({ id: schema.venue.id }),
-	);
 	const [inserted] = await db
-		.with(newVenue)
-		.insert(schema.managedEntity)
+		.insert(schema.venue)
 		.values({
-			managedEntityType: "venue",
-			refId: sql`(select id from ${newVenue})`,
+			name: data.name,
+			venueTypeId: data.venueTypeId,
+			organizationId: data.organizationId,
+			accessLevel: data.accessLevel,
+			isAvailable: data.isAvailable,
+			unavailabilityReason: data.unavailabilityReason,
+			maxCapacity: data.maxCapacity,
 		})
-		.returning({ id: newVenue.id });
+		.returning({ id: schema.venue.id });
 
 	if (inserted == null) unreachable();
 
