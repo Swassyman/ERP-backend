@@ -1,6 +1,6 @@
 import { Router } from "express";
-import * as controller from "./controller.js";
 import { requirePermissions } from "@/middlewares/require-permissions.js";
+import * as controller from "./controller.js";
 
 const router: Router = Router();
 

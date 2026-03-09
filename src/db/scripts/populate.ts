@@ -6,8 +6,7 @@ import { isPermission, quickEnv, unreachable } from "@/lib/helpers.js";
 import "dotenv/config";
 import { eq, inArray, type SQL, sql } from "drizzle-orm";
 
-// ADMIN USER ACCOUNT
-
+// === Setup 'admin' user account
 const ADMIN_LOGIN_EMAIL = quickEnv("ADMIN_LOGIN_EMAIL");
 const ADMIN_LOGIN_PASSWORD = quickEnv("ADMIN_LOGIN_PASSWORD");
 
@@ -55,8 +54,7 @@ if (existingAdminAccounts.length === 0) {
 	}
 }
 
-// PERMISSIONS
-
+// === Sync permissions
 console.log("Setting up permissions");
 
 const existingPermissions = await db
