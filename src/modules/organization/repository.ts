@@ -52,7 +52,6 @@ export async function findOrganizationManagedEntity(organizationId: number) {
 }
 
 export async function getOrganizationMembers(managedEntityId: number) {
-	// todo: do I need to check whether the org exist? think
 	return await db.query.userRole.findMany({
 		where: and(
 			eq(schema.userRole.managedEntityId, managedEntityId),

@@ -15,7 +15,6 @@ export async function getUserWithPermissions(id: number) {
 			email: true,
 			fullName: true,
 			type: true,
-			// todo: return more info
 		},
 		with: {
 			roles: {
