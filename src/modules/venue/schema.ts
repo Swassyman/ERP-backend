@@ -38,37 +38,28 @@ export const createVenueSchema = z
 				venue.unavailabilityReason != null &&
 				venue.unavailabilityReason.length > 0),
 		{
-			error:
-				"Venue must have reason for its unavailability if marked unavailable",
+			error: "Venue must have reason for its unavailability if marked unavailable",
 		},
 	)
 	.strict();
 
 export const venueScopedSchema = z
 	.object({
-		id: z.coerce
-			.number({ error: "Invalid venue ID" })
-			.int({ error: "Invalid venue ID" }),
+		id: z.coerce.number({ error: "Invalid venue ID" }).int({ error: "Invalid venue ID" }),
 	})
 	.strict();
 
 export const addMemberToVenueSchema = z
 	.object({
-		userId: z.coerce
-			.number({ error: "Invalid user ID" })
-			.int({ error: "Invalid user ID" }),
-		roleId: z.coerce
-			.number({ error: "Invalid role ID" })
-			.int({ error: "Invalid role ID" }),
+		userId: z.coerce.number({ error: "Invalid user ID" }).int({ error: "Invalid user ID" }),
+		roleId: z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }),
 	})
 	.strict();
 
 export const setVenueFacilitiesSchema = z
 	.object({
 		facilityId: z.array(
-			z.coerce
-				.number({ error: "Invalid facility ID" })
-				.int({ error: "Invalid facility ID" }),
+			z.coerce.number({ error: "Invalid facility ID" }).int({ error: "Invalid facility ID" }),
 			{ error: "Invalid set of facility IDs" },
 		),
 	})
@@ -77,6 +68,4 @@ export const setVenueFacilitiesSchema = z
 export type CreateVenueSchema = z.output<typeof createVenueSchema>;
 export type VenueScopedSchema = z.output<typeof venueScopedSchema>;
 export type AddMemberToVenueSchema = z.output<typeof addMemberToVenueSchema>;
-export type SetVenueFacilitiesSchema = z.output<
-	typeof setVenueFacilitiesSchema
->;
+export type SetVenueFacilitiesSchema = z.output<typeof setVenueFacilitiesSchema>;

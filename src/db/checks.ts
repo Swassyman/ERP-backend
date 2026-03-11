@@ -16,8 +16,7 @@ export const CHECKS = {
 	},
 	venue: {
 		unavailability_reason_presence: {
-			error:
-				"Unavailability reason must be present only when venue is unavailable",
+			error: "Unavailability reason must be present only when venue is unavailable",
 		},
 	},
 } as const satisfies Record<string, CustomChecks>;
@@ -28,10 +27,7 @@ type CheckIdentifier = {
 	}[keyof (typeof CHECKS)[TT]];
 }[keyof typeof CHECKS];
 
-export function buildCheck(
-	identifier: CheckIdentifier,
-	value: SQL,
-): CheckBuilder {
+export function buildCheck(identifier: CheckIdentifier, value: SQL): CheckBuilder {
 	const colonIndex = identifier.indexOf(":");
 	if (colonIndex < 1) throw new Error("invalid identifier"); // 1 because table name cannot be empty
 	const tableName = identifier.slice(0, colonIndex);
@@ -46,9 +42,6 @@ export function isTableName(name: string): name is TableName {
 	return name in CHECKS;
 }
 
-export function isCheckName<T extends TableName>(
-	table: T,
-	name: string,
-): name is CheckName<T> {
+export function isCheckName<T extends TableName>(table: T, name: string): name is CheckName<T> {
 	return name in CHECKS[table];
 }

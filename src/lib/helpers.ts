@@ -1,10 +1,6 @@
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/lib/constants.js";
-import {
-	handleDbError,
-	UnauthorizedError,
-	UnreachableError,
-} from "./errors.js";
+import { handleDbError, UnauthorizedError, UnreachableError } from "./errors.js";
 
 export function unreachable(): never {
 	console.error("never supposed to reach here");

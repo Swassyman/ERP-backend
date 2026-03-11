@@ -2,12 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError, ERROR_CODES, UnreachableError } from "@/lib/errors.js";
 
-export const errorHandler: ErrorRequestHandler = (
-	error: Error,
-	_req,
-	res: ApiResponse,
-	_next,
-) => {
+export const errorHandler: ErrorRequestHandler = (error: Error, _req, res: ApiResponse, _next) => {
 	if (error instanceof ZodError) {
 		return res.status(422).json({
 			success: false,

@@ -12,9 +12,7 @@ export const createVenueTypeSchema = z
 
 export const venueTypeScopedSchema = z
 	.object({
-		id: z.coerce
-			.number({ error: "Invalid venue type ID" })
-			.int({ error: "Invalid venue type ID" }),
+		id: z.coerce.number({ error: "Invalid venue type ID" }).int({ error: "Invalid venue type ID" }),
 	})
 	.strict();
 
@@ -30,6 +28,4 @@ export const createVenueTypeRoleSchema = z
 
 export type CreateVenueTypeSchema = z.output<typeof createVenueTypeSchema>;
 export type VenueTypeScopedSchema = z.output<typeof venueTypeScopedSchema>;
-export type CreateVenueTypeRoleSchema = z.output<
-	typeof createVenueTypeRoleSchema
->;
+export type CreateVenueTypeRoleSchema = z.output<typeof createVenueTypeRoleSchema>;

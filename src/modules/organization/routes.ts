@@ -5,11 +5,7 @@ import * as controller from "./controller.js";
 const router: Router = Router();
 
 router.get("/", controller.getOrganizations);
-router.post(
-	"/",
-	requirePermissions(["organization:create"]),
-	controller.createOrganization,
-);
+router.post("/", requirePermissions(["organization:create"]), controller.createOrganization);
 
 router.get("/:id/members", controller.getOrganizationMembers);
 router.post(

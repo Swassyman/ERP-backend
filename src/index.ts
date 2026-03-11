@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 		path,
 	);
 
-	function l() {
+	function onFinish() {
 		const resOk = res.statusCode >= 200 && res.statusCode < 300;
 		console.info(
 			styleText("magenta", new Date().toISOString()),
@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 		);
 	}
 
-	res.once("finish", l);
+	res.once("finish", onFinish);
 
 	next();
 });
@@ -95,9 +95,7 @@ app.use("/facilities", facilitiesRouter);
 app.use(errorHandler);
 
 const HAS_HOST = process.argv.includes("--host");
-const HOSTNAME = HAS_HOST
-	? "0.0.0.0"
-	: (quickEnv("HOSTNAME", false) ?? "localhost");
+const HOSTNAME = HAS_HOST ? "0.0.0.0" : (quickEnv("HOSTNAME", false) ?? "localhost");
 
 app.listen(PORT, HOSTNAME, () => {
 	console.log(styleText("green", "\nserver is now running"));
@@ -121,10 +119,7 @@ app.listen(PORT, HOSTNAME, () => {
 		}
 	}
 
-	console.log(
-		"\nactive addresses",
-		HAS_HOST ? "(exposed to all):" : "(use --host to expose):",
-	);
+	console.log("\nactive addresses", HAS_HOST ? "(exposed to all):" : "(use --host to expose):");
 	hostnames.entries().forEach(([hostname, internal]) => {
 		console.log(
 			`  * ${internal ? "Local" : "Network"}:`,

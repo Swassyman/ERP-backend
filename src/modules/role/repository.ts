@@ -10,18 +10,13 @@ export const getRolePermissions = dbAction(async (rolePermissionId: number) => {
 			description: schema.permission.description,
 		})
 		.from(schema.rolePermission)
-		.innerJoin(
-			schema.permission,
-			eq(schema.rolePermission.permissionId, schema.permission.id),
-		)
+		.innerJoin(schema.permission, eq(schema.rolePermission.permissionId, schema.permission.id))
 		.where(eq(schema.rolePermission.roleId, rolePermissionId));
 	// note: no deletedAt
 });
 
 export const deleteAll = dbAction(async (roleId: number) => {
-	await db
-		.delete(schema.rolePermission)
-		.where(eq(schema.rolePermission.roleId, roleId));
+	await db.delete(schema.rolePermission).where(eq(schema.rolePermission.roleId, roleId));
 });
 
 export const setRolePermissions = dbAction(
@@ -39,10 +34,7 @@ export const setRolePermissions = dbAction(
 					),
 				)
 				.onConflictDoNothing({
-					target: [
-						schema.rolePermission.roleId,
-						schema.rolePermission.permissionId,
-					],
+					target: [schema.rolePermission.roleId, schema.rolePermission.permissionId],
 				})
 				.returning({
 					roleId: schema.rolePermission.roleId,
@@ -58,10 +50,7 @@ export const setRolePermissions = dbAction(
 					.where(
 						and(
 							eq(schema.rolePermission.roleId, roleId),
-							notInArray(
-								schema.rolePermission.permissionId,
-								data.permissionIds,
-							),
+							notInArray(schema.rolePermission.permissionId, data.permissionIds),
 						),
 					),
 			);

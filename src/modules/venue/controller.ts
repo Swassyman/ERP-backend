@@ -49,10 +49,7 @@ export const getVenueMembers: ApiRequestHandler<
 	return ok(res, result);
 };
 
-export const addMemberToVenue: ApiRequestHandler<{ id: number }> = async (
-	req,
-	res,
-) => {
+export const addMemberToVenue: ApiRequestHandler<{ id: number }> = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
 	const body = addMemberToVenueSchema.parse(req.body);
 	const result = await service.addMemberToVenue(params.id, body);
@@ -71,9 +68,7 @@ export const getVenueFacilities: ApiRequestHandler<
 	return ok(res, result);
 };
 
-export const setVenueFacilities: ApiRequestHandler<
-	{ facilityId: number }[]
-> = async (req, res) => {
+export const setVenueFacilities: ApiRequestHandler<{ facilityId: number }[]> = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
 	const body = setVenueFacilitiesSchema.parse(req.body);
 	const result = await service.setVenueFacilities(params.id, body);

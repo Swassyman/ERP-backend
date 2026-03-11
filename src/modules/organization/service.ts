@@ -1,9 +1,6 @@
 import { NotFoundError } from "@/lib/errors.js";
 import * as repository from "./repository.js";
-import type {
-	AddMemberToOrganizationSchema,
-	CreateOrganizationSchema,
-} from "./schema.js";
+import type { AddMemberToOrganizationSchema, CreateOrganizationSchema } from "./schema.js";
 
 export async function createOrganization(input: CreateOrganizationSchema) {
 	return await repository.createOrganization({
@@ -18,11 +15,9 @@ export async function getOrganizations() {
 }
 
 export async function getOrganizationMembers(organizationId: number) {
-	const relatedManagedEntity =
-		await repository.findOrganizationManagedEntity(organizationId);
+	const relatedManagedEntity = await repository.findOrganizationManagedEntity(organizationId);
 
-	if (relatedManagedEntity == null)
-		throw new NotFoundError("Could not find the organization");
+	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the organization");
 
 	return await repository.getOrganizationMembers(relatedManagedEntity.id);
 }
@@ -31,11 +26,9 @@ export async function addMemberToOrganization(
 	organizationId: number,
 	input: AddMemberToOrganizationSchema,
 ) {
-	const relatedManagedEntity =
-		await repository.findOrganizationManagedEntity(organizationId);
+	const relatedManagedEntity = await repository.findOrganizationManagedEntity(organizationId);
 
-	if (relatedManagedEntity == null)
-		throw new NotFoundError("Could not find the organization");
+	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the organization");
 
 	const newMember = await repository.addOrganizationMember({
 		managedEntityId: relatedManagedEntity.id,

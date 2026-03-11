@@ -5,11 +5,7 @@ import * as controller from "./controller.js";
 const router: Router = Router();
 
 router.get("/", controller.getVenueTypes);
-router.post(
-	"/",
-	requirePermissions(["venue_type:create"]),
-	controller.createVenueType,
-);
+router.post("/", requirePermissions(["venue_type:create"]), controller.createVenueType);
 
 // todo: delete (soft) organization type
 

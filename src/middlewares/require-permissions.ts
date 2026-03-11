@@ -4,9 +4,7 @@ import { quickEnv } from "@/lib/helpers.js";
 
 const DEBUG_BYPASS_PERMISSIONS = !!quickEnv("DEBUG_BYPASS_PERMISSIONS", false);
 
-export function requirePermissions(
-	permissions: PermissionCode[],
-): RequestHandler {
+export function requirePermissions(permissions: PermissionCode[]): RequestHandler {
 	return (req: Request, _res: ApiResponse, next: NextFunction) => {
 		if (DEBUG_BYPASS_PERMISSIONS) {
 			return next();
@@ -25,14 +23,10 @@ export function requirePermissions(
 
 		const userPermissions = req.user.permissions;
 
-		if (
-			permissions.some((permission) => userPermissions.includes(permission))
-		) {
+		if (permissions.some((permission) => userPermissions.includes(permission))) {
 			return next();
 		} else {
-			throw new ForbiddenError(
-				"You do not have any required permission for this",
-			);
+			throw new ForbiddenError("You do not have any required permission for this");
 		}
 	};
 }

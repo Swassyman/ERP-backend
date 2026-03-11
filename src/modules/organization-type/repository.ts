@@ -13,44 +13,34 @@ export const getOrganizationTypes = dbAction(async () => {
 		.orderBy(schema.organizationType.createdAt);
 });
 
-export const createOrganizationType = dbAction(
-	async (data: { name: string }) => {
-		const [inserted] = await db
-			.insert(schema.organizationType)
-			.values({ name: data.name })
-			.returning({ id: schema.organizationType.id });
+export const createOrganizationType = dbAction(async (data: { name: string }) => {
+	const [inserted] = await db
+		.insert(schema.organizationType)
+		.values({ name: data.name })
+		.returning({ id: schema.organizationType.id });
 
-		if (inserted == null) unreachable();
+	if (inserted == null) unreachable();
 
-		return inserted;
-	},
-);
+	return inserted;
+});
 
-export const getOrganizationTypeChildrenTypes = dbAction(
-	async (organizationTypeId: number) => {
-		return await db
-			.select({
-				id: schema.organizationTypeAllowedParent.childTypeId,
-				name: schema.organizationType.name,
-			})
-			.from(schema.organizationTypeAllowedParent)
-			.innerJoin(
-				schema.organizationType,
-				eq(
-					schema.organizationTypeAllowedParent.childTypeId,
-					schema.organizationType.id,
-				),
-			)
-			.where(
-				eq(
-					schema.organizationTypeAllowedParent.parentTypeId,
-					organizationTypeId,
-				),
-				// note: no need of soft-check
-			)
-			.orderBy(schema.organizationTypeAllowedParent.createdAt);
-	},
-);
+export const getOrganizationTypeChildrenTypes = dbAction(async (organizationTypeId: number) => {
+	return await db
+		.select({
+			id: schema.organizationTypeAllowedParent.childTypeId,
+			name: schema.organizationType.name,
+		})
+		.from(schema.organizationTypeAllowedParent)
+		.innerJoin(
+			schema.organizationType,
+			eq(schema.organizationTypeAllowedParent.childTypeId, schema.organizationType.id),
+		)
+		.where(
+			eq(schema.organizationTypeAllowedParent.parentTypeId, organizationTypeId),
+			// note: no need of soft-check
+		)
+		.orderBy(schema.organizationTypeAllowedParent.createdAt);
+});
 
 export const addAllowedChildType = dbAction(
 	async (data: { parentTypeId: number; childTypeId: number }) => {
@@ -71,24 +61,22 @@ export const addAllowedChildType = dbAction(
 	},
 );
 
-export const getOrganizationTypeRoles = dbAction(
-	async (organizationTypeId: number) => {
-		return await db
-			.select({
-				id: schema.role.id,
-				name: schema.role.name,
-			})
-			.from(schema.role)
-			.where(
-				and(
-					eq(schema.role.managedEntityType, "organization"),
-					eq(schema.role.typeRefId, organizationTypeId),
-					isNull(schema.role.deletedAt),
-				),
-			)
-			.orderBy(asc(schema.role.createdAt));
-	},
-);
+export const getOrganizationTypeRoles = dbAction(async (organizationTypeId: number) => {
+	return await db
+		.select({
+			id: schema.role.id,
+			name: schema.role.name,
+		})
+		.from(schema.role)
+		.where(
+			and(
+				eq(schema.role.managedEntityType, "organization"),
+				eq(schema.role.typeRefId, organizationTypeId),
+				isNull(schema.role.deletedAt),
+			),
+		)
+		.orderBy(asc(schema.role.createdAt));
+});
 
 export const createOrganizationTypeRole = dbAction(
 	async (

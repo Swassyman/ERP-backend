@@ -32,9 +32,7 @@ export const logout: ApiRequestHandler = (_req, res) => {
 	return res.sendStatus(200);
 };
 
-export const userDetails: ApiRequestHandler<
-	Frontend.AuthenticatedUser
-> = async (req, res) => {
+export const userDetails: ApiRequestHandler<Frontend.AuthenticatedUser> = async (req, res) => {
 	const user = getAuthenticatedUser(req);
 	const result = await service.getUserDetails(user.id);
 	return ok(res, result);

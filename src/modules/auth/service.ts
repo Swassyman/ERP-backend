@@ -39,9 +39,7 @@ export async function login(
 	};
 }
 
-export async function getUserDetails(
-	userId: number,
-): Promise<Frontend.AuthenticatedUser> {
+export async function getUserDetails(userId: number): Promise<Frontend.AuthenticatedUser> {
 	const user = await repository.getUserWithPermissions(userId);
 	if (user == null) throw new NotFoundError("User not found");
 	return user;
@@ -51,10 +49,7 @@ export async function createNewTokens(refreshToken: string) {
 	let jwtPayload: IJWTPayload;
 
 	try {
-		const { payload } = await jwtVerify<IJWTPayload>(
-			refreshToken,
-			JWT_REFRESH_SECRET_SIGN_KEY,
-		);
+		const { payload } = await jwtVerify<IJWTPayload>(refreshToken, JWT_REFRESH_SECRET_SIGN_KEY);
 		jwtPayload = payload;
 	} catch {
 		throw new UnauthorizedError("Invalid or expired refresh token");

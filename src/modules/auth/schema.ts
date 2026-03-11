@@ -5,9 +5,7 @@ export const loginSchema = z
 	.object({
 		email: z
 			.email({ error: "Invalid email format" })
-			.endsWith(INSTITUTION_DOMAIN, {
-				error: "Expected institution domain email",
-			}),
+			.endsWith(INSTITUTION_DOMAIN, { error: "Expected institution domain email" }),
 		password: z
 			.string({ error: "Invalid password input" })
 			.min(6, { error: "Password must be at least 6 characters" }),
