@@ -65,12 +65,11 @@ CREATE TABLE "role" (
 );
 --> statement-breakpoint
 CREATE TABLE "role_permission" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "role_permission_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"permission_id" integer NOT NULL,
 	"role_id" smallint NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "role_permission_roleId_permissionId_unique" UNIQUE("role_id","permission_id")
+	CONSTRAINT "role_permission_role_id_permission_id_pk" PRIMARY KEY("role_id","permission_id")
 );
 --> statement-breakpoint
 CREATE TABLE "user" (
@@ -83,7 +82,7 @@ CREATE TABLE "user" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"deleted_at" timestamp with time zone,
-	CONSTRAINT "email_check" CHECK ("user"."email" LIKE '%@tkmce.ac.in')
+	CONSTRAINT "chk_user__email_must_belong_to_institution" CHECK ("user"."email" LIKE '%@tkmce.ac.in')
 );
 --> statement-breakpoint
 CREATE TABLE "user_role" (
@@ -109,7 +108,8 @@ CREATE TABLE "venue" (
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"deleted_at" timestamp with time zone
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "chk_venue__unavailability_reason_presence" CHECK ("venue"."is_available" = (NULLIF("venue"."unavailability_reason", '') IS NULL))
 );
 --> statement-breakpoint
 CREATE TABLE "venue_facility" (
@@ -145,10 +145,10 @@ ALTER TABLE "venue_facility" ADD CONSTRAINT "venue_facility_venue_id_venue_id_fk
 ALTER TABLE "venue_facility" ADD CONSTRAINT "venue_facility_facility_id_facility_id_fk" FOREIGN KEY ("facility_id") REFERENCES "public"."facility"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "facility_name_index" ON "facility" USING btree ("name") WHERE "facility"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "managed_entity_managed_entity_type_ref_id_index" ON "managed_entity" USING btree ("managed_entity_type","ref_id") WHERE "managed_entity"."deleted_at" is null;--> statement-breakpoint
-CREATE UNIQUE INDEX "organization_name_index" ON "organization" USING btree ("name") WHERE "organization"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "organization_organization_type_id_name_index" ON "organization" USING btree ("organization_type_id","name") WHERE "organization"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "organization_type_name_index" ON "organization_type" USING btree ("name") WHERE "organization_type"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "role_name_managed_entity_type_type_ref_id_index" ON "role" USING btree ("name","managed_entity_type","type_ref_id") WHERE "role"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "user_email_index" ON "user" USING btree ("email") WHERE "user"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "user_role_user_id_role_id_managed_entity_id_index" ON "user_role" USING btree ("user_id","role_id","managed_entity_id") WHERE "user_role"."deleted_at" is null;--> statement-breakpoint
-CREATE UNIQUE INDEX "venue_name_index" ON "venue" USING btree ("name") WHERE "venue"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "venue_venue_type_id_name_index" ON "venue" USING btree ("venue_type_id","name") WHERE "venue"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "venue_type_name_index" ON "venue_type" USING btree ("name") WHERE "venue_type"."deleted_at" is null;
