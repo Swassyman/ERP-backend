@@ -23,7 +23,7 @@ export const createOrganization = dbAction(
 	},
 );
 
-export async function getOrganizations() {
+export const getOrganizations = dbAction(async () => {
 	return await db.query.organization.findMany({
 		where: isNull(schema.organization.deletedAt),
 		columns: {
@@ -35,46 +35,50 @@ export async function getOrganizations() {
 			createdAt: true,
 		},
 	});
-}
+});
 
-export async function findOrganizationManagedEntity(organizationId: number) {
-	const [relatedManagedEntity] = await db
-		.select({ id: schema.managedEntity.id })
-		.from(schema.managedEntity)
-		.where(
-			and(
-				eq(schema.managedEntity.managedEntityType, "organization"),
-				eq(schema.managedEntity.refId, organizationId),
-				isNull(schema.managedEntity.deletedAt),
+export const findOrganizationManagedEntity = dbAction(
+	async (organizationId: number) => {
+		const [relatedManagedEntity] = await db
+			.select({ id: schema.managedEntity.id })
+			.from(schema.managedEntity)
+			.where(
+				and(
+					eq(schema.managedEntity.managedEntityType, "organization"),
+					eq(schema.managedEntity.refId, organizationId),
+					isNull(schema.managedEntity.deletedAt),
+				),
+			)
+			.limit(1);
+
+		return relatedManagedEntity;
+	},
+);
+
+export const getOrganizationMembers = dbAction(
+	async (managedEntityId: number) => {
+		return await db.query.userRole.findMany({
+			where: and(
+				eq(schema.userRole.managedEntityId, managedEntityId),
+				isNull(schema.userRole.deletedAt),
 			),
-		)
-		.limit(1);
-
-	return relatedManagedEntity;
-}
-
-export async function getOrganizationMembers(managedEntityId: number) {
-	return await db.query.userRole.findMany({
-		where: and(
-			eq(schema.userRole.managedEntityId, managedEntityId),
-			isNull(schema.userRole.deletedAt),
-		),
-		columns: {
-			id: true,
-			isActive: true,
-			roleId: true,
-		},
-		with: {
-			user: {
-				columns: {
-					id: true,
-					fullName: true,
-					email: true,
+			columns: {
+				id: true,
+				isActive: true,
+				roleId: true,
+			},
+			with: {
+				user: {
+					columns: {
+						id: true,
+						fullName: true,
+						email: true,
+					},
 				},
 			},
-		},
-	});
-}
+		});
+	},
+);
 
 export const addOrganizationMember = dbAction(
 	async (data: { managedEntityId: number; userId: number; roleId: number }) => {

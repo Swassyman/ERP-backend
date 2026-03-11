@@ -2,7 +2,7 @@ import { isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { dbAction, unreachable } from "@/lib/helpers.js";
 
-export async function findFacilities() {
+export const findFacilities = dbAction(async () => {
 	return await db
 		.select({
 			id: schema.facility.id,
@@ -10,7 +10,7 @@ export async function findFacilities() {
 		})
 		.from(schema.facility)
 		.where(isNull(schema.facility.deletedAt));
-}
+});
 
 export const insertFacility = dbAction(async (data: { name: string }) => {
 	const [inserted] = await db

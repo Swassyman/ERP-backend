@@ -2,7 +2,7 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { dbAction, unreachable } from "@/lib/helpers.js";
 
-export async function getVenueTypes() {
+export const getVenueTypes = dbAction(async () => {
 	return await db
 		.select({
 			id: schema.venueType.id,
@@ -11,7 +11,7 @@ export async function getVenueTypes() {
 		.from(schema.venueType)
 		.where(isNull(schema.venueType.deletedAt))
 		.orderBy(schema.venueType.createdAt);
-}
+});
 
 export const insertVenueType = dbAction(async (data: { name: string }) => {
 	const [inserted] = await db
@@ -24,7 +24,7 @@ export const insertVenueType = dbAction(async (data: { name: string }) => {
 	return inserted;
 });
 
-export async function getVenueTypeRoles(venueTypeId: number) {
+export const getVenueTypeRoles = dbAction(async (venueTypeId: number) => {
 	return await db
 		.select({
 			id: schema.role.id,
@@ -39,7 +39,7 @@ export async function getVenueTypeRoles(venueTypeId: number) {
 			),
 		)
 		.orderBy(asc(schema.role.createdAt));
-}
+});
 
 export const createVenueTypeRole = dbAction(
 	async (

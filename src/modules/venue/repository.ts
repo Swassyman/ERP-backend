@@ -31,7 +31,7 @@ export const createVenue = dbAction(
 	},
 );
 
-export async function getVenues() {
+export const getVenues = dbAction(async () => {
 	return await db.query.venue.findMany({
 		where: isNull(schema.venue.deletedAt),
 		columns: {
@@ -46,9 +46,9 @@ export async function getVenues() {
 			isActive: true,
 		},
 	});
-}
+});
 
-export async function findVenueManagedEntity(venueId: number) {
+export const findVenueManagedEntity = dbAction(async (venueId: number) => {
 	const [relatedManagedEntity] = await db
 		.select({ id: schema.managedEntity.id })
 		.from(schema.managedEntity)
@@ -62,9 +62,9 @@ export async function findVenueManagedEntity(venueId: number) {
 		.limit(1);
 
 	return relatedManagedEntity;
-}
+});
 
-export async function getVenueMembers(managedEntityId: number) {
+export const getVenueMembers = dbAction(async (managedEntityId: number) => {
 	return await db.query.userRole.findMany({
 		where: and(
 			eq(schema.userRole.managedEntityId, managedEntityId),
@@ -85,7 +85,7 @@ export async function getVenueMembers(managedEntityId: number) {
 			},
 		},
 	});
-}
+});
 
 export const addVenueMember = dbAction(
 	async (data: { managedEntityId: number; userId: number; roleId: number }) => {
@@ -104,7 +104,7 @@ export const addVenueMember = dbAction(
 	},
 );
 
-export async function getVenueFacilities(venueId: number) {
+export const getVenueFacilities = dbAction(async (venueId: number) => {
 	return await db
 		.select({
 			id: schema.venueFacility.id,
@@ -117,7 +117,7 @@ export async function getVenueFacilities(venueId: number) {
 			eq(schema.venueFacility.facilityId, schema.facility.id),
 		)
 		.where(eq(schema.venueFacility.venueId, venueId));
-}
+});
 
 export const setVenueFacilities = dbAction(
 	async (venueId: number, data: { facilityIds: number[] }) => {

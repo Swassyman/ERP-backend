@@ -2,7 +2,7 @@ import { and, eq, notInArray } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { dbAction } from "@/lib/helpers.js";
 
-export async function getRolePermissions(rolePermissionId: number) {
+export const getRolePermissions = dbAction(async (rolePermissionId: number) => {
 	return await db
 		.select({
 			id: schema.permission.id,
@@ -16,7 +16,7 @@ export async function getRolePermissions(rolePermissionId: number) {
 		)
 		.where(eq(schema.rolePermission.roleId, rolePermissionId));
 	// note: no deletedAt
-}
+});
 
 export const deleteAll = dbAction(async (roleId: number) => {
 	await db
