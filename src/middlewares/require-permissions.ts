@@ -1,10 +1,17 @@
 import type { NextFunction, Request, RequestHandler } from "express";
 import { ForbiddenError, UnauthorizedError } from "@/lib/errors.js";
+import { quickEnv } from "@/lib/helpers.js";
+
+const DEBUG_BYPASS_PERMISSIONS = !!quickEnv("DEBUG_BYPASS_PERMISSIONS", false);
 
 export function requirePermissions(
 	permissions: PermissionCode[],
 ): RequestHandler {
 	return (req: Request, _res: ApiResponse, next: NextFunction) => {
+		if (DEBUG_BYPASS_PERMISSIONS) {
+			return next();
+		}
+
 		if (req.user == null) {
 			throw new UnauthorizedError("Unauthorized");
 		}

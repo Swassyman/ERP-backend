@@ -1,5 +1,6 @@
 import { and, eq, notInArray } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
+import { dbAction } from "@/lib/helpers.js";
 
 export async function getRolePermissions(rolePermissionId: number) {
 	return await db
@@ -17,53 +18,58 @@ export async function getRolePermissions(rolePermissionId: number) {
 	// note: no deletedAt
 }
 
-export async function deleteAll(roleId: number) {
+export const deleteAll = dbAction(async (roleId: number) => {
 	await db
 		.delete(schema.rolePermission)
 		.where(eq(schema.rolePermission.roleId, roleId));
-}
+});
 
-export async function setRolePermissions(
-	roleId: number,
-	data: { permissionIds: number[] },
-) {
-	const upsertCte = db.$with("upsert").as(
-		db
-			.insert(schema.rolePermission)
-			.values(
-				data.permissionIds.map(
-					(permissionId) =>
-						({
-							roleId: roleId,
-							permissionId: permissionId,
-						}) satisfies typeof schema.rolePermission.$inferInsert,
-				),
-			)
-			.onConflictDoNothing({
-				target: [
-					schema.rolePermission.roleId,
-					schema.rolePermission.permissionId,
-				],
-			})
-			.returning({ id: schema.rolePermission.id }),
-	);
-
-	const deleteCte = db
-		.$with("delete")
-		.as(
+export const setRolePermissions = dbAction(
+	async (roleId: number, data: { permissionIds: number[] }) => {
+		const upsertCte = db.$with("upsert").as(
 			db
-				.delete(schema.rolePermission)
-				.where(
-					and(
-						eq(schema.rolePermission.roleId, roleId),
-						notInArray(schema.rolePermission.permissionId, data.permissionIds),
+				.insert(schema.rolePermission)
+				.values(
+					data.permissionIds.map(
+						(permissionId) =>
+							({
+								roleId: roleId,
+								permissionId: permissionId,
+							}) satisfies typeof schema.rolePermission.$inferInsert,
 					),
-				),
+				)
+				.onConflictDoNothing({
+					target: [
+						schema.rolePermission.roleId,
+						schema.rolePermission.permissionId,
+					],
+				})
+				.returning({
+					roleId: schema.rolePermission.roleId,
+					permissionId: schema.rolePermission.permissionId,
+				}),
 		);
 
-	return await db
-		.with(upsertCte, deleteCte)
-		.select({ permissionId: schema.rolePermission.permissionId })
-		.from(schema.rolePermission)
-		.where(eq(schema.rolePermission.roleId, roleId));
-}
+		const deleteCte = db
+			.$with("delete")
+			.as(
+				db
+					.delete(schema.rolePermission)
+					.where(
+						and(
+							eq(schema.rolePermission.roleId, roleId),
+							notInArray(
+								schema.rolePermission.permissionId,
+								data.permissionIds,
+							),
+						),
+					),
+			);
+
+		return await db
+			.with(upsertCte, deleteCte)
+			.select({ permissionId: schema.rolePermission.permissionId })
+			.from(schema.rolePermission)
+			.where(eq(schema.rolePermission.roleId, roleId));
+	},
+);

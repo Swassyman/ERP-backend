@@ -1,6 +1,6 @@
 import { isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
 export async function findFacilities() {
 	return await db
@@ -12,7 +12,7 @@ export async function findFacilities() {
 		.where(isNull(schema.facility.deletedAt));
 }
 
-export async function insertFacility(data: { name: string }) {
+export const insertFacility = dbAction(async (data: { name: string }) => {
 	const [inserted] = await db
 		.insert(schema.facility)
 		.values({
@@ -23,4 +23,4 @@ export async function insertFacility(data: { name: string }) {
 	if (inserted == null) unreachable();
 
 	return inserted;
-}
+});

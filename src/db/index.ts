@@ -8,6 +8,7 @@ const DATABASE_URL = quickEnv("DATABASE_URL");
 
 const sql = neon(DATABASE_URL);
 const db = drizzle(sql, {
+	// logger: true,
 	schema: schema,
 	casing: "snake_case",
 });

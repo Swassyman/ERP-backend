@@ -19,7 +19,9 @@ export const errorHandler: ErrorRequestHandler = (
 				code: issue.code,
 			})),
 		});
-	} else if (error instanceof AppError) {
+	}
+
+	if (error instanceof AppError) {
 		return res.status(error.statusCode).json({
 			success: false,
 			code: error.errorCode,

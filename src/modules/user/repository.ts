@@ -1,28 +1,26 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
-export async function insertUser(data: {
-	email: string;
-	passwordHash: string;
-	fullName: string;
-}) {
-	const [inserted] = await db
-		.insert(schema.user)
-		.values({
-			type: "end_user",
-			email: data.email,
-			passwordHash: data.passwordHash,
-			fullName: data.fullName,
-		})
-		.returning({
-			id: schema.user.id,
-		});
+export const insertUser = dbAction(
+	async (data: { email: string; passwordHash: string; fullName: string }) => {
+		const [inserted] = await db
+			.insert(schema.user)
+			.values({
+				type: "end_user",
+				email: data.email,
+				passwordHash: data.passwordHash,
+				fullName: data.fullName,
+			})
+			.returning({
+				id: schema.user.id,
+			});
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getUsers() {
 	return await db.query.user.findMany({

@@ -1,25 +1,27 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
-export async function createOrganization(data: {
-	name: string;
-	organizationTypeId: number;
-	parentOrganizationId: number | null | undefined;
-}) {
-	const [inserted] = await db
-		.insert(schema.organization)
-		.values({
-			name: data.name,
-			organizationTypeId: data.organizationTypeId,
-			parentOrganizationId: data.parentOrganizationId ?? null,
-		})
-		.returning({ id: schema.organization.id });
+export const createOrganization = dbAction(
+	async (data: {
+		name: string;
+		organizationTypeId: number;
+		parentOrganizationId: number | null | undefined;
+	}) => {
+		const [inserted] = await db
+			.insert(schema.organization)
+			.values({
+				name: data.name,
+				organizationTypeId: data.organizationTypeId,
+				parentOrganizationId: data.parentOrganizationId ?? null,
+			})
+			.returning({ id: schema.organization.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getOrganizations() {
 	return await db.query.organization.findMany({
@@ -74,21 +76,19 @@ export async function getOrganizationMembers(managedEntityId: number) {
 	});
 }
 
-export async function addOrganizationMember(data: {
-	managedEntityId: number;
-	userId: number;
-	roleId: number;
-}) {
-	const [inserted] = await db
-		.insert(schema.userRole)
-		.values({
-			managedEntityId: data.managedEntityId,
-			userId: data.userId,
-			roleId: data.roleId,
-		})
-		.returning({ id: schema.userRole.id });
+export const addOrganizationMember = dbAction(
+	async (data: { managedEntityId: number; userId: number; roleId: number }) => {
+		const [inserted] = await db
+			.insert(schema.userRole)
+			.values({
+				managedEntityId: data.managedEntityId,
+				userId: data.userId,
+				roleId: data.roleId,
+			})
+			.returning({ id: schema.userRole.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
