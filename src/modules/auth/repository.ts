@@ -1,13 +1,14 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
+import { dbAction } from "@/lib/helpers.js";
 
-export async function findUserByEmail(email: string) {
+export const findUserByEmail = dbAction(async (email: string) => {
 	return await db.query.user.findFirst({
 		where: and(eq(schema.user.email, email), isNull(schema.user.deletedAt)),
 	});
-}
+});
 
-export async function getUserWithPermissions(id: number) {
+export const getUserWithPermissions = dbAction(async (id: number) => {
 	const user = await db.query.user.findFirst({
 		where: and(eq(schema.user.id, id), isNull(schema.user.deletedAt)),
 		columns: {
@@ -52,4 +53,4 @@ export async function getUserWithPermissions(id: number) {
 		...user,
 		permissions: permissions.map((permission) => permission.code),
 	};
-}
+});

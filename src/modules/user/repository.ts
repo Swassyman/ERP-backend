@@ -22,7 +22,7 @@ export const insertUser = dbAction(
 	},
 );
 
-export async function getUsers() {
+export const getUsers = dbAction(async () => {
 	return await db.query.user.findMany({
 		where: and(eq(schema.user.type, "end_user"), isNull(schema.user.deletedAt)),
 		columns: {
@@ -44,4 +44,4 @@ export async function getUsers() {
 			},
 		},
 	});
-}
+});
