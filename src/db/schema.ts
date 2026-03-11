@@ -1,10 +1,4 @@
-import {
-	type HasDefault,
-	isNull,
-	type NotNull,
-	relations,
-	sql,
-} from "drizzle-orm";
+import { type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -31,14 +25,8 @@ import { buildCheck } from "./checks.js";
 
 // === Enums
 export const userTypeEnum = pgEnum("user_type", USER_TYPES);
-export const managedEntityTypeEnum = pgEnum(
-	"managed_entity_type",
-	MANAGED_ENTITY_TYPES,
-);
-export const venueAccessLevelEnum = pgEnum(
-	"venue_access_level",
-	VENUE_ACCESS_LEVELS,
-);
+export const managedEntityTypeEnum = pgEnum("managed_entity_type", MANAGED_ENTITY_TYPES);
+export const venueAccessLevelEnum = pgEnum("venue_access_level", VENUE_ACCESS_LEVELS);
 
 // === Tables
 export const managedEntity = pgTable(
@@ -49,9 +37,7 @@ export const managedEntity = pgTable(
 		refId: integer().notNull(),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [
-		uniqueIndex().on(t.managedEntityType, t.refId).where(isNull(t.deletedAt)),
-	],
+	(t) => [uniqueIndex().on(t.managedEntityType, t.refId).where(isNull(t.deletedAt))],
 	// soft-fk(ref_id) -> organization, venue
 );
 
@@ -95,9 +81,7 @@ export const role = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex()
-			.on(t.name, t.managedEntityType, t.typeRefId)
-			.where(isNull(t.deletedAt)),
+		uniqueIndex().on(t.name, t.managedEntityType, t.typeRefId).where(isNull(t.deletedAt)),
 		// uniqueIndex()
 		// 	.on(t.code, t.managedEntityType, t.typeRefId)
 		// 	.where(isNull(t.deletedAt)),
@@ -126,11 +110,7 @@ export const userRole = pgTable(
 		isActive: boolean().notNull().default(true),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [
-		uniqueIndex()
-			.on(t.userId, t.roleId, t.managedEntityId)
-			.where(isNull(t.deletedAt)),
-	],
+	(t) => [uniqueIndex().on(t.userId, t.roleId, t.managedEntityId).where(isNull(t.deletedAt))],
 );
 
 export const userRoleRelations = relations(userRole, (r) => ({
@@ -247,15 +227,11 @@ export const organization = pgTable(
 		organizationTypeId: smallint()
 			.references(() => organizationType.id)
 			.notNull(),
-		parentOrganizationId: integer().references(
-			(): AnyPgColumn => organization.id,
-		),
+		parentOrganizationId: integer().references((): AnyPgColumn => organization.id),
 		isActive: boolean().notNull().default(true),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [
-		uniqueIndex().on(t.organizationTypeId, t.name).where(isNull(t.deletedAt)),
-	],
+	(t) => [uniqueIndex().on(t.organizationTypeId, t.name).where(isNull(t.deletedAt))],
 );
 
 export const organizationRelations = relations(organization, (r) => ({
@@ -386,9 +362,7 @@ type FieldsFor<T extends readonly Scope[]> = ("common" extends T[number]
 function fields<const T extends readonly Scope[]>(...scopes: T): FieldsFor<T> {
 	return {
 		...(scopes.includes("common") && {
-			createdAt: timestamp({ mode: "string", withTimezone: true })
-				.defaultNow()
-				.notNull(),
+			createdAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
 			updatedAt: timestamp({ mode: "string", withTimezone: true })
 				.defaultNow()
 				.$onUpdate(() => sql`now()`)

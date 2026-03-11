@@ -15,9 +15,10 @@ export const getRolePermissions: ApiRequestHandler<
 	return ok(res, result);
 };
 
-export const setRolePermissions: ApiRequestHandler<
-	{ permissionId: number }[]
-> = async (req, res) => {
+export const setRolePermissions: ApiRequestHandler<{ permissionId: number }[]> = async (
+	req,
+	res,
+) => {
 	const params = roleScopedSchema.parse(req.params);
 	const body = setRolePermissionsSchema.parse(req.body);
 	const result = await service.setRolePermissions(params.id, body);

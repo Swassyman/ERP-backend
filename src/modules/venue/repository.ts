@@ -112,10 +112,7 @@ export const getVenueFacilities = dbAction(async (venueId: number) => {
 			facilityName: schema.facility.name,
 		})
 		.from(schema.venueFacility)
-		.innerJoin(
-			schema.facility,
-			eq(schema.venueFacility.facilityId, schema.facility.id),
-		)
+		.innerJoin(schema.facility, eq(schema.venueFacility.facilityId, schema.facility.id))
 		.where(eq(schema.venueFacility.venueId, venueId));
 });
 
@@ -134,10 +131,7 @@ export const setVenueFacilities = dbAction(
 					),
 				)
 				.onConflictDoNothing({
-					target: [
-						schema.venueFacility.venueId,
-						schema.venueFacility.facilityId,
-					],
+					target: [schema.venueFacility.venueId, schema.venueFacility.facilityId],
 				})
 				.returning({ id: schema.venueFacility.id }),
 		);
@@ -164,7 +158,5 @@ export const setVenueFacilities = dbAction(
 );
 
 export const deleteAllVenueFacilities = dbAction(async (venueId: number) => {
-	await db
-		.delete(schema.venueFacility)
-		.where(eq(schema.venueFacility.venueId, venueId));
+	await db.delete(schema.venueFacility).where(eq(schema.venueFacility.venueId, venueId));
 });

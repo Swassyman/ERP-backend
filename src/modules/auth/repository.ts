@@ -38,10 +38,7 @@ export const getUserWithPermissions = dbAction(async (id: number) => {
 	const permissions = await db
 		.selectDistinct({ code: schema.permission.code })
 		.from(schema.rolePermission)
-		.innerJoin(
-			schema.permission,
-			eq(schema.rolePermission.permissionId, schema.permission.id),
-		)
+		.innerJoin(schema.permission, eq(schema.rolePermission.permissionId, schema.permission.id))
 		.where(
 			inArray(
 				schema.rolePermission.roleId,

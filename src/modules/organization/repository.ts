@@ -37,48 +37,44 @@ export const getOrganizations = dbAction(async () => {
 	});
 });
 
-export const findOrganizationManagedEntity = dbAction(
-	async (organizationId: number) => {
-		const [relatedManagedEntity] = await db
-			.select({ id: schema.managedEntity.id })
-			.from(schema.managedEntity)
-			.where(
-				and(
-					eq(schema.managedEntity.managedEntityType, "organization"),
-					eq(schema.managedEntity.refId, organizationId),
-					isNull(schema.managedEntity.deletedAt),
-				),
-			)
-			.limit(1);
-
-		return relatedManagedEntity;
-	},
-);
-
-export const getOrganizationMembers = dbAction(
-	async (managedEntityId: number) => {
-		return await db.query.userRole.findMany({
-			where: and(
-				eq(schema.userRole.managedEntityId, managedEntityId),
-				isNull(schema.userRole.deletedAt),
+export const findOrganizationManagedEntity = dbAction(async (organizationId: number) => {
+	const [relatedManagedEntity] = await db
+		.select({ id: schema.managedEntity.id })
+		.from(schema.managedEntity)
+		.where(
+			and(
+				eq(schema.managedEntity.managedEntityType, "organization"),
+				eq(schema.managedEntity.refId, organizationId),
+				isNull(schema.managedEntity.deletedAt),
 			),
-			columns: {
-				id: true,
-				isActive: true,
-				roleId: true,
-			},
-			with: {
-				user: {
-					columns: {
-						id: true,
-						fullName: true,
-						email: true,
-					},
+		)
+		.limit(1);
+
+	return relatedManagedEntity;
+});
+
+export const getOrganizationMembers = dbAction(async (managedEntityId: number) => {
+	return await db.query.userRole.findMany({
+		where: and(
+			eq(schema.userRole.managedEntityId, managedEntityId),
+			isNull(schema.userRole.deletedAt),
+		),
+		columns: {
+			id: true,
+			isActive: true,
+			roleId: true,
+		},
+		with: {
+			user: {
+				columns: {
+					id: true,
+					fullName: true,
+					email: true,
 				},
 			},
-		});
-	},
-);
+		},
+	});
+});
 
 export const addOrganizationMember = dbAction(
 	async (data: { managedEntityId: number; userId: number; roleId: number }) => {

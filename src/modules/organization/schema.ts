@@ -21,20 +21,10 @@ export const organizationScopedSchema = z
 	.strict();
 
 export const addMemberToOrganizationSchema = z.object({
-	userId: z.coerce
-		.number({ error: "Invalid user ID" })
-		.int({ error: "Invalid user ID" }),
-	roleId: z.coerce
-		.number({ error: "Invalid role ID" })
-		.int({ error: "Invalid role ID" }),
+	userId: z.coerce.number({ error: "Invalid user ID" }).int({ error: "Invalid user ID" }),
+	roleId: z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }),
 });
 
-export type CreateOrganizationSchema = z.output<
-	typeof createOrganizationSchema
->;
-export type OrganizationScopedSchema = z.output<
-	typeof organizationScopedSchema
->;
-export type AddMemberToOrganizationSchema = z.output<
-	typeof addMemberToOrganizationSchema
->;
+export type CreateOrganizationSchema = z.output<typeof createOrganizationSchema>;
+export type OrganizationScopedSchema = z.output<typeof organizationScopedSchema>;
+export type AddMemberToOrganizationSchema = z.output<typeof addMemberToOrganizationSchema>;

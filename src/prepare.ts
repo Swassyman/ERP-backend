@@ -21,10 +21,7 @@ export async function prepare() {
 		dbPermissions.symmetricDifference(localPermissions).size > 0
 	) {
 		console.error(
-			styleText(
-				"red",
-				"[x] error: mismatch in permissions local vs. db; please run 'populate'",
-			),
+			styleText("red", "[x] error: mismatch in permissions local vs. db; please run 'populate'"),
 		);
 		throw new Error("fatal: mismatch in permissions");
 	}

@@ -31,14 +31,9 @@ if (existingAdminAccounts.length === 0) {
 	const account = existingAdminAccounts[0];
 	if (account == null) unreachable();
 	const emailMatch = account.email === ADMIN_LOGIN_EMAIL;
-	const passwordMatch = await verifyPassword(
-		account.passwordHash,
-		ADMIN_LOGIN_PASSWORD,
-	);
+	const passwordMatch = await verifyPassword(account.passwordHash, ADMIN_LOGIN_PASSWORD);
 	if (!emailMatch || !passwordMatch) {
-		console.log(
-			"mismatched credentials for admin account, setting them to config",
-		);
+		console.log("mismatched credentials for admin account, setting them to config");
 		if (
 			await confirm({
 				message: "Set email and password of admin account to ENV vars?",
@@ -68,14 +63,8 @@ const permissionsToDelete: number[] = [];
 
 for (const permissionCode in FLATTENED_PERMISSIONS) {
 	if (!isPermission(permissionCode)) unreachable();
-	if (
-		permissionCode in existingPermissions &&
-		existingPermissions[permissionCode] != null
-	) {
-		if (
-			FLATTENED_PERMISSIONS[permissionCode] !==
-			existingPermissions[permissionCode].description
-		) {
+	if (permissionCode in existingPermissions && existingPermissions[permissionCode] != null) {
+		if (FLATTENED_PERMISSIONS[permissionCode] !== existingPermissions[permissionCode].description) {
 			// mismatch in display names
 			permissionsToUpdate.push(permissionCode);
 		} else {
@@ -152,9 +141,5 @@ if (
 	const hardDeletedRolePermissions = await db
 		.delete(schema.rolePermission)
 		.where(inArray(schema.rolePermission.permissionId, permissionsToDelete));
-	console.log(
-		"hard-deleted",
-		hardDeletedRolePermissions.rowCount,
-		"role permissions",
-	);
+	console.log("hard-deleted", hardDeletedRolePermissions.rowCount, "role permissions");
 }

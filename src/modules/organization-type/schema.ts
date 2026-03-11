@@ -39,15 +39,7 @@ export const createOrganizationTypeRoleSchema = z
 	})
 	.strict();
 
-export type CreateOrganizationTypeSchema = z.output<
-	typeof createOrganizationTypeSchema
->;
-export type OrganizationTypeScopedSchema = z.output<
-	typeof organizationTypeScopedSchema
->;
-export type AddAllowedParentParamsSchema = z.output<
-	typeof addAllowedParentParamsSchema
->;
-export type CreateOrganizationTypeRoleSchema = z.output<
-	typeof createOrganizationTypeRoleSchema
->;
+export type CreateOrganizationTypeSchema = z.output<typeof createOrganizationTypeSchema>;
+export type OrganizationTypeScopedSchema = z.output<typeof organizationTypeScopedSchema>;
+export type AddAllowedParentParamsSchema = z.output<typeof addAllowedParentParamsSchema>;
+export type CreateOrganizationTypeRoleSchema = z.output<typeof createOrganizationTypeRoleSchema>;

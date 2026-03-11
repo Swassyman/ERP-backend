@@ -9,17 +9,13 @@ export async function getOrganizationTypes() {
 	return await repository.getOrganizationTypes();
 }
 
-export async function createOrganizationType(
-	input: CreateOrganizationTypeSchema,
-) {
+export async function createOrganizationType(input: CreateOrganizationTypeSchema) {
 	return await repository.createOrganizationType({
 		name: input.name,
 	});
 }
 
-export async function getOrganizationTypeChildTypes(
-	organizationTypeId: number,
-) {
+export async function getOrganizationTypeChildTypes(organizationTypeId: number) {
 	return await repository.getOrganizationTypeChildrenTypes(organizationTypeId);
 }
 
