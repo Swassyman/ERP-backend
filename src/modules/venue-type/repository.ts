@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
 export async function getVenueTypes() {
 	return await db
@@ -13,7 +13,7 @@ export async function getVenueTypes() {
 		.orderBy(schema.venueType.createdAt);
 }
 
-export async function insertVenueType(data: { name: string }) {
+export const insertVenueType = dbAction(async (data: { name: string }) => {
 	const [inserted] = await db
 		.insert(schema.venueType)
 		.values({ name: data.name })
@@ -22,7 +22,7 @@ export async function insertVenueType(data: { name: string }) {
 	if (inserted == null) unreachable();
 
 	return inserted;
-}
+});
 
 export async function getVenueTypeRoles(venueTypeId: number) {
 	return await db
@@ -41,22 +41,24 @@ export async function getVenueTypeRoles(venueTypeId: number) {
 		.orderBy(asc(schema.role.createdAt));
 }
 
-export async function createVenueTypeRole(
-	venueTypeId: number,
-	data: {
-		name: string;
+export const createVenueTypeRole = dbAction(
+	async (
+		venueTypeId: number,
+		data: {
+			name: string;
+		},
+	) => {
+		const [inserted] = await db
+			.insert(schema.role)
+			.values({
+				name: data.name,
+				managedEntityType: "venue",
+				typeRefId: venueTypeId,
+			})
+			.returning({ id: schema.role.id });
+
+		if (inserted == null) unreachable();
+
+		return inserted;
 	},
-) {
-	const [inserted] = await db
-		.insert(schema.role)
-		.values({
-			name: data.name,
-			managedEntityType: "venue",
-			typeRefId: venueTypeId,
-		})
-		.returning({ id: schema.role.id });
-
-	if (inserted == null) unreachable();
-
-	return inserted;
-}
+);

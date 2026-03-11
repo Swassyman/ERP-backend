@@ -1,33 +1,35 @@
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
-export async function createVenue(data: {
-	name: string;
-	venueTypeId: number;
-	maxCapacity: number;
-	accessLevel: VenueAccessLevel;
-	isAvailable: boolean;
-	organizationId?: number | null | undefined;
-	unavailabilityReason?: string | undefined;
-}) {
-	const [inserted] = await db
-		.insert(schema.venue)
-		.values({
-			name: data.name,
-			venueTypeId: data.venueTypeId,
-			organizationId: data.organizationId,
-			accessLevel: data.accessLevel,
-			isAvailable: data.isAvailable,
-			unavailabilityReason: data.unavailabilityReason,
-			maxCapacity: data.maxCapacity,
-		})
-		.returning({ id: schema.venue.id });
+export const createVenue = dbAction(
+	async (data: {
+		name: string;
+		venueTypeId: number;
+		maxCapacity: number;
+		accessLevel: VenueAccessLevel;
+		isAvailable: boolean;
+		organizationId?: number | null | undefined;
+		unavailabilityReason?: string | undefined;
+	}) => {
+		const [inserted] = await db
+			.insert(schema.venue)
+			.values({
+				name: data.name,
+				venueTypeId: data.venueTypeId,
+				organizationId: data.organizationId,
+				accessLevel: data.accessLevel,
+				isAvailable: data.isAvailable,
+				unavailabilityReason: data.unavailabilityReason,
+				maxCapacity: data.maxCapacity,
+			})
+			.returning({ id: schema.venue.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getVenues() {
 	return await db.query.venue.findMany({
@@ -85,24 +87,22 @@ export async function getVenueMembers(managedEntityId: number) {
 	});
 }
 
-export async function addVenueMember(data: {
-	managedEntityId: number;
-	userId: number;
-	roleId: number;
-}) {
-	const [inserted] = await db
-		.insert(schema.userRole)
-		.values({
-			managedEntityId: data.managedEntityId,
-			userId: data.userId,
-			roleId: data.roleId,
-		})
-		.returning({ id: schema.userRole.id });
+export const addVenueMember = dbAction(
+	async (data: { managedEntityId: number; userId: number; roleId: number }) => {
+		const [inserted] = await db
+			.insert(schema.userRole)
+			.values({
+				managedEntityId: data.managedEntityId,
+				userId: data.userId,
+				roleId: data.roleId,
+			})
+			.returning({ id: schema.userRole.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getVenueFacilities(venueId: number) {
 	return await db
@@ -119,50 +119,52 @@ export async function getVenueFacilities(venueId: number) {
 		.where(eq(schema.venueFacility.venueId, venueId));
 }
 
-export async function setVenueFacilities(
-	venueId: number,
-	data: { facilityIds: number[] },
-) {
-	const upsertCte = db.$with("upsert").as(
-		db
-			.insert(schema.venueFacility)
-			.values(
-				data.facilityIds.map(
-					(facilityId) =>
-						({
-							venueId: venueId,
-							facilityId: facilityId,
-						}) satisfies typeof schema.venueFacility.$inferInsert,
-				),
-			)
-			.onConflictDoNothing({
-				target: [schema.venueFacility.venueId, schema.venueFacility.facilityId],
-			})
-			.returning({ id: schema.venueFacility.id }),
-	);
-
-	const deleteCte = db
-		.$with("delete")
-		.as(
+export const setVenueFacilities = dbAction(
+	async (venueId: number, data: { facilityIds: number[] }) => {
+		const upsertCte = db.$with("upsert").as(
 			db
-				.delete(schema.venueFacility)
-				.where(
-					and(
-						eq(schema.venueFacility.venueId, venueId),
-						notInArray(schema.venueFacility.facilityId, data.facilityIds),
+				.insert(schema.venueFacility)
+				.values(
+					data.facilityIds.map(
+						(facilityId) =>
+							({
+								venueId: venueId,
+								facilityId: facilityId,
+							}) satisfies typeof schema.venueFacility.$inferInsert,
 					),
-				),
+				)
+				.onConflictDoNothing({
+					target: [
+						schema.venueFacility.venueId,
+						schema.venueFacility.facilityId,
+					],
+				})
+				.returning({ id: schema.venueFacility.id }),
 		);
 
-	return await db
-		.with(upsertCte, deleteCte)
-		.select({ facilityId: schema.venueFacility.facilityId })
-		.from(schema.venueFacility)
-		.where(eq(schema.venueFacility.venueId, venueId));
-}
+		const deleteCte = db
+			.$with("delete")
+			.as(
+				db
+					.delete(schema.venueFacility)
+					.where(
+						and(
+							eq(schema.venueFacility.venueId, venueId),
+							notInArray(schema.venueFacility.facilityId, data.facilityIds),
+						),
+					),
+			);
 
-export async function deleteAllVenueFacilities(venueId: number) {
+		return await db
+			.with(upsertCte, deleteCte)
+			.select({ facilityId: schema.venueFacility.facilityId })
+			.from(schema.venueFacility)
+			.where(eq(schema.venueFacility.venueId, venueId));
+	},
+);
+
+export const deleteAllVenueFacilities = dbAction(async (venueId: number) => {
 	await db
 		.delete(schema.venueFacility)
 		.where(eq(schema.venueFacility.venueId, venueId));
-}
+});

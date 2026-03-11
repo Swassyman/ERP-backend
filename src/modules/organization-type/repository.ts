@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
-import { unreachable } from "@/lib/helpers.js";
+import { dbAction, unreachable } from "@/lib/helpers.js";
 
 export async function getOrganizationTypes() {
 	return await db
@@ -13,16 +13,18 @@ export async function getOrganizationTypes() {
 		.orderBy(schema.organizationType.createdAt);
 }
 
-export async function createOrganizationType(data: { name: string }) {
-	const [inserted] = await db
-		.insert(schema.organizationType)
-		.values({ name: data.name })
-		.returning({ id: schema.organizationType.id });
+export const createOrganizationType = dbAction(
+	async (data: { name: string }) => {
+		const [inserted] = await db
+			.insert(schema.organizationType)
+			.values({ name: data.name })
+			.returning({ id: schema.organizationType.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getOrganizationTypeChildrenTypes(
 	organizationTypeId: number,
@@ -47,25 +49,24 @@ export async function getOrganizationTypeChildrenTypes(
 		.orderBy(schema.organizationTypeAllowedParent.createdAt);
 }
 
-export async function addAllowedChildType(data: {
-	parentTypeId: number;
-	childTypeId: number;
-}) {
-	const [inserted] = await db
-		.insert(schema.organizationTypeAllowedParent)
-		.values({
-			parentTypeId: data.parentTypeId,
-			childTypeId: data.childTypeId,
-		})
-		.returning({
-			parentTypeId: schema.organizationTypeAllowedParent.parentTypeId,
-			childTypeId: schema.organizationTypeAllowedParent.childTypeId,
-		});
+export const addAllowedChildType = dbAction(
+	async (data: { parentTypeId: number; childTypeId: number }) => {
+		const [inserted] = await db
+			.insert(schema.organizationTypeAllowedParent)
+			.values({
+				parentTypeId: data.parentTypeId,
+				childTypeId: data.childTypeId,
+			})
+			.returning({
+				parentTypeId: schema.organizationTypeAllowedParent.parentTypeId,
+				childTypeId: schema.organizationTypeAllowedParent.childTypeId,
+			});
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-}
+		return inserted;
+	},
+);
 
 export async function getOrganizationTypeRoles(organizationTypeId: number) {
 	return await db
@@ -84,22 +85,24 @@ export async function getOrganizationTypeRoles(organizationTypeId: number) {
 		.orderBy(asc(schema.role.createdAt));
 }
 
-export async function createOrganizationTypeRole(
-	organizationTypeId: number,
-	data: {
-		name: string;
+export const createOrganizationTypeRole = dbAction(
+	async (
+		organizationTypeId: number,
+		data: {
+			name: string;
+		},
+	) => {
+		const [inserted] = await db
+			.insert(schema.role)
+			.values({
+				name: data.name,
+				managedEntityType: "organization",
+				typeRefId: organizationTypeId,
+			})
+			.returning({ id: schema.role.id });
+
+		if (inserted == null) unreachable();
+
+		return inserted;
 	},
-) {
-	const [inserted] = await db
-		.insert(schema.role)
-		.values({
-			name: data.name,
-			managedEntityType: "organization",
-			typeRefId: organizationTypeId,
-		})
-		.returning({ id: schema.role.id });
-
-	if (inserted == null) unreachable();
-
-	return inserted;
-}
+);

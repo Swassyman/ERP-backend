@@ -9,7 +9,6 @@ import {
 	type AnyPgColumn,
 	bigint,
 	boolean,
-	check,
 	integer,
 	pgEnum,
 	pgTable,
@@ -26,6 +25,7 @@ import {
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
 } from "@/lib/constants.js";
+import { buildCheck } from "./checks.js";
 
 // todo: how about switching to string based ids?
 
@@ -72,8 +72,8 @@ export const user = pgTable(
 	},
 	(t) => [
 		uniqueIndex().on(t.email).where(isNull(t.deletedAt)),
-		check(
-			"email_check",
+		buildCheck(
+			"user:email_must_belong_to_institution",
 			sql`${t.email} LIKE '%@${sql.raw(INSTITUTION_DOMAIN)}'`,
 		),
 	],
@@ -166,7 +166,6 @@ export const permissionRelations = relations(permission, (r) => ({
 export const rolePermission = pgTable(
 	"role_permission",
 	{
-		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		permissionId: integer()
 			.references(() => permission.id, { onDelete: "cascade" })
 			.notNull(),
@@ -175,7 +174,7 @@ export const rolePermission = pgTable(
 			.notNull(),
 		...fields("common"), // goes hard
 	},
-	(t) => [unique().on(t.roleId, t.permissionId)],
+	(t) => [primaryKey({ columns: [t.roleId, t.permissionId] })],
 );
 
 export const rolePermissionRelations = relations(rolePermission, (r) => ({
@@ -308,10 +307,9 @@ export const venue = pgTable(
 	},
 	(t) => [
 		uniqueIndex().on(t.venueTypeId, t.name).where(isNull(t.deletedAt)),
-		check(
-			"availability_details",
-			sql`(${t.isAvailable} = TRUE AND ${t.unavailabilityReason} IS NULL) OR
-			(${t.isAvailable} = FALSE AND ${t.unavailabilityReason} IS NOT NULL AND LENGTH(${t.unavailabilityReason}) > 0)`,
+		buildCheck(
+			"venue:unavailability_reason_presence",
+			sql`${t.isAvailable} = (NULLIF(${t.unavailabilityReason}, '') IS NULL)`,
 		),
 	],
 );
@@ -370,7 +368,7 @@ export const venueFacilityRelations = relations(venueFacility, (r) => ({
 	}),
 }));
 
-// === Common fields
+// === Helpers
 type PgStringTimestamp = ReturnType<typeof timestamp<"string">>;
 type Scope = "common" | "soft-delete";
 type CommonFields = {
