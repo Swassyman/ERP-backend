@@ -1,4 +1,4 @@
-import { type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
+import { type HasDefault, isNull, type NotNull, or, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -18,8 +18,13 @@ import {
 	MANAGED_ENTITY_TYPES,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
+	EVENT_STATUS,
+	EVENT_ORGANIZER_ROLES,
+	EVENT_ORGANIZER_INVITATION_STATUS,
 } from "@/lib/constants.js";
 import { buildCheck } from "./checks.js";
+import { readFile } from "node:fs/promises";
+import { time } from "node:console";
 
 // todo: how about switching to string based ids?
 
@@ -27,7 +32,12 @@ import { buildCheck } from "./checks.js";
 export const userTypeEnum = pgEnum("user_type", USER_TYPES);
 export const managedEntityTypeEnum = pgEnum("managed_entity_type", MANAGED_ENTITY_TYPES);
 export const venueAccessLevelEnum = pgEnum("venue_access_level", VENUE_ACCESS_LEVELS);
-
+export const eventStatusEnum = pgEnum("event_status", EVENT_STATUS);
+export const eventOrganizerRoleEnum = pgEnum("event_organizer_role", EVENT_ORGANIZER_ROLES);
+export const eventOrganizerInvitationStatusEnum = pgEnum(
+	"event_organizer_inivitation_status",
+	EVENT_ORGANIZER_INVITATION_STATUS,
+);
 // === Tables
 export const managedEntity = pgTable(
 	"managed_entity",
@@ -341,6 +351,177 @@ export const venueFacilityRelations = relations(venueFacility, (r) => ({
 	facility: r.one(facility, {
 		fields: [venueFacility.facilityId],
 		references: [facility.id],
+	}),
+}));
+
+export const eventType = pgTable(
+	"event_type",
+	{
+		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
+		eventTypeName: text().notNull(), //program/event or what type of event?
+		/*workflowid: integer()
+			.references(() => workflow.id)
+			.notNull(),*/
+		...fields("common", "soft-delete"),
+	},
+	(t) => [unique().on(t.eventTypeName)],
+);
+
+export const event = pgTable(
+	"event",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventName: text().notNull(),
+		eventTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		expectedParticipants: integer().notNull(),
+		requestDetails: text().notNull(),
+		status: eventStatusEnum().notNull(),
+		programId: bigint({ mode: "number" }).references((): AnyPgColumn => event.id),
+		startsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		buildCheck("event:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`),
+		buildCheck("event:min_participants", sql`${t.expectedParticipants}>0`),
+		buildCheck("event:unique_to_program", sql`${t.programId} != ${t.id} `),
+	],
+);
+
+export const eventRelations = relations(event, (r) => ({
+	eventType: r.one(eventType, {
+		fields: [event.eventTypeId],
+		references: [eventType.id],
+	}),
+	venueAllotments: r.many(venueAllotment),
+	organizers: r.many(eventOrganizer),
+	invitations: r.many(eventOrganizerInvitation),
+	report: r.one(eventReport, {
+		fields: [event.id],
+		references: [eventReport.eventId],
+	}),
+}));
+
+export const venueAllotment = pgTable(
+	"venue_allotment",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		venueId: integer()
+			.references(() => venue.id, { onDelete: "cascade" })
+			.notNull(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		startsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [buildCheck("venue_allotment:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`)],
+);
+
+export const venueAllotmentRelations = relations(venueAllotment, (r) => ({
+	event: r.one(event, {
+		fields: [venueAllotment.eventId],
+		references: [event.id],
+	}),
+	venue: r.one(venue, {
+		fields: [venueAllotment.venueId],
+		references: [venue.id],
+	}),
+}));
+
+export const eventOrganizer = pgTable(
+	"event_organizer",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		organizationId: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		role: eventOrganizerRoleEnum().notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [unique().on(t.eventId, t.organizationId)],
+);
+
+export const eventOrganizerRelations = relations(eventOrganizer, (r) => ({
+	event: r.one(event, {
+		fields: [eventOrganizer.eventId],
+		references: [event.id],
+	}),
+	organization: r.one(organization, {
+		fields: [eventOrganizer.organizationId],
+		references: [organization.id],
+	}),
+}));
+
+export const eventOrganizerInvitation = pgTable(
+	"event_organizer_invitation",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		invitedAt: timestamp({ mode: "date", withTimezone: true }).defaultNow(),
+		inviter: bigint({ mode: "number" })
+			.references(() => userRole.id, { onDelete: "cascade" })
+			.notNull(),
+		invitee: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		status: eventOrganizerInvitationStatusEnum().default("Pending").notNull(),
+		respondedAt: timestamp({ mode: "date", withTimezone: true }),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		unique().on(t.eventId, t.invitee, t.respondedAt).nullsNotDistinct(),
+		buildCheck("event_organizer_invitation:to_self", sql`${t.invitee} !=${t.inviter}`),
+		buildCheck(
+			"event_organizer_invitation:status_update",
+			sql`
+			(${t.status} = 'Pending' AND ${t.respondedAt} is NULL)
+			OR
+			(${t.status} IN ('Accepted', 'Rejected') AND ${t.respondedAt} IS NOT NULL)`,
+		),
+	],
+);
+
+export const eventOrganizerInvitationRelations = relations(eventOrganizerInvitation, (r) => ({
+	event: r.one(event, {
+		fields: [eventOrganizerInvitation.eventId],
+		references: [event.id],
+	}),
+	inviter: r.one(userRole, {
+		fields: [eventOrganizerInvitation.inviter],
+		references: [userRole.id],
+	}),
+	invitee: r.one(organization, {
+		fields: [eventOrganizerInvitation.invitee],
+		references: [organization.id],
+	}),
+}));
+
+export const eventReport = pgTable(
+	"event_report",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		details: text().notNull(),
+		submittedAt: timestamp({ mode: "date", withTimezone: true }).defaultNow().notNull(),
+	},
+	(t) => [unique().on(t.eventId)],
+);
+
+export const eventReportRelations = relations(eventReport, (r) => ({
+	event: r.one(event, {
+		fields: [eventReport.eventId],
+		references: [event.id],
 	}),
 }));
 
