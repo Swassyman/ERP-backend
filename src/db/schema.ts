@@ -35,7 +35,7 @@ export const venueAccessLevelEnum = pgEnum("venue_access_level", VENUE_ACCESS_LE
 export const eventStatusEnum = pgEnum("event_status", EVENT_STATUS);
 export const eventOrganizerRoleEnum = pgEnum("event_organizer_role", EVENT_ORGANIZER_ROLES);
 export const eventOrganizerInvitationStatusEnum = pgEnum(
-	"event_organizer_inivitation_status",
+	"event_organizer_invitation_status",
 	EVENT_ORGANIZER_INVITATION_STATUS,
 );
 // === Tables
