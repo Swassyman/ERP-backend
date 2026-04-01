@@ -22,10 +22,10 @@ export const CHECKS = {
 	},
 	event: {
 		ends_after_starts: {
-			error: "Event must start befor completion",
+			error: "Event must end after it starts",
 		},
 		min_participants: {
-			error: "Event must have atleast one or more participants",
+			error: "Event must have at least 1 participant",
 		},
 		unique_to_program: {
 			error: "Cannot have self referential Program / Event",
