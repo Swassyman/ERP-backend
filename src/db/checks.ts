@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import { type CheckBuilder, check } from "drizzle-orm/pg-core";
+import { event_organizer_invitation, organizer_invitation, venue_allotment } from "./schema.js";
 
 export type CustomCheckEntry = {
 	error: string;
@@ -17,6 +18,30 @@ export const CHECKS = {
 	venue: {
 		unavailability_reason_presence: {
 			error: "Unavailability reason must be present only when venue is unavailable",
+		},
+	},
+	event: {
+		ends_after_starts: {
+			error: "Event must start befor completion",
+		},
+		min_participants: {
+			error: "Event must have atleast one or more participants",
+		},
+		unique_to_program: {
+			error: "Cannot have self referential Program / Event",
+		},
+	},
+	venue_allotment: {
+		ends_after_starts: {
+			error: "Venue allotment cannot end before starting",
+		},
+	},
+	event_organizer_invitation: {
+		to_self: {
+			error: "Invitee and Inviter cannot be same",
+		},
+		status_update: {
+			error: "Status should be correctly checked", //need a better remark
 		},
 	},
 } as const satisfies Record<string, CustomChecks>;
