@@ -1,6 +1,5 @@
 import type { SQL } from "drizzle-orm";
 import { type CheckBuilder, check } from "drizzle-orm/pg-core";
-import { event_organizer_invitation, organizer_invitation, venue_allotment } from "./schema.js";
 
 export type CustomCheckEntry = {
 	error: string;
@@ -22,7 +21,7 @@ export const CHECKS = {
 	},
 	event: {
 		ends_after_starts: {
-			error: "Event must end after it starts",
+			error: "Event must start before completion",
 		},
 		min_participants: {
 			error: "Event must have at least 1 participant",
@@ -41,7 +40,8 @@ export const CHECKS = {
 			error: "Invitee and Inviter cannot be same",
 		},
 		status_update: {
-			error: "Status should be correctly checked", //need a better remark
+			error:
+				"Status must be pending when respondedAt is null, and accepted or rejected only when respondedAt is set", //need a better remark
 		},
 	},
 } as const satisfies Record<string, CustomChecks>;
