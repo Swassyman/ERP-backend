@@ -1,4 +1,4 @@
-import { type HasDefault, isNull, type NotNull, or, relations, sql } from "drizzle-orm";
+import { type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -23,8 +23,6 @@ import {
 	EVENT_ORGANIZER_INVITATION_STATUS,
 } from "@/lib/constants.js";
 import { buildCheck } from "./checks.js";
-import { readFile } from "node:fs/promises";
-import { time } from "node:console";
 
 // todo: how about switching to string based ids?
 
@@ -364,7 +362,7 @@ export const eventType = pgTable(
 			.notNull(),*/
 		...fields("common", "soft-delete"),
 	},
-	(t) => [unique().on(t.eventTypeName)],
+	(t) => [uniqueIndex("event_type_name_unique").on(t.eventTypeName).where(isNull(t.deletedAt))],
 );
 
 export const event = pgTable(
@@ -379,8 +377,8 @@ export const event = pgTable(
 		requestDetails: text().notNull(),
 		status: eventStatusEnum().notNull(),
 		programId: bigint({ mode: "number" }).references((): AnyPgColumn => event.id),
-		startsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
-		endsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		startsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
@@ -414,8 +412,8 @@ export const venueAllotment = pgTable(
 		eventId: bigint({ mode: "number" })
 			.references(() => event.id, { onDelete: "cascade" })
 			.notNull(),
-		startsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
-		endsAt: timestamp({ mode: "date", withTimezone: true }).notNull(),
+		startsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [buildCheck("venue_allotment:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`)],
@@ -445,7 +443,11 @@ export const eventOrganizer = pgTable(
 		role: eventOrganizerRoleEnum().notNull(),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [unique().on(t.eventId, t.organizationId)],
+	(t) => [
+		uniqueIndex("event_organizer_event_org_unique")
+			.on(t.eventId, t.organizationId)
+			.where(isNull(t.deletedAt)),
+	],
 );
 
 export const eventOrganizerRelations = relations(eventOrganizer, (r) => ({
@@ -466,19 +468,22 @@ export const eventOrganizerInvitation = pgTable(
 		eventId: bigint({ mode: "number" })
 			.references(() => event.id, { onDelete: "cascade" })
 			.notNull(),
-		invitedAt: timestamp({ mode: "date", withTimezone: true }).defaultNow(),
+		invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
 		inviter: bigint({ mode: "number" })
 			.references(() => userRole.id, { onDelete: "cascade" })
 			.notNull(),
 		invitee: integer()
 			.references(() => organization.id, { onDelete: "cascade" })
 			.notNull(),
-		status: eventOrganizerInvitationStatusEnum().default("Pending").notNull(),
-		respondedAt: timestamp({ mode: "date", withTimezone: true }),
+		status: eventOrganizerInvitationStatusEnum().default("pending").notNull(),
+		respondedAt: timestamp({ mode: "string", withTimezone: true }),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		unique().on(t.eventId, t.invitee, t.respondedAt).nullsNotDistinct(),
+		//check(said doc error!)
+		uniqueIndex("event_organizer_invitation_event_invitee_respondedat_uq")
+			.on(t.eventId, t.invitee, t.respondedAt)
+			.where(isNull(t.deletedAt)),
 		buildCheck("event_organizer_invitation:to_self", sql`${t.invitee} !=${t.inviter}`),
 		buildCheck(
 			"event_organizer_invitation:status_update",
@@ -513,7 +518,7 @@ export const eventReport = pgTable(
 			.references(() => event.id, { onDelete: "cascade" })
 			.notNull(),
 		details: text().notNull(),
-		submittedAt: timestamp({ mode: "date", withTimezone: true }).defaultNow().notNull(),
+		submittedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
 	},
 	(t) => [unique().on(t.eventId)],
 );
