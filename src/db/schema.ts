@@ -488,9 +488,9 @@ export const eventOrganizerInvitation = pgTable(
 		buildCheck(
 			"event_organizer_invitation:status_update",
 			sql`
-			(${t.status} = 'Pending' AND ${t.respondedAt} is NULL)
+			(${t.status} = 'pending' AND ${t.respondedAt} is NULL)
 			OR
-			(${t.status} IN ('Accepted', 'Rejected') AND ${t.respondedAt} IS NOT NULL)`,
+			(${t.status} IN ('accepted', 'rejected') AND ${t.respondedAt} IS NOT NULL)`,
 		),
 	],
 );
