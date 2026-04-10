@@ -365,6 +365,36 @@ export const eventType = pgTable(
 	(t) => [uniqueIndex("event_type_name_unique").on(t.eventTypeName).where(isNull(t.deletedAt))],
 );
 
+export const eventTypeAllowedParent = pgTable(
+  "event_type_allowed_parent",
+  {
+    childTypeId: smallint()
+      .references(() => eventType.id)
+      .notNull(),
+    parentTypeId: smallint()
+      .references(() => eventType.id)
+      .notNull(),
+    ...fields("common"),
+  },
+  (t) => [primaryKey({ columns: [t.childTypeId, t.parentTypeId] })],
+);
+
+export const eventTypeAllowedParentRelations = relations(
+	eventTypeAllowedParent,
+	(r) => ({
+		childType: r.one(eventType, {
+			fields: [eventTypeAllowedParent.childTypeId],
+			references: [eventType.id],
+			relationName: "as_child",
+		}),
+		parentType: r.one(eventType, {
+			fields: [eventTypeAllowedParent.parentTypeId],
+			references: [eventType.id],
+			relationName: "as_parent",
+		}),
+	}),
+);
+
 export const event = pgTable(
 	"event",
 	{
@@ -376,7 +406,7 @@ export const event = pgTable(
 		expectedParticipants: integer().notNull(),
 		requestDetails: text().notNull(),
 		status: eventStatusEnum().notNull(),
-		programId: bigint({ mode: "number" }).references((): AnyPgColumn => event.id),
+		parentEventId: bigint({ mode: "number" }).references((): AnyPgColumn => event.id),
 		startsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
 		endsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
 		...fields("common", "soft-delete"),
@@ -384,7 +414,7 @@ export const event = pgTable(
 	(t) => [
 		buildCheck("event:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`),
 		buildCheck("event:min_participants", sql`${t.expectedParticipants}>0`),
-		buildCheck("event:unique_to_program", sql`${t.programId} != ${t.id} `),
+		buildCheck("event:unique_to_program", sql`${t.parentEventId} != ${t.id} `),
 	],
 );
 
