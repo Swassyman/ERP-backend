@@ -366,34 +366,31 @@ export const eventType = pgTable(
 );
 
 export const eventTypeAllowedParent = pgTable(
-  "event_type_allowed_parent",
-  {
-    childTypeId: smallint()
-      .references(() => eventType.id)
-      .notNull(),
-    parentTypeId: smallint()
-      .references(() => eventType.id)
-      .notNull(),
-    ...fields("common"),
-  },
-  (t) => [primaryKey({ columns: [t.childTypeId, t.parentTypeId] })],
+	"event_type_allowed_parent",
+	{
+		childTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		parentTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		...fields("common"),
+	},
+	(t) => [primaryKey({ columns: [t.childTypeId, t.parentTypeId] })],
 );
 
-export const eventTypeAllowedParentRelations = relations(
-	eventTypeAllowedParent,
-	(r) => ({
-		childType: r.one(eventType, {
-			fields: [eventTypeAllowedParent.childTypeId],
-			references: [eventType.id],
-			relationName: "as_child",
-		}),
-		parentType: r.one(eventType, {
-			fields: [eventTypeAllowedParent.parentTypeId],
-			references: [eventType.id],
-			relationName: "as_parent",
-		}),
+export const eventTypeAllowedParentRelations = relations(eventTypeAllowedParent, (r) => ({
+	childType: r.one(eventType, {
+		fields: [eventTypeAllowedParent.childTypeId],
+		references: [eventType.id],
+		relationName: "as_child",
 	}),
-);
+	parentType: r.one(eventType, {
+		fields: [eventTypeAllowedParent.parentTypeId],
+		references: [eventType.id],
+		relationName: "as_parent",
+	}),
+}));
 
 export const event = pgTable(
 	"event",
@@ -498,15 +495,18 @@ export const eventOrganizerInvitation = pgTable(
 		eventId: bigint({ mode: "number" })
 			.references(() => event.id, { onDelete: "cascade" })
 			.notNull(),
-    invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
-		invitedBy: bigint({ mode: "number" })
-      .references(() => userRole.id, { onDelete: "cascade" })
-      .notNull(),
-    inviter: integer()
+		invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
+		invitedByUserId: bigint({ mode: "number" })
+			.references(() => userRole.id, { onDelete: "cascade" })
+			.notNull(),
+		senderOrganizationId: integer()
 			.references(() => organization.id, { onDelete: "cascade" })
 			.notNull(),
-		invitee: integer()
+		recipientOrganizationId: integer()
 			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		respondedByUserId: bigint({ mode: "number" })
+			.references(() => userRole.id, { onDelete: "cascade" })
 			.notNull(),
 		status: eventOrganizerInvitationStatusEnum().default("pending").notNull(),
 		respondedAt: timestamp({ mode: "string", withTimezone: true }),
@@ -514,9 +514,12 @@ export const eventOrganizerInvitation = pgTable(
 	},
 	(t) => [
 		uniqueIndex("event_organizer_invitation_event_invitee_respondedat_uq")
-			.on(t.eventId, t.invitee, t.respondedAt)
+			.on(t.eventId, t.recipientOrganizationId, t.respondedAt)
 			.where(isNull(t.deletedAt)),
-		buildCheck("event_organizer_invitation:to_self", sql`${t.invitee} !=${t.inviter}`),
+		buildCheck(
+			"event_organizer_invitation:to_self",
+			sql`${t.senderOrganizationId} !=${t.recipientOrganizationId}`,
+		),
 		buildCheck(
 			"event_organizer_invitation:status_update",
 			sql`
@@ -531,19 +534,22 @@ export const eventOrganizerInvitationRelations = relations(eventOrganizerInvitat
 	event: r.one(event, {
 		fields: [eventOrganizerInvitation.eventId],
 		references: [event.id],
-  }),
-  invitedBy: r.one(userRole, {
-    fields: [eventOrganizerInvitation.invitedBy],
-    references:[userRole.id],
-	})
-	,
-	inviter: r.one(organization, {
-		fields: [eventOrganizerInvitation.inviter],
+	}),
+	invitedByUserId: r.one(userRole, {
+		fields: [eventOrganizerInvitation.invitedByUserId],
+		references: [userRole.id],
+	}),
+	senderOrganizationId: r.one(organization, {
+		fields: [eventOrganizerInvitation.senderOrganizationId],
 		references: [organization.id],
 	}),
-	invitee: r.one(organization, {
-		fields: [eventOrganizerInvitation.invitee],
+	recipientOrganizationId: r.one(organization, {
+		fields: [eventOrganizerInvitation.recipientOrganizationId],
 		references: [organization.id],
+	}),
+	respondedByUserId: r.one(userRole, {
+		fields: [eventOrganizerInvitation.respondedByUserId],
+		references: [userRole.id],
 	}),
 }));
 
