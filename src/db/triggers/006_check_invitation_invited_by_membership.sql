@@ -1,6 +1,6 @@
     -- 006_check_invitation_invited_by_membership.sql
     --
-    -- soft-fk: invited_by must be a member of inviter organization
+    -- soft-fk: invited_by_user_id must be a member of sender_organization
 
     CREATE OR REPLACE FUNCTION check_invitation_invited_by_membership()
     RETURNS TRIGGER AS $$
@@ -27,7 +27,7 @@
             AND deleted_at IS NULL
         ) THEN
             RAISE EXCEPTION
-                'invitation: invited_by_user_id % is not a member of sender organization %',
+                'invitation: invited by user id % is not a member of sender organization %',
                 NEW.invited_by_user_id,
                 NEW.sender_organization_id;
         END IF;
