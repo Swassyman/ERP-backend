@@ -468,9 +468,12 @@ export const eventOrganizerInvitation = pgTable(
 		eventId: bigint({ mode: "number" })
 			.references(() => event.id, { onDelete: "cascade" })
 			.notNull(),
-		invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
-		inviter: bigint({ mode: "number" })
-			.references(() => userRole.id, { onDelete: "cascade" })
+    invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
+		invitedBy: bigint({ mode: "number" })
+      .references(() => userRole.id, { onDelete: "cascade" })
+      .notNull(),
+    inviter: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
 			.notNull(),
 		invitee: integer()
 			.references(() => organization.id, { onDelete: "cascade" })
@@ -480,7 +483,6 @@ export const eventOrganizerInvitation = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		//check(said doc error!)
 		uniqueIndex("event_organizer_invitation_event_invitee_respondedat_uq")
 			.on(t.eventId, t.invitee, t.respondedAt)
 			.where(isNull(t.deletedAt)),
@@ -499,10 +501,15 @@ export const eventOrganizerInvitationRelations = relations(eventOrganizerInvitat
 	event: r.one(event, {
 		fields: [eventOrganizerInvitation.eventId],
 		references: [event.id],
-	}),
-	inviter: r.one(userRole, {
+  }),
+  invitedBy: r.one(userRole, {
+    fields: [eventOrganizerInvitation.invitedBy],
+    references:[userRole.id],
+	})
+	,
+	inviter: r.one(organization, {
 		fields: [eventOrganizerInvitation.inviter],
-		references: [userRole.id],
+		references: [organization.id],
 	}),
 	invitee: r.one(organization, {
 		fields: [eventOrganizerInvitation.invitee],
