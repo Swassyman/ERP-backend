@@ -19,6 +19,31 @@ export const CHECKS = {
 			error: "Unavailability reason must be present only when venue is unavailable",
 		},
 	},
+	event: {
+		ends_after_starts: {
+			error: "Event must start before completion",
+		},
+		min_participants: {
+			error: "Event must have at least 1 participant",
+		},
+		unique_to_program: {
+			error: "Cannot have self referential Program / Event",
+		},
+	},
+	venue_allotment: {
+		ends_after_starts: {
+			error: "Venue allotment cannot end before starting",
+		},
+	},
+	event_organizer_invitation: {
+		to_self: {
+			error: "Invitee and Inviter cannot be same",
+		},
+		status_update: {
+			error:
+				"Status must be pending when respondedAt is null, and accepted or rejected only when respondedAt is set", //need a better remark
+		},
+	},
 } as const satisfies Record<string, CustomChecks>;
 
 type CheckIdentifier = {

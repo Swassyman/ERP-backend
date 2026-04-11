@@ -12,6 +12,15 @@ export const REFRESH_TOKEN_COOKIE_NAME = "refresh-token";
 export const USER_TYPES = ["admin", "end_user"] as const;
 export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;
 export const VENUE_ACCESS_LEVELS = ["public", "private"] as const;
+export const EVENT_STATUS = [
+	"draft",
+	"awaiting_approval",
+	"cancelled",
+	"overridden",
+	"completed",
+] as const;
+export const EVENT_ORGANIZER_ROLES = ["host", "co_host"] as const;
+export const EVENT_ORGANIZER_INVITATION_STATUS = ["pending", "accepted", "rejected"] as const;
 
 // note: keep it sorted like the schema:
 export const PERMISSION = {

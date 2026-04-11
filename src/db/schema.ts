@@ -18,6 +18,9 @@ import {
 	MANAGED_ENTITY_TYPES,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
+	EVENT_STATUS,
+	EVENT_ORGANIZER_ROLES,
+	EVENT_ORGANIZER_INVITATION_STATUS,
 } from "@/lib/constants.js";
 import { buildCheck } from "./checks.js";
 
@@ -27,7 +30,12 @@ import { buildCheck } from "./checks.js";
 export const userTypeEnum = pgEnum("user_type", USER_TYPES);
 export const managedEntityTypeEnum = pgEnum("managed_entity_type", MANAGED_ENTITY_TYPES);
 export const venueAccessLevelEnum = pgEnum("venue_access_level", VENUE_ACCESS_LEVELS);
-
+export const eventStatusEnum = pgEnum("event_status", EVENT_STATUS);
+export const eventOrganizerRoleEnum = pgEnum("event_organizer_role", EVENT_ORGANIZER_ROLES);
+export const eventOrganizerInvitationStatusEnum = pgEnum(
+	"event_organizer_invitation_status",
+	EVENT_ORGANIZER_INVITATION_STATUS,
+);
 // === Tables
 export const managedEntity = pgTable(
 	"managed_entity",
@@ -341,6 +349,227 @@ export const venueFacilityRelations = relations(venueFacility, (r) => ({
 	facility: r.one(facility, {
 		fields: [venueFacility.facilityId],
 		references: [facility.id],
+	}),
+}));
+
+export const eventType = pgTable(
+	"event_type",
+	{
+		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
+		eventTypeName: text().notNull(), //program/event or what type of event?
+		/*workflowid: integer()
+			.references(() => workflow.id)
+			.notNull(),*/
+		...fields("common", "soft-delete"),
+	},
+	(t) => [uniqueIndex("event_type_name_unique").on(t.eventTypeName).where(isNull(t.deletedAt))],
+);
+
+export const eventTypeAllowedParent = pgTable(
+	"event_type_allowed_parent",
+	{
+		childTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		parentTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		...fields("common"),
+	},
+	(t) => [primaryKey({ columns: [t.childTypeId, t.parentTypeId] })],
+);
+
+export const eventTypeAllowedParentRelations = relations(eventTypeAllowedParent, (r) => ({
+	childType: r.one(eventType, {
+		fields: [eventTypeAllowedParent.childTypeId],
+		references: [eventType.id],
+		relationName: "as_child",
+	}),
+	parentType: r.one(eventType, {
+		fields: [eventTypeAllowedParent.parentTypeId],
+		references: [eventType.id],
+		relationName: "as_parent",
+	}),
+}));
+
+export const event = pgTable(
+	"event",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventName: text().notNull(),
+		eventTypeId: smallint()
+			.references(() => eventType.id)
+			.notNull(),
+		expectedParticipants: integer().notNull(),
+		requestDetails: text().notNull(),
+		status: eventStatusEnum().notNull(),
+		parentEventId: bigint({ mode: "number" }).references((): AnyPgColumn => event.id),
+		startsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		buildCheck("event:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`),
+		buildCheck("event:min_participants", sql`${t.expectedParticipants}>0`),
+		buildCheck("event:unique_to_program", sql`${t.parentEventId} != ${t.id} `),
+	],
+);
+
+export const eventRelations = relations(event, (r) => ({
+	eventType: r.one(eventType, {
+		fields: [event.eventTypeId],
+		references: [eventType.id],
+	}),
+	venueAllotments: r.many(venueAllotment),
+	organizers: r.many(eventOrganizer),
+	invitations: r.many(eventOrganizerInvitation),
+	report: r.one(eventReport, {
+		fields: [event.id],
+		references: [eventReport.eventId],
+	}),
+}));
+
+export const venueAllotment = pgTable(
+	"venue_allotment",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		venueId: integer()
+			.references(() => venue.id, { onDelete: "cascade" })
+			.notNull(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		startsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		endsAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [buildCheck("venue_allotment:ends_after_starts", sql`${t.endsAt} > ${t.startsAt}`)],
+);
+
+export const venueAllotmentRelations = relations(venueAllotment, (r) => ({
+	event: r.one(event, {
+		fields: [venueAllotment.eventId],
+		references: [event.id],
+	}),
+	venue: r.one(venue, {
+		fields: [venueAllotment.venueId],
+		references: [venue.id],
+	}),
+}));
+
+export const eventOrganizer = pgTable(
+	"event_organizer",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		organizationId: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		role: eventOrganizerRoleEnum().notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex("event_organizer_event_org_unique")
+			.on(t.eventId, t.organizationId)
+			.where(isNull(t.deletedAt)),
+	],
+);
+
+export const eventOrganizerRelations = relations(eventOrganizer, (r) => ({
+	event: r.one(event, {
+		fields: [eventOrganizer.eventId],
+		references: [event.id],
+	}),
+	organization: r.one(organization, {
+		fields: [eventOrganizer.organizationId],
+		references: [organization.id],
+	}),
+}));
+
+export const eventOrganizerInvitation = pgTable(
+	"event_organizer_invitation",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		invitedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow(),
+		invitedByUserId: bigint({ mode: "number" })
+			.references(() => userRole.id, { onDelete: "cascade" })
+			.notNull(),
+		senderOrganizationId: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		recipientOrganizationId: integer()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.notNull(),
+		respondedByUserId: bigint({ mode: "number" }).references(() => userRole.id, {
+			onDelete: "cascade",
+		}),
+		status: eventOrganizerInvitationStatusEnum().default("pending").notNull(),
+		respondedAt: timestamp({ mode: "string", withTimezone: true }),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex("event_organizer_invitation_event_invitee_respondedat_uq")
+			.on(t.eventId, t.recipientOrganizationId, t.respondedAt)
+			.where(isNull(t.deletedAt)),
+		buildCheck(
+			"event_organizer_invitation:to_self",
+			sql`${t.senderOrganizationId} !=${t.recipientOrganizationId}`,
+		),
+		buildCheck(
+			"event_organizer_invitation:status_update",
+			sql`
+			(${t.status} = 'pending' AND ${t.respondedAt} is NULL)
+			OR
+			(${t.status} IN ('accepted', 'rejected') AND ${t.respondedAt} IS NOT NULL)`,
+		),
+	],
+);
+
+export const eventOrganizerInvitationRelations = relations(eventOrganizerInvitation, (r) => ({
+	event: r.one(event, {
+		fields: [eventOrganizerInvitation.eventId],
+		references: [event.id],
+	}),
+	invitedByUser: r.one(userRole, {
+		fields: [eventOrganizerInvitation.invitedByUserId],
+		references: [userRole.id],
+	}),
+	senderOrganization: r.one(organization, {
+		fields: [eventOrganizerInvitation.senderOrganizationId],
+		references: [organization.id],
+	}),
+	recipientOrganization: r.one(organization, {
+		fields: [eventOrganizerInvitation.recipientOrganizationId],
+		references: [organization.id],
+	}),
+	respondedByUser: r.one(userRole, {
+		fields: [eventOrganizerInvitation.respondedByUserId],
+		references: [userRole.id],
+	}),
+}));
+
+export const eventReport = pgTable(
+	"event_report",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id, { onDelete: "cascade" })
+			.notNull(),
+		details: text().notNull(),
+		submittedAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
+	},
+	(t) => [unique().on(t.eventId)],
+);
+
+export const eventReportRelations = relations(eventReport, (r) => ({
+	event: r.one(event, {
+		fields: [eventReport.eventId],
+		references: [event.id],
 	}),
 }));
 
