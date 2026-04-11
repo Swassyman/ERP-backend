@@ -505,9 +505,9 @@ export const eventOrganizerInvitation = pgTable(
 		recipientOrganizationId: integer()
 			.references(() => organization.id, { onDelete: "cascade" })
 			.notNull(),
-		respondedByUserId: bigint({ mode: "number" })
-			.references(() => userRole.id, { onDelete: "cascade" })
-			.notNull(),
+		respondedByUserId: bigint({ mode: "number" }).references(() => userRole.id, {
+			onDelete: "cascade",
+		}),
 		status: eventOrganizerInvitationStatusEnum().default("pending").notNull(),
 		respondedAt: timestamp({ mode: "string", withTimezone: true }),
 		...fields("common", "soft-delete"),
@@ -535,19 +535,19 @@ export const eventOrganizerInvitationRelations = relations(eventOrganizerInvitat
 		fields: [eventOrganizerInvitation.eventId],
 		references: [event.id],
 	}),
-	invitedByUserId: r.one(userRole, {
+	invitedByUser: r.one(userRole, {
 		fields: [eventOrganizerInvitation.invitedByUserId],
 		references: [userRole.id],
 	}),
-	senderOrganizationId: r.one(organization, {
+	senderOrganization: r.one(organization, {
 		fields: [eventOrganizerInvitation.senderOrganizationId],
 		references: [organization.id],
 	}),
-	recipientOrganizationId: r.one(organization, {
+	recipientOrganization: r.one(organization, {
 		fields: [eventOrganizerInvitation.recipientOrganizationId],
 		references: [organization.id],
 	}),
-	respondedByUserId: r.one(userRole, {
+	respondedByUser: r.one(userRole, {
 		fields: [eventOrganizerInvitation.respondedByUserId],
 		references: [userRole.id],
 	}),
