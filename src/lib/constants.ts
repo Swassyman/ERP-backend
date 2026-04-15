@@ -20,7 +20,13 @@ export const EVENT_STATUS = [
 	"completed",
 ] as const;
 export const EVENT_ORGANIZER_ROLES = ["host", "co_host"] as const;
-export const EVENT_ORGANIZER_INVITATION_STATUS = ["pending", "accepted", "rejected"] as const;
+export const EVENT_ORGANIZER_INVITATION_STATUS = [
+	"pending",
+	"accepted",
+	"rejected",
+	"revoked",
+	"expired",
+] as const;
 
 // note: keep it sorted like the schema:
 export const PERMISSION = {

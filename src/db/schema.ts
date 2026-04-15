@@ -509,12 +509,12 @@ export const eventOrganizerInvitation = pgTable(
 			onDelete: "cascade",
 		}),
 		status: eventOrganizerInvitationStatusEnum().default("pending").notNull(),
-		respondedAt: timestamp({ mode: "string", withTimezone: true }),
+		closedAt: timestamp({ mode: "string", withTimezone: true }),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex("event_organizer_invitation_event_invitee_respondedat_uq")
-			.on(t.eventId, t.recipientOrganizationId, t.respondedAt)
+		uniqueIndex("event_organizer_invitation_event_invitee_closedat_uq")
+			.on(t.eventId, t.recipientOrganizationId, t.closedAt)
 			.where(isNull(t.deletedAt)),
 		buildCheck(
 			"event_organizer_invitation:to_self",
@@ -523,9 +523,9 @@ export const eventOrganizerInvitation = pgTable(
 		buildCheck(
 			"event_organizer_invitation:status_update",
 			sql`
-			(${t.status} = 'pending' AND ${t.respondedAt} is NULL)
+			(${t.status} = 'pending' AND ${t.closedAt} is NULL)
 			OR
-			(${t.status} IN ('accepted', 'rejected') AND ${t.respondedAt} IS NOT NULL)`,
+			(${t.status} IN ('accepted', 'rejected', 'revoked', 'expired') AND ${t.closedAt} IS NOT NULL)`,
 		),
 	],
 );
