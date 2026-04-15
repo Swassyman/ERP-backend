@@ -41,7 +41,7 @@ export const CHECKS = {
 		},
 		status_update: {
 			error:
-				"Status must be pending when respondedAt is null, and accepted or rejected only when respondedAt is set", //need a better remark
+				"Status must be pending when closedAt is null, and accepted, rejected, revoked or expired only when closedAt is set", //need a better remark
 		},
 	},
 } as const satisfies Record<string, CustomChecks>;
