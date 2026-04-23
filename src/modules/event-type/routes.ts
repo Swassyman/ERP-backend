@@ -8,4 +8,16 @@ router.get("/", controller.getEventType);
 router.post("/", requirePermissions(["event_type:create"]), controller.createEventType);
 router.delete("/:id", requirePermissions(["event_type:delete"]), controller.deleteEventType);
 
+router.get("/:id/children", controller.getEventTypeChildTypes);
+router.post(
+	"/:id/children/:childId",
+	requirePermissions(["event_type:modify_hierarchy"]),
+	controller.addAllowedChildType,
+);
+router.delete(
+	"/:id/children/:childId",
+	requirePermissions(["event_type:modify_hierarchy"]),
+	controller.removeAllowedChildType,
+);
+
 export default router;

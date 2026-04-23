@@ -10,10 +10,20 @@ export const createEventTypeSchema = z
 	})
 	.strict();
 
-export const deleteEventTypeSchema = z
+export const eventTypeScopedSchema = z
 	.object({
 		id: z.coerce.number({ error: "Invalid event type ID" }).int({ error: "Invalid event type ID" }),
 	})
 	.strict();
 
+export const allowedParentParamsSchema = z
+	.object({
+		id: z.coerce.number({ error: "Invalid event type ID" }).int({ error: "Invalid event type ID" }),
+		childId: z.coerce
+			.number({ error: "Invalid child event type ID" })
+			.int({ error: "Invalid child event type ID" }),
+	})
+	.strict();
+
 export type CreateEventTypeSchema = z.output<typeof createEventTypeSchema>;
+export type AllowedParentParamsSchema = z.output<typeof allowedParentParamsSchema>;

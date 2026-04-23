@@ -68,6 +68,7 @@ export const PERMISSION = {
 	event_type: {
 		create: "Create event types",
 		delete: "Delete event types",
+		modify_hierarchy: "Modify hierarchy of event types",
 	},
 } as const;
 

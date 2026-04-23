@@ -39,3 +39,44 @@ export const deleteEventType = dbAction(async (id: number) => {
 		.set({ deletedAt: sql`NOW()` })
 		.where(and(eq(schema.eventType.id, id), isNull(schema.eventType.deletedAt)));
 });
+
+export const getEventTypeChildTypes = dbAction(async (parentEventId: number) => {
+	return await db
+		.select({ id: schema.eventTypeAllowedParent.childTypeId, name: schema.eventType.name })
+		.from(schema.eventTypeAllowedParent)
+		.innerJoin(schema.eventType, eq(schema.eventTypeAllowedParent.childTypeId, schema.eventType.id))
+		.where(eq(schema.eventTypeAllowedParent.parentTypeId, parentEventId))
+		.orderBy(schema.eventTypeAllowedParent.createdAt);
+});
+
+export const addAllowedChildtype = dbAction(
+	async (data: { parentTypeId: number; childTypeId: number }) => {
+		const [inserted] = await db
+			.insert(schema.eventTypeAllowedParent)
+			.values({
+				parentTypeId: data.parentTypeId,
+				childTypeId: data.childTypeId,
+			})
+			.returning({
+				parentTypeId: schema.eventTypeAllowedParent.parentTypeId,
+				childTypeId: schema.eventTypeAllowedParent.childTypeId,
+			});
+
+		if (inserted == null) return unreachable();
+
+		return inserted;
+	},
+);
+
+export const removeAllowedChildType = dbAction(
+	async (data: { parentTypeId: number; childTypeId: number }) => {
+		await db
+			.delete(schema.eventTypeAllowedParent)
+			.where(
+				and(
+					eq(schema.eventTypeAllowedParent.parentTypeId, data.parentTypeId),
+					eq(schema.eventTypeAllowedParent.childTypeId, data.childTypeId),
+				),
+			);
+	},
+);
