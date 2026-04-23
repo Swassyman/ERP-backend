@@ -65,6 +65,10 @@ export const PERMISSION = {
 		create: "Create venue types",
 		create_role: "Create roles under venue types",
 	},
+	event_type: {
+		create: "Create event types",
+		delete: "Delete event types",
+	},
 } as const;
 
 export const PERMISSION_SCOPES = Object.keys(PERMISSION) as PermissionScope[];
