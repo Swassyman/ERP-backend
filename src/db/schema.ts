@@ -21,6 +21,8 @@ import {
 	EVENT_STATUS,
 	EVENT_ORGANIZER_ROLES,
 	EVENT_ORGANIZER_INVITATION_STATUS,
+	WORKFLOW_INSTANCE_STATUS,
+	WORKFLOW_STEP_LOG_STATUS,
 } from "@/lib/constants.js";
 import { buildCheck } from "./checks.js";
 
@@ -35,6 +37,15 @@ export const eventOrganizerRoleEnum = pgEnum("event_organizer_role", EVENT_ORGAN
 export const eventOrganizerInvitationStatusEnum = pgEnum(
 	"event_organizer_invitation_status",
 	EVENT_ORGANIZER_INVITATION_STATUS,
+);
+
+export const workflowInstanceStatusEnum = pgEnum(
+	"workflow_instance_status",
+	WORKFLOW_INSTANCE_STATUS,
+);
+export const workflowStepLogStatusEnum = pgEnum(
+	"workflow_step_log_status",
+	WORKFLOW_STEP_LOG_STATUS,
 );
 // === Tables
 export const managedEntity = pgTable(
@@ -100,6 +111,7 @@ export const role = pgTable(
 export const roleRelations = relations(role, (r) => ({
 	users: r.many(userRole),
 	permissions: r.many(rolePermission),
+	steps: r.many(workflowStep),
 }));
 
 export const userRole = pgTable(
@@ -134,6 +146,7 @@ export const userRoleRelations = relations(userRole, (r) => ({
 		fields: [userRole.managedEntityId],
 		references: [managedEntity.id],
 	}),
+	handledLogs: r.many(workflowStepLog),
 }));
 
 export const permission = pgTable(
@@ -357,13 +370,23 @@ export const eventType = pgTable(
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		eventTypeName: text().notNull(), //program/event or what type of event?
-		/*workflowid: integer()
-			.references(() => workflow.id)
-			.notNull(),*/
+		workflowId: integer()
+			.references((): AnyPgColumn => workflow.id)
+			.notNull(),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [uniqueIndex("event_type_name_unique").on(t.eventTypeName).where(isNull(t.deletedAt))],
 );
+
+export const eventTypeRelations = relations(eventType, (r) => ({
+	workflow: r.one(workflow, {
+		fields: [eventType.workflowId],
+		references: [workflow.id],
+	}),
+	events: r.many(event),
+	parents: r.many(eventTypeAllowedParent, { relationName: "as_child" }),
+	children: r.many(eventTypeAllowedParent, { relationName: "as_parent" }),
+}));
 
 export const eventTypeAllowedParent = pgTable(
 	"event_type_allowed_parent",
@@ -427,6 +450,7 @@ export const eventRelations = relations(event, (r) => ({
 		fields: [event.id],
 		references: [eventReport.eventId],
 	}),
+	instances: r.many(workflowInstance),
 }));
 
 export const venueAllotment = pgTable(
@@ -570,6 +594,150 @@ export const eventReportRelations = relations(eventReport, (r) => ({
 	event: r.one(event, {
 		fields: [eventReport.eventId],
 		references: [event.id],
+	}),
+}));
+
+export const workflow = pgTable(
+	"workflow",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(),
+		initialStepId: integer()
+			.references((): AnyPgColumn => workflowStep.id)
+			.notNull(),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		uniqueIndex().on(t.initialStepId).where(isNull(t.deletedAt)),
+		uniqueIndex().on(t.name).where(isNull(t.deletedAt)),
+	],
+);
+
+export const workflowRelations = relations(workflow, (r) => ({
+	initialStep: r.one(workflowStep, {
+		fields: [workflow.initialStepId],
+		references: [workflowStep.id],
+		relationName: "initialStep",
+	}),
+	workflowSteps: r.many(workflowStep, { relationName: "steps" }),
+	instances: r.many(workflowInstance),
+	eventTypes: r.many(eventType),
+}));
+
+export const workflowStep = pgTable(
+	"workflow_step",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		workflowId: integer()
+			.references(() => workflow.id)
+			.notNull(),
+		roleId: smallint()
+			.references(() => role.id)
+			.notNull(),
+		nextStepId: integer().references((): AnyPgColumn => workflowStep.id),
+		...fields("common", "soft-delete"),
+	},
+	(t) => [
+		unique().on(t.workflowId, t.nextStepId).nullsNotDistinct(),
+		buildCheck("workflow_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
+	],
+);
+
+export const workflowStepRelations = relations(workflowStep, (r) => ({
+	workflow: r.one(workflow, {
+		fields: [workflowStep.workflowId],
+		references: [workflow.id],
+		relationName: "steps",
+	}),
+	workflowViaInitialStep: r.one(workflow, {
+		fields: [workflowStep.id],
+		references: [workflow.initialStepId],
+		relationName: "initialStep",
+	}),
+	role: r.one(role, {
+		fields: [workflowStep.roleId],
+		references: [role.id],
+	}),
+	nextStep: r.one(workflowStep, {
+		fields: [workflowStep.nextStepId],
+		references: [workflowStep.id],
+		relationName: "nextStep",
+	}),
+	previousStep: r.many(workflowStep, { relationName: "nextStep" }),
+	currentStepInstances: r.many(workflowInstance),
+	logs: r.many(workflowStepLog),
+}));
+
+export const workflowInstance = pgTable(
+	"workflow_instance",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		eventId: bigint({ mode: "number" })
+			.references(() => event.id)
+			.notNull(),
+		workflowId: integer()
+			.references(() => workflow.id)
+			.notNull(),
+		currentStepId: integer()
+			.references(() => workflowStep.id)
+			.notNull(),
+		initiatedOn: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
+		status: workflowInstanceStatusEnum().default("pending").notNull(),
+		updatedAt: timestamp({ mode: "string", withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => sql`now()`)
+			.notNull(),
+	},
+	(t) => [uniqueIndex().on(t.eventId).where(sql`${t.status}='pending'`)],
+);
+
+export const workflowInstanceRelations = relations(workflowInstance, (r) => ({
+	event: r.one(event, {
+		fields: [workflowInstance.eventId],
+		references: [event.id],
+	}),
+	workflow: r.one(workflow, {
+		fields: [workflowInstance.workflowId],
+		references: [workflow.id],
+	}),
+	currentStep: r.one(workflowStep, {
+		fields: [workflowInstance.currentStepId],
+		references: [workflowStep.id],
+	}),
+	logs: r.many(workflowStepLog),
+}));
+
+export const workflowStepLog = pgTable(
+	"workflow_step_log",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		workflowInstanceId: bigint({ mode: "number" })
+			.references(() => workflowInstance.id)
+			.notNull(),
+		stepId: integer()
+			.references(() => workflowStep.id)
+			.notNull(),
+		handledBy: bigint({ mode: "number" })
+			.references(() => userRole.id)
+			.notNull(),
+		status: workflowStepLogStatusEnum().notNull(),
+		remarks: text(),
+		handledAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
+	},
+	(t) => [unique().on(t.workflowInstanceId, t.stepId)],
+);
+export const workflowStepLogRelations = relations(workflowStepLog, (r) => ({
+	workflowInstance: r.one(workflowInstance, {
+		fields: [workflowStepLog.workflowInstanceId],
+		references: [workflowInstance.id],
+	}),
+	step: r.one(workflowStep, {
+		fields: [workflowStepLog.stepId],
+		references: [workflowStep.id],
+	}),
+	handledBy: r.one(userRole, {
+		fields: [workflowStepLog.handledBy],
+		references: [userRole.id],
 	}),
 }));
 
