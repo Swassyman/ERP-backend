@@ -44,6 +44,11 @@ export const CHECKS = {
 				"Status must be pending when closedAt is null, and accepted, rejected, revoked or expired only when closedAt is set", //need a better remark
 		},
 	},
+	workflow_step: {
+		circular_reference: {
+			error: "Step cannot reference itself",
+		},
+	},
 } as const satisfies Record<string, CustomChecks>;
 
 type CheckIdentifier = {
