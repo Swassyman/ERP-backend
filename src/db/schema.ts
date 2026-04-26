@@ -683,10 +683,7 @@ export const workflowInstance = pgTable(
 			.notNull(),
 		initiatedOn: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
 		status: workflowInstanceStatusEnum().default("pending").notNull(),
-		updatedAt: timestamp({ mode: "string", withTimezone: true })
-			.defaultNow()
-			.$onUpdate(() => sql`now()`)
-			.notNull(),
+		...fields("common"),
 	},
 	(t) => [uniqueIndex().on(t.eventId).where(sql`${t.status}='pending'`)],
 );
@@ -723,6 +720,7 @@ export const workflowStepLog = pgTable(
 		status: workflowStepLogStatusEnum().notNull(),
 		remarks: text(),
 		handledAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
+		...fields("common"),
 	},
 	(t) => [unique().on(t.workflowInstanceId, t.stepId)],
 );
