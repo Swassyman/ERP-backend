@@ -600,9 +600,7 @@ export const workflowTemplate = pgTable(
 	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(),
-		initialStepId: integer()
-			.references((): AnyPgColumn => workflowTemplateStep.id)
-			.notNull(),
+		initialStepId: integer().references((): AnyPgColumn => workflowTemplateStep.id),
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
@@ -632,7 +630,7 @@ export const workflowTemplateStep = pgTable(
 			.references(() => role.id)
 			.notNull(),
 		nextStepId: integer().references((): AnyPgColumn => workflowTemplateStep.id),
-		...fields("common", "soft-delete"), //Need soft-delete?
+		...fields("common"),
 	},
 	(t) => [
 		uniqueIndex().on(t.workflowId, t.nextStepId).where(sql`${t.nextStepId} IS NOT NULL`),
