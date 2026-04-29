@@ -38,7 +38,6 @@ export const eventOrganizerInvitationStatusEnum = pgEnum(
 	"event_organizer_invitation_status",
 	EVENT_ORGANIZER_INVITATION_STATUS,
 );
-
 export const workflowInstanceStatusEnum = pgEnum(
 	"workflow_instance_status",
 	WORKFLOW_INSTANCE_STATUS,
@@ -47,6 +46,7 @@ export const workflowStepLogStatusEnum = pgEnum(
 	"workflow_step_log_status",
 	WORKFLOW_STEP_LOG_STATUS,
 );
+
 // === Tables
 export const managedEntity = pgTable(
 	"managed_entity",
@@ -294,7 +294,7 @@ export const venue = pgTable(
 		venueTypeId: smallint()
 			.references(() => venueType.id)
 			.notNull(),
-		organizationId: integer().references((): AnyPgColumn => organization.id),
+		organizationId: integer().references(() => organization.id),
 		accessLevel: venueAccessLevelEnum().notNull(),
 		isAvailable: boolean().notNull(),
 		unavailabilityReason: text(),
@@ -369,13 +369,13 @@ export const eventType = pgTable(
 	"event_type",
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
-		eventTypeName: text().notNull(), //program/event or what type of event?
+		name: text().notNull(), //program/event or what type of event?
 		workflowId: integer()
-			.references((): AnyPgColumn => workflow.id)
+			.references(() => workflow.id)
 			.notNull(),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [uniqueIndex("event_type_name_unique").on(t.eventTypeName).where(isNull(t.deletedAt))],
+	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
 );
 
 export const eventTypeRelations = relations(eventType, (r) => ({
@@ -494,11 +494,7 @@ export const eventOrganizer = pgTable(
 		role: eventOrganizerRoleEnum().notNull(),
 		...fields("common", "soft-delete"),
 	},
-	(t) => [
-		uniqueIndex("event_organizer_event_org_unique")
-			.on(t.eventId, t.organizationId)
-			.where(isNull(t.deletedAt)),
-	],
+	(t) => [uniqueIndex().on(t.eventId, t.organizationId).where(isNull(t.deletedAt))],
 );
 
 export const eventOrganizerRelations = relations(eventOrganizer, (r) => ({
@@ -537,9 +533,7 @@ export const eventOrganizerInvitation = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		uniqueIndex("event_organizer_invitation_event_invitee_closedat_uq")
-			.on(t.eventId, t.recipientOrganizationId, t.closedAt)
-			.where(isNull(t.deletedAt)),
+		uniqueIndex().on(t.eventId, t.recipientOrganizationId, t.closedAt).where(isNull(t.deletedAt)),
 		buildCheck(
 			"event_organizer_invitation:to_self",
 			sql`${t.senderOrganizationId} !=${t.recipientOrganizationId}`,
@@ -638,7 +632,7 @@ export const workflowStep = pgTable(
 		...fields("common", "soft-delete"),
 	},
 	(t) => [
-		unique().on(t.workflowId, t.nextStepId).nullsNotDistinct(),
+		uniqueIndex().on(t.workflowId, t.nextStepId).where(sql`${t.nextStepId} IS NOT NULL`),
 		buildCheck("workflow_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
 	],
 );
@@ -682,7 +676,7 @@ export const workflowInstance = pgTable(
 			.references(() => workflowStep.id)
 			.notNull(),
 		initiatedOn: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
-		status: workflowInstanceStatusEnum().default("pending").notNull(),
+		status: workflowInstanceStatusEnum().notNull(),
 		...fields("common"),
 	},
 	(t) => [uniqueIndex().on(t.eventId).where(sql`${t.status}='pending'`)],
@@ -724,6 +718,7 @@ export const workflowStepLog = pgTable(
 	},
 	(t) => [unique().on(t.workflowInstanceId, t.stepId)],
 );
+
 export const workflowStepLogRelations = relations(workflowStepLog, (r) => ({
 	workflowInstance: r.one(workflowInstance, {
 		fields: [workflowStepLog.workflowInstanceId],
