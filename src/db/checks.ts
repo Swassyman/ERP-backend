@@ -46,7 +46,7 @@ export const CHECKS = {
 	},
 	workflow_step: {
 		circular_reference: {
-			error: "Step cannot reference itself",
+			error: "Workflow step should not reference itself",
 		},
 	},
 } as const satisfies Record<string, CustomChecks>;
