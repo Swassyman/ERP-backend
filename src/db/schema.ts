@@ -369,7 +369,7 @@ export const eventType = pgTable(
 	{
 		id: smallint().primaryKey().generatedAlwaysAsIdentity(),
 		name: text().notNull(), //program/event or what type of event?
-		workflowId: integer()
+		workflowTemplateId: integer()
 			.references(() => workflowTemplate.id)
 			.notNull(),
 		...fields("common", "soft-delete"),
@@ -379,7 +379,7 @@ export const eventType = pgTable(
 
 export const eventTypeRelations = relations(eventType, (r) => ({
 	workflow: r.one(workflowTemplate, {
-		fields: [eventType.workflowId],
+		fields: [eventType.workflowTemplateId],
 		references: [workflowTemplate.id],
 	}),
 	events: r.many(event),
@@ -452,7 +452,7 @@ export const eventRelations = relations(event, (r) => ({
 		fields: [event.id],
 		references: [eventReport.eventId],
 	}),
-	instances: r.many(workflowInstance),
+	workflowInstances: r.many(workflowInstance),
 }));
 
 export const venueAllotment = pgTable(
@@ -623,7 +623,7 @@ export const workflowTemplateStep = pgTable(
 	"workflow_template_step",
 	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
-		workflowId: integer()
+		workflowTemplateId: integer()
 			.references(() => workflowTemplate.id)
 			.notNull(),
 		roleId: smallint()
@@ -633,14 +633,14 @@ export const workflowTemplateStep = pgTable(
 		...fields("common"),
 	},
 	(t) => [
-		uniqueIndex().on(t.workflowId, t.nextStepId).where(sql`${t.nextStepId} IS NOT NULL`),
+		uniqueIndex().on(t.workflowTemplateId, t.nextStepId).where(sql`${t.nextStepId} IS NOT NULL`),
 		buildCheck("workflow_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
 	],
 );
 
 export const workflowTemplateStepRelations = relations(workflowTemplateStep, (r) => ({
 	workflow: r.one(workflowTemplate, {
-		fields: [workflowTemplateStep.workflowId],
+		fields: [workflowTemplateStep.workflowTemplateId],
 		references: [workflowTemplate.id],
 		relationName: "steps",
 	}),
