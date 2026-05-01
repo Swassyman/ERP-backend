@@ -378,7 +378,7 @@ export const eventType = pgTable(
 );
 
 export const eventTypeRelations = relations(eventType, (r) => ({
-	workflow: r.one(workflowTemplate, {
+	workflowTemplate: r.one(workflowTemplate, {
 		fields: [eventType.workflowTemplateId],
 		references: [workflowTemplate.id],
 	}),
@@ -610,12 +610,12 @@ export const workflowTemplate = pgTable(
 );
 
 export const workflowTemplateRelations = relations(workflowTemplate, (r) => ({
-	initialStep: r.one(workflowTemplateStep, {
+	initialTemplateStep: r.one(workflowTemplateStep, {
 		fields: [workflowTemplate.initialStepId],
 		references: [workflowTemplateStep.id],
 		relationName: "initial_step",
 	}),
-	workflowSteps: r.many(workflowTemplateStep, { relationName: "steps" }),
+	workflowTemplateSteps: r.many(workflowTemplateStep, { relationName: "steps" }),
 	eventTypes: r.many(eventType),
 }));
 
@@ -634,12 +634,12 @@ export const workflowTemplateStep = pgTable(
 	},
 	(t) => [
 		uniqueIndex().on(t.workflowTemplateId, t.nextStepId).where(sql`${t.nextStepId} IS NOT NULL`),
-		buildCheck("workflow_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
+		buildCheck("workflow_template_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
 	],
 );
 
 export const workflowTemplateStepRelations = relations(workflowTemplateStep, (r) => ({
-	workflow: r.one(workflowTemplate, {
+	workflowTemplate: r.one(workflowTemplate, {
 		fields: [workflowTemplateStep.workflowTemplateId],
 		references: [workflowTemplate.id],
 		relationName: "steps",
