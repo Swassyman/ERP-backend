@@ -644,7 +644,7 @@ export const workflowTemplateStepRelations = relations(workflowTemplateStep, (r)
 		references: [workflowTemplate.id],
 		relationName: "steps",
 	}),
-	role: r.one(role, {
+	associatedRole: r.one(role, {
 		fields: [workflowTemplateStep.roleId],
 		references: [role.id],
 	}),
@@ -703,7 +703,7 @@ export const workflowInstanceStepRelations = relations(workflowInstanceStep, (r)
 		fields: [workflowInstanceStep.workflowInstanceId],
 		references: [workflowInstance.id],
 	}),
-	handledBy: r.one(userRole, {
+	handledByUserRoleId: r.one(userRole, {
 		fields: [workflowInstanceStep.handledBy],
 		references: [userRole.id],
 	}),
