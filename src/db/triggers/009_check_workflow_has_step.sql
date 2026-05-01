@@ -11,7 +11,7 @@ BEGIN
         WHERE workflow_id = NEW.workflow_id
     ) THEN
         RAISE EXCEPTION
-            'workflow_template % must have at least one step before being assigned',
+            'workflow_template % must have at least one step before being assigned to an event type',
             NEW.workflow_id;
     END IF;
     RETURN NEW;
