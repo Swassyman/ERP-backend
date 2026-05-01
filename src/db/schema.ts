@@ -662,6 +662,7 @@ export const workflowInstance = pgTable(
 		eventId: bigint({ mode: "number" })
 			.references(() => event.id)
 			.notNull(),
+		initialStepId: integer().references((): AnyPgColumn => workflowInstanceStep.id),
 		initiatedOn: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
 		status: workflowInstanceStatusEnum().notNull(),
 		...fields("common"),
@@ -673,6 +674,10 @@ export const workflowInstanceRelations = relations(workflowInstance, (r) => ({
 	event: r.one(event, {
 		fields: [workflowInstance.eventId],
 		references: [event.id],
+	}),
+	initialStep: r.one(workflowInstanceStep, {
+		fields: [workflowInstance.initialStepId],
+		references: [workflowInstanceStep.id],
 	}),
 }));
 
