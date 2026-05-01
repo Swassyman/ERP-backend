@@ -22,7 +22,7 @@ BEGIN
         AND next_step_id = OLD.id
     ) THEN
         RAISE EXCEPTION
-            'workflow_template_step: cannot delete the last step of workflow %',
+            'workflow_template_step: cannot delete the last step of workflow % assigned to an event type'
             OLD.workflow_id;
     END IF;
 
