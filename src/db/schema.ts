@@ -376,14 +376,6 @@ export const eventType = pgTable(
 	},
 	(t) => [uniqueIndex().on(t.name).where(isNull(t.deletedAt))],
 );
-export const eventTypeRelations = relations(eventType, (r) => ({
-	allowedParents: r.many(eventTypeAllowedParent, {
-		relationName: "as_child",
-	}),
-	allowedChildren: r.many(eventTypeAllowedParent, {
-		relationName: "as_parent",
-	}),
-}));
 
 export const eventTypeRelations = relations(eventType, (r) => ({
 	workflowTemplate: r.one(workflowTemplate, {
