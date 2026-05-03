@@ -703,7 +703,10 @@ export const workflowInstanceStep = pgTable(
 		handledAt: timestamp({ mode: "string", withTimezone: true }).defaultNow().notNull(),
 		...fields("common"),
 	},
-	(t) => [unique().on(t.workflowInstanceId, t.nextStepId)],
+	(t) => [
+		unique().on(t.workflowInstanceId, t.nextStepId),
+		buildCheck("workflow_instance_step:circular_reference", sql`${t.id}!=${t.nextStepId}`),
+	],
 );
 
 export const workflowInstanceStepRelations = relations(workflowInstanceStep, (r) => ({

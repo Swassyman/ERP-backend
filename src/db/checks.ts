@@ -49,6 +49,11 @@ export const CHECKS = {
 			error: "Workflow template step should not reference itself",
 		},
 	},
+	workflow_instance_step: {
+		circular_reference: {
+			error: "Workflow instance step should not reference itself",
+		},
+	},
 } as const satisfies Record<string, CustomChecks>;
 
 type CheckIdentifier = {
