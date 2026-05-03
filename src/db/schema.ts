@@ -610,12 +610,12 @@ export const workflowTemplate = pgTable(
 );
 
 export const workflowTemplateRelations = relations(workflowTemplate, (r) => ({
-	initialTemplateStep: r.one(workflowTemplateStep, {
+	initialStep: r.one(workflowTemplateStep, {
 		fields: [workflowTemplate.initialStepId],
 		references: [workflowTemplateStep.id],
 		relationName: "initial_step",
 	}),
-	workflowTemplateSteps: r.many(workflowTemplateStep, { relationName: "steps" }),
+	steps: r.many(workflowTemplateStep, { relationName: "steps" }),
 	eventTypes: r.many(eventType),
 }));
 
