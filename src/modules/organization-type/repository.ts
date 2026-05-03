@@ -24,6 +24,19 @@ export const createOrganizationType = dbAction(async (data: { name: string }) =>
 	return inserted;
 });
 
+export const getOrganizationType = dbAction(async (organizationTypeId: number) => {
+	return await db.query.organizationType.findFirst({
+		where: and(
+			eq(schema.organizationType.id, organizationTypeId),
+			isNull(schema.organizationType.deletedAt),
+		),
+		columns: {
+			id: true,
+			name: true,
+		},
+	});
+});
+
 export const getOrganizationTypeChildrenTypes = dbAction(async (organizationTypeId: number) => {
 	return await db
 		.select({

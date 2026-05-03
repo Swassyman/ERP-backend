@@ -14,6 +14,12 @@ export async function getOrganizations() {
 	return await repository.getOrganizations();
 }
 
+export async function getOrganization(organizationId: number) {
+	const organization = await repository.getOrganization(organizationId);
+	if (organization == null) throw new NotFoundError("Could not find the organization");
+	return organization;
+}
+
 export async function getOrganizationMembers(organizationId: number) {
 	const relatedManagedEntity = await repository.findOrganizationManagedEntity(organizationId);
 

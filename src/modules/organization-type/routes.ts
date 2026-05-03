@@ -11,6 +11,8 @@ router.post(
 	controller.createOrganizationType,
 );
 
+router.get("/:id", controller.getOrganizationType);
+
 router.get("/:id/children", controller.getOrganizationTypeChildTypes);
 router.post(
 	"/:id/children/:childId",

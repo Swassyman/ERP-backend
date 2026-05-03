@@ -24,6 +24,16 @@ export const insertVenueType = dbAction(async (data: { name: string }) => {
 	return inserted;
 });
 
+export const getVenueType = dbAction(async (venueTypeId: number) => {
+	return await db.query.venueType.findFirst({
+		where: and(eq(schema.venueType.id, venueTypeId), isNull(schema.venueType.deletedAt)),
+		columns: {
+			id: true,
+			name: true,
+		},
+	});
+});
+
 export const getVenueTypeRoles = dbAction(async (venueTypeId: number) => {
 	return await db
 		.select({

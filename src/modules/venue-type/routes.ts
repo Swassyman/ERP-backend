@@ -7,6 +7,8 @@ const router: Router = Router();
 router.get("/", controller.getVenueTypes);
 router.post("/", requirePermissions(["venue_type:create"]), controller.createVenueType);
 
+router.get("/:id", controller.getVenueType);
+
 // todo: delete (soft) organization type
 
 router.get("/:id/roles", controller.getVenueTypeRoles);

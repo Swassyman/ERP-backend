@@ -28,6 +28,18 @@ export const getOrganizations: ApiRequestHandler<
 	return ok(res, result);
 };
 
+export const getOrganization: ApiRequestHandler<{
+	organizationTypeId: number;
+	id: number;
+	name: string;
+	parentOrganizationId: number | null;
+	isActive: boolean;
+}> = async (req, res) => {
+	const params = organizationScopedSchema.parse(req.params);
+	const result = await service.getOrganization(params.id);
+	return ok(res, result);
+};
+
 export const getOrganizationMembers: ApiRequestHandler<
 	{
 		id: number;

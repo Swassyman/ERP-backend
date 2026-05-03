@@ -1,3 +1,4 @@
+import { NotFoundError } from "@/lib/errors.js";
 import * as repository from "./repository.js";
 import type {
 	AddAllowedParentParamsSchema,
@@ -13,6 +14,12 @@ export async function createOrganizationType(input: CreateOrganizationTypeSchema
 	return await repository.createOrganizationType({
 		name: input.name,
 	});
+}
+
+export async function getOrganizationType(organizationTypeId: number) {
+	const organizationType = await repository.getOrganizationType(organizationTypeId);
+	if (organizationType == null) throw new NotFoundError("Could not find the organization type");
+	return organizationType;
 }
 
 export async function getOrganizationTypeChildTypes(organizationTypeId: number) {
