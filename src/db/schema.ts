@@ -695,7 +695,7 @@ export const workflowInstanceStep = pgTable(
 			.references(() => role.id)
 			.notNull(),
 		nextStepId: bigint({ mode: "number" }).references((): AnyPgColumn => workflowInstanceStep.id),
-		handledBy: bigint({ mode: "number" })
+		handledByUserRoleId: bigint({ mode: "number" })
 			.references(() => userRole.id)
 			.notNull(),
 		status: workflowInstanceStepStatusEnum().notNull(),
@@ -711,8 +711,8 @@ export const workflowInstanceStepRelations = relations(workflowInstanceStep, (r)
 		fields: [workflowInstanceStep.workflowInstanceId],
 		references: [workflowInstance.id],
 	}),
-	handledByUserRoleId: r.one(userRole, {
-		fields: [workflowInstanceStep.handledBy],
+	handledBy: r.one(userRole, {
+		fields: [workflowInstanceStep.handledByUserRoleId],
 		references: [userRole.id],
 	}),
 }));
