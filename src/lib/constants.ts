@@ -28,7 +28,12 @@ export const EVENT_ORGANIZER_INVITATION_STATUS = [
 	"expired",
 ] as const;
 export const WORKFLOW_INSTANCE_STATUS = ["pending", "approved", "rejected", "revoked"] as const;
-export const WORKFLOW_INSTANCE_STEP_STATUS = ["approved", "rejected", "skipped", "pending", "revoked"] as const;
+export const WORKFLOW_INSTANCE_STEP_STATUS = [
+	"approved",
+	"rejected",
+	"skipped",
+	"pending",
+] as const;
 
 // note: keep it sorted like the schema:
 export const PERMISSION = {
