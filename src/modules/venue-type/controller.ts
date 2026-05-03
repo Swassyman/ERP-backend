@@ -24,6 +24,15 @@ export const createVenueType: ApiRequestHandler<{
 	return ok(res, result);
 };
 
+export const getVenueType: ApiRequestHandler<{
+	id: number;
+	name: string;
+}> = async (req, res) => {
+	const params = venueTypeScopedSchema.parse(req.params);
+	const result = await service.getVenueType(params.id);
+	return ok(res, result);
+};
+
 export const getVenueTypeRoles: ApiRequestHandler<
 	{
 		id: number;

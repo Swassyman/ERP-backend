@@ -37,6 +37,20 @@ export const getOrganizations = dbAction(async () => {
 	});
 });
 
+export const getOrganization = dbAction(async (organizationId: number) => {
+	return await db.query.organization.findFirst({
+		where: and(eq(schema.organization.id, organizationId), isNull(schema.organization.deletedAt)),
+		columns: {
+			id: true,
+			name: true,
+			organizationTypeId: true,
+			parentOrganizationId: true,
+			isActive: true,
+			createdAt: true,
+		},
+	});
+});
+
 export const findOrganizationManagedEntity = dbAction(async (organizationId: number) => {
 	const [relatedManagedEntity] = await db
 		.select({ id: schema.managedEntity.id })

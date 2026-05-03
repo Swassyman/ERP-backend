@@ -32,6 +32,23 @@ export const getVenues: ApiRequestHandler<
 	return ok(res, result);
 };
 
+export const getVenue: ApiRequestHandler<{
+	name: string;
+	venueTypeId: number;
+	organizationId: number | null;
+	maxCapacity: number;
+	accessLevel: VenueAccessLevel;
+	isAvailable: boolean;
+	unavailabilityReason: string | null;
+	id: number;
+	createdAt: string;
+	isActive: boolean;
+}> = async (req, res) => {
+	const params = venueScopedSchema.parse(req.params);
+	const result = await service.getVenue(params.id);
+	return ok(res, result);
+};
+
 export const getVenueMembers: ApiRequestHandler<
 	{
 		id: number;

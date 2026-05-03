@@ -48,6 +48,24 @@ export const getVenues = dbAction(async () => {
 	});
 });
 
+export const getVenue = dbAction(async (venueId: number) => {
+	return await db.query.venue.findFirst({
+		where: and(eq(schema.venue.id, venueId), isNull(schema.venue.deletedAt)),
+		columns: {
+			id: true,
+			name: true,
+			venueTypeId: true,
+			maxCapacity: true,
+			accessLevel: true,
+			isAvailable: true,
+			unavailabilityReason: true,
+			organizationId: true, // note: if needed as full object, include in `with`
+			isActive: true,
+			createdAt: true,
+		},
+	});
+});
+
 export const findVenueManagedEntity = dbAction(async (venueId: number) => {
 	const [relatedManagedEntity] = await db
 		.select({ id: schema.managedEntity.id })

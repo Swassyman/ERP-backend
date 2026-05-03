@@ -7,6 +7,8 @@ const router: Router = Router();
 router.get("/", controller.getOrganizations);
 router.post("/", requirePermissions(["organization:create"]), controller.createOrganization);
 
+router.get("/:id", controller.getOrganization);
+
 router.get("/:id/members", controller.getOrganizationMembers);
 router.post(
 	"/:id/members",

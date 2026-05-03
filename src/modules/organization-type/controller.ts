@@ -25,6 +25,15 @@ export const createOrganizationType: ApiRequestHandler<{
 	return ok(res, result);
 };
 
+export const getOrganizationType: ApiRequestHandler<{
+	id: number;
+	name: string;
+}> = async (req, res) => {
+	const params = organizationTypeScopedSchema.parse(req.params);
+	const result = await service.getOrganizationType(params.id);
+	return ok(res, result);
+};
+
 export const getOrganizationTypeChildTypes: ApiRequestHandler<
 	{
 		id: number;

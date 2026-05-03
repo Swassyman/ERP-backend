@@ -22,6 +22,12 @@ export async function getVenues() {
 	return await repository.getVenues();
 }
 
+export async function getVenue(venueId: number) {
+	const venue = await repository.getVenue(venueId);
+	if (venue == null) throw new NotFoundError("Could not find the venue");
+	return venue;
+}
+
 export async function getVenueMembers(venueId: number) {
 	const relatedManagedEntity = await repository.findVenueManagedEntity(venueId);
 
