@@ -667,7 +667,10 @@ export const workflowInstance = pgTable(
 		status: workflowInstanceStatusEnum().notNull(),
 		...fields("common"),
 	},
-	(t) => [uniqueIndex().on(t.eventId).where(sql`${t.status}='pending'`)],
+	(t) => [
+		uniqueIndex().on(t.eventId).where(sql`${t.status}='pending'`),
+		unique().on(t.initialStepId),
+	],
 );
 
 export const workflowInstanceRelations = relations(workflowInstance, (r) => ({
