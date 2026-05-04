@@ -7,6 +7,9 @@ export const createEventTypeSchema = z
 			.trim()
 			.nonempty({ error: "Name cannot be empty" })
 			.max(256, { error: "Name cannot exceed 256 characters" }),
+		workflowTemplateId: z.coerce
+			.number({ error: "Invalid workflow template ID" })
+			.int({ error: "Invalid workflow template ID" }),
 	})
 	.strict();
 

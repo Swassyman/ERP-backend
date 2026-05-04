@@ -6,13 +6,23 @@ import {
 } from "./schema.js";
 import * as service from "./service.js";
 
-export const getEventType: ApiRequestHandler<
+export const getEventTypes: ApiRequestHandler<
 	{
 		id: number;
 		name: string;
 	}[]
 > = async (_req, res) => {
 	const result = await service.getEventTypes();
+	return ok(res, result);
+};
+
+export const getEventType: ApiRequestHandler<{
+	id: number;
+	name: string;
+	workflowTemplateId: number;
+}> = async (req, res) => {
+	const params = eventTypeScopedSchema.parse(req.params);
+	const result = await service.getEventType(params.id);
 	return ok(res, result);
 };
 

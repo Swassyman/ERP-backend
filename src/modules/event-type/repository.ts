@@ -13,16 +13,18 @@ export const getEventTypes = dbAction(async () => {
 		.orderBy(schema.eventType.createdAt);
 });
 
-export const createEventType = dbAction(async (data: { name: string }) => {
-	const [inserted] = await db
-		.insert(schema.eventType)
-		.values({ name: data.name })
-		.returning({ id: schema.eventType.id });
+export const createEventType = dbAction(
+	async (data: { name: string; workflowTemplateId: number }) => {
+		const [inserted] = await db
+			.insert(schema.eventType)
+			.values({ name: data.name, workflowTemplateId: data.workflowTemplateId })
+			.returning({ id: schema.eventType.id });
 
-	if (inserted == null) unreachable();
+		if (inserted == null) unreachable();
 
-	return inserted;
-});
+		return inserted;
+	},
+);
 
 export const findEventType = dbAction(async (id: number) => {
 	const [found] = await db
@@ -31,6 +33,17 @@ export const findEventType = dbAction(async (id: number) => {
 		.where(and(eq(schema.eventType.id, id), isNull(schema.eventType.deletedAt)))
 		.limit(1);
 	return found != null;
+});
+
+export const getEventType = dbAction(async (evenTypeId: number) => {
+	return await db.query.eventType.findFirst({
+		where: and(eq(schema.eventType.id, evenTypeId), isNull(schema.eventType.deletedAt)),
+		columns: {
+			id: true,
+			name: true,
+			workflowTemplateId: true,
+		},
+	});
 });
 
 export const deleteEventType = dbAction(async (id: number) => {
@@ -49,7 +62,7 @@ export const getEventTypeChildTypes = dbAction(async (parentEventId: number) => 
 		.orderBy(schema.eventTypeAllowedParent.createdAt);
 });
 
-export const addAllowedChildtype = dbAction(
+export const addAllowedChildType = dbAction(
 	async (data: { parentTypeId: number; childTypeId: number }) => {
 		const [inserted] = await db
 			.insert(schema.eventTypeAllowedParent)

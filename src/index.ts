@@ -18,6 +18,7 @@ import rolesRouter from "@/modules/role/routes.js";
 import usersRouter from "@/modules/user/routes.js";
 import venuesRouter from "@/modules/venue/routes.js";
 import venueTypesRouter from "@/modules/venue-type/routes.js";
+import eventTypesRouter from "@/modules/event-type/routes.js";
 
 console.info(
 	"[i] starting in",
@@ -91,6 +92,7 @@ app.use("/organization-types", organizationTypesRouter);
 app.use("/venues", venuesRouter);
 app.use("/venue-types", venueTypesRouter);
 app.use("/facilities", facilitiesRouter);
+app.use("/event-types", eventTypesRouter);
 
 app.use(errorHandler);
 

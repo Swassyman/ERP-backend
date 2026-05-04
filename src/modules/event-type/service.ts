@@ -6,9 +6,16 @@ export async function getEventTypes() {
 	return await repository.getEventTypes();
 }
 
+export async function getEventType(eventTypeId: number) {
+	const eventType = await repository.getEventType(eventTypeId);
+	if (eventType == null) throw new NotFoundError("Event type not found");
+	return eventType;
+}
+
 export async function createEventType(input: CreateEventTypeSchema) {
 	return await repository.createEventType({
 		name: input.name,
+		workflowTemplateId: input.workflowTemplateId,
 	});
 }
 
@@ -23,7 +30,7 @@ export async function getEventTypeChildTypes(parentEventTypeId: number) {
 }
 
 export async function addAllowedChildType(input: AllowedParentParamsSchema) {
-	return await repository.addAllowedChildtype({
+	return await repository.addAllowedChildType({
 		parentTypeId: input.id,
 		childTypeId: input.childId,
 	});
