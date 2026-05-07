@@ -1,9 +1,11 @@
 import { ok } from "@/lib/helpers.js";
 import {
-	addMemberToVenueSchema,
 	createVenueSchema,
+	getVenueMembersQuerySchema,
 	setVenueFacilitiesSchema,
+	venueMemberScopedSchema,
 	venueScopedSchema,
+	venueUserRolesSchema,
 } from "./schema.js";
 import * as service from "./service.js";
 
@@ -52,24 +54,52 @@ export const getVenue: ApiRequestHandler<{
 export const getVenueMembers: ApiRequestHandler<
 	{
 		id: number;
-		isActive: boolean;
-		roleId: number;
-		user: {
+		fullName: string;
+		email: string;
+		roles: {
 			id: number;
-			fullName: string;
-			email: string;
-		};
+			isActive: boolean;
+			roleId: number;
+		}[];
 	}[]
 > = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
-	const result = await service.getVenueMembers(params.id);
+	const query = getVenueMembersQuerySchema.parse(req.query);
+	const result = await service.getVenueMembers(params.id, query);
 	return ok(res, result);
 };
 
-export const addMemberToVenue: ApiRequestHandler<{ id: number }> = async (req, res) => {
+export const addMemberToVenue: ApiRequestHandler<
+	{
+		id: number;
+		roleId: number;
+	}[]
+> = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
-	const body = addMemberToVenueSchema.parse(req.body);
-	const result = await service.addMemberToVenue(params.id, body);
+	const body = venueUserRolesSchema.parse(req.body);
+	const result = await service.addVenueMember(params.id, body);
+	return ok(res, result);
+};
+
+export const updateVenueMemberRoles: ApiRequestHandler<
+	{
+		id: number;
+		roleId: number;
+	}[]
+> = async (req, res) => {
+	const params = venueMemberScopedSchema.parse(req.params);
+	const body = venueUserRolesSchema.parse(req.body);
+	const result = await service.assignVenueMemberRoles(params.id, params.userId, body);
+	return ok(res, result);
+};
+
+export const deleteVenueMember: ApiRequestHandler<
+	{
+		id: number;
+	}[]
+> = async (req, res) => {
+	const params = venueMemberScopedSchema.parse(req.params);
+	const result = await service.deleteVenueMember(params.id, params.userId);
 	return ok(res, result);
 };
 
