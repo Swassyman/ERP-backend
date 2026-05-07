@@ -74,26 +74,31 @@ export const getOrganizationMembers = dbAction(
 			userId?: number;
 		},
 	) => {
-		const filterConditions: SQL[] = [];
+		const userFilterClauses: SQL[] = [];
 
 		if (filters.userId != null) {
-			filterConditions.push(eq(schema.userRole.userId, filters.userId));
+			// User specific search
+			userFilterClauses.push(eq(schema.user.id, filters.userId));
+		} else {
+			// Global search
+			userFilterClauses.push(
+				inArray(
+					schema.user.id,
+					db
+						.select({ id: schema.userRole.userId })
+						.from(schema.userRole)
+						.where(
+							and(
+								eq(schema.userRole.managedEntityId, managedEntityId),
+								isNull(schema.userRole.deletedAt),
+							),
+						),
+				),
+			);
 		}
 
 		return await db.query.user.findMany({
-			where: inArray(
-				schema.user.id,
-				db
-					.select({ id: schema.userRole.userId })
-					.from(schema.userRole)
-					.where(
-						and(
-							eq(schema.userRole.managedEntityId, managedEntityId),
-							isNull(schema.userRole.deletedAt),
-							...filterConditions,
-						),
-					),
-			),
+			where: and(isNull(schema.user.deletedAt), ...userFilterClauses),
 			columns: {
 				id: true,
 				fullName: true,
