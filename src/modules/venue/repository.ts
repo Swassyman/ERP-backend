@@ -164,14 +164,6 @@ export const assignVenueMemberRoles = dbAction(
 			const existingRoleIds = new Set(userRoles.map((ur) => ur.roleId));
 			const toBeAdded = data.roleIds.filter((roleId) => !existingRoleIds.has(roleId));
 
-			for (const roleId of data.roleIds) {
-				const existingRole = userRoles.find((userRole) => userRole.roleId === roleId);
-				if (existingRole == null) {
-					// in the new list, but currently does not have it:
-					toBeAdded.push(roleId);
-				}
-			}
-
 			if (toBeDeletedPks.length > 0) {
 				await tx
 					.update(schema.userRole)
