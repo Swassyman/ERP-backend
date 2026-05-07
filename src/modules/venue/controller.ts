@@ -5,7 +5,8 @@ import {
 	setVenueFacilitiesSchema,
 	venueMemberScopedSchema,
 	venueScopedSchema,
-	venueUserRolesSchema,
+	addVenueMemberSchema,
+	assignVenueMemberRolesSchema,
 } from "./schema.js";
 import * as service from "./service.js";
 
@@ -76,7 +77,7 @@ export const addMemberToVenue: ApiRequestHandler<
 	}[]
 > = async (req, res) => {
 	const params = venueScopedSchema.parse(req.params);
-	const body = venueUserRolesSchema.parse(req.body);
+	const body = addVenueMemberSchema.parse(req.body);
 	const result = await service.addVenueMember(params.id, body);
 	return ok(res, result);
 };
@@ -88,7 +89,7 @@ export const updateVenueMemberRoles: ApiRequestHandler<
 	}[]
 > = async (req, res) => {
 	const params = venueMemberScopedSchema.parse(req.params);
-	const body = venueUserRolesSchema.parse(req.body);
+	const body = assignVenueMemberRolesSchema.parse(req.body);
 	const result = await service.assignVenueMemberRoles(params.id, params.userId, body);
 	return ok(res, result);
 };

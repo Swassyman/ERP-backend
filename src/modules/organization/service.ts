@@ -4,8 +4,8 @@ import * as repository from "./repository.js";
 import type {
 	CreateOrganizationSchema,
 	GetOrganizationMembersQuerySchema,
-	OrganizationUserRolesAssignmentSchema,
-	OrganizationUserRolesSchema,
+	AssignOrganizationMemberRolesSchema,
+	AddOrganizationMemberSchema,
 } from "./schema.js";
 
 export async function createOrganization(input: CreateOrganizationSchema) {
@@ -50,7 +50,7 @@ export async function getOrganizationMembers(
 
 export async function addOrganizationMember(
 	organizationId: number,
-	input: OrganizationUserRolesSchema,
+	input: AddOrganizationMemberSchema,
 ) {
 	const relatedManagedEntity = await repository.findOrganizationManagedEntity(organizationId);
 	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the organization");
@@ -70,7 +70,7 @@ export async function addOrganizationMember(
 export async function assignOrganizationMemberRoles(
 	organizationId: number,
 	userId: number,
-	input: OrganizationUserRolesAssignmentSchema,
+	input: AssignOrganizationMemberRolesSchema,
 ) {
 	const relatedManagedEntity = await repository.findOrganizationManagedEntity(organizationId);
 	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the organization");

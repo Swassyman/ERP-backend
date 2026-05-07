@@ -4,7 +4,8 @@ import {
 	getOrganizationMembersQuerySchema,
 	organizationMemberScopedSchema,
 	organizationScopedSchema,
-	organizationUserRolesSchema,
+	assignOrganizationMemberRolesSchema,
+	addOrganizationMemberSchema,
 } from "./schema.js";
 import * as service from "./service.js";
 
@@ -67,7 +68,7 @@ export const addMemberToOrganization: ApiRequestHandler<
 	}[]
 > = async (req, res) => {
 	const params = organizationScopedSchema.parse(req.params);
-	const body = organizationUserRolesSchema.parse(req.body);
+	const body = addOrganizationMemberSchema.parse(req.body);
 	const result = await service.addOrganizationMember(params.id, body);
 	return ok(res, result);
 };
@@ -79,7 +80,7 @@ export const updateOrganizationMemberRoles: ApiRequestHandler<
 	}[]
 > = async (req, res) => {
 	const params = organizationMemberScopedSchema.parse(req.params);
-	const body = organizationUserRolesSchema.parse(req.body);
+	const body = assignOrganizationMemberRolesSchema.parse(req.body);
 	const result = await service.assignOrganizationMemberRoles(params.id, params.userId, body);
 	return ok(res, result);
 };

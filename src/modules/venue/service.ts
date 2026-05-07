@@ -5,8 +5,8 @@ import type {
 	CreateVenueSchema,
 	GetVenueMembersQuerySchema,
 	SetVenueFacilitiesSchema,
-	VenueUserRolesAssignmentSchema,
-	VenueUserRolesSchema,
+	AssignVenueMemberRolesSchema,
+	AddVenueMemberSchema,
 } from "./schema.js";
 
 export async function createVenue(input: CreateVenueSchema) {
@@ -50,7 +50,7 @@ export async function getVenueMembers(venueId: number, filters: GetVenueMembersQ
 	return await repository.getVenueMembers(relatedManagedEntity.id, {});
 }
 
-export async function addVenueMember(venueId: number, input: VenueUserRolesSchema) {
+export async function addVenueMember(venueId: number, input: AddVenueMemberSchema) {
 	const relatedManagedEntity = await repository.findVenueManagedEntity(venueId);
 	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the venue");
 
@@ -69,7 +69,7 @@ export async function addVenueMember(venueId: number, input: VenueUserRolesSchem
 export async function assignVenueMemberRoles(
 	venueId: number,
 	userId: number,
-	input: VenueUserRolesAssignmentSchema,
+	input: AssignVenueMemberRolesSchema,
 ) {
 	const relatedManagedEntity = await repository.findVenueManagedEntity(venueId);
 	if (relatedManagedEntity == null) throw new NotFoundError("Could not find the venue");

@@ -33,7 +33,7 @@ export const getOrganizationMembersQuerySchema = z.object({
 	email: z.string().optional(),
 });
 
-export const organizationUserRolesSchema = z.object({
+export const addOrganizationMemberSchema = z.object({
 	userId: z.coerce.number({ error: "Invalid user ID" }).int({ error: "Invalid user ID" }),
 	roleIds: z
 		.array(z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }), {
@@ -42,7 +42,7 @@ export const organizationUserRolesSchema = z.object({
 		.nonempty({ error: "Expected at least one role to be assigned to the user" }),
 });
 
-export const organizationUserRolesAssignmentSchema = z.object({
+export const assignOrganizationMemberRolesSchema = z.object({
 	roleIds: z
 		.array(z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }), {
 			error: "Expected an array of role IDs",
@@ -53,7 +53,7 @@ export const organizationUserRolesAssignmentSchema = z.object({
 export type CreateOrganizationSchema = z.output<typeof createOrganizationSchema>;
 export type OrganizationScopedSchema = z.output<typeof organizationScopedSchema>;
 export type GetOrganizationMembersQuerySchema = z.output<typeof getOrganizationMembersQuerySchema>;
-export type OrganizationUserRolesSchema = z.output<typeof organizationUserRolesSchema>;
-export type OrganizationUserRolesAssignmentSchema = z.output<
-	typeof organizationUserRolesAssignmentSchema
+export type AddOrganizationMemberSchema = z.output<typeof addOrganizationMemberSchema>;
+export type AssignOrganizationMemberRolesSchema = z.output<
+	typeof assignOrganizationMemberRolesSchema
 >;

@@ -60,7 +60,7 @@ export const getVenueMembersQuerySchema = z.object({
 	email: z.string().optional(),
 });
 
-export const venueUserRolesSchema = z.object({
+export const addVenueMemberSchema = z.object({
 	userId: z.coerce.number({ error: "Invalid user ID" }).int({ error: "Invalid user ID" }),
 	roleIds: z
 		.array(z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }), {
@@ -69,7 +69,7 @@ export const venueUserRolesSchema = z.object({
 		.nonempty({ error: "Expected at least one role to be assigned to the user" }),
 });
 
-export const venueUserRolesAssignmentSchema = z.object({
+export const assignVenueMemberRolesSchema = z.object({
 	roleIds: z
 		.array(z.coerce.number({ error: "Invalid role ID" }).int({ error: "Invalid role ID" }), {
 			error: "Expected an array of role IDs",
@@ -90,5 +90,5 @@ export type CreateVenueSchema = z.output<typeof createVenueSchema>;
 export type VenueScopedSchema = z.output<typeof venueScopedSchema>;
 export type SetVenueFacilitiesSchema = z.output<typeof setVenueFacilitiesSchema>;
 export type GetVenueMembersQuerySchema = z.output<typeof getVenueMembersQuerySchema>;
-export type VenueUserRolesSchema = z.output<typeof venueUserRolesSchema>;
-export type VenueUserRolesAssignmentSchema = z.output<typeof venueUserRolesAssignmentSchema>;
+export type AddVenueMemberSchema = z.output<typeof addVenueMemberSchema>;
+export type AssignVenueMemberRolesSchema = z.output<typeof assignVenueMemberRolesSchema>;
