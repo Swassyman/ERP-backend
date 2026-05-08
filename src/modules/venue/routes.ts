@@ -7,6 +7,8 @@ const router: Router = Router();
 router.get("/", controller.getVenues);
 router.post("/", requirePermissions(["venue:create"]), controller.createVenue);
 
+router.get("/:id", controller.getVenue);
+
 router.get("/:id/members", controller.getVenueMembers);
 router.post("/:id/members", requirePermissions(["venue:add_member"]), controller.addMemberToVenue);
 router.put(
