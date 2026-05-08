@@ -11,6 +11,7 @@ export const insertUser = dbAction(
 				email: data.email,
 				passwordHash: data.passwordHash,
 				fullName: data.fullName,
+				isActive: false,
 			})
 			.returning({
 				id: schema.user.id,
