@@ -8,6 +8,13 @@
 			"when": 1773248993831,
 			"tag": "0000_supreme_legion",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1778244897185,
+			"tag": "0001_true_pet_avengers",
+			"breakpoints": true
 		}
 	]
 }

@@ -34,6 +34,7 @@ export const WORKFLOW_INSTANCE_STEP_STATUS = [
 	"skipped",
 	"pending",
 ] as const;
+export const PASSWORD_TOKEN_TYPES = ["INITIAL_SETUP", "PASSWORD_RESET"] as const;
 
 // note: keep it sorted like the schema:
 export const PERMISSION = {

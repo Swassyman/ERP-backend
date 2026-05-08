@@ -1,4 +1,4 @@
-import { type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
+import { type HasDefault, isNull, type NotNull, relations, sql, gt, and } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -16,6 +16,7 @@ import {
 import {
 	INSTITUTION_DOMAIN,
 	MANAGED_ENTITY_TYPES,
+	PASSWORD_TOKEN_TYPES,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
 	EVENT_STATUS,
@@ -46,6 +47,7 @@ export const workflowInstanceStepStatusEnum = pgEnum(
 	"workflow_instance_step_status",
 	WORKFLOW_INSTANCE_STEP_STATUS,
 );
+export const passwordTokenTypeEnum = pgEnum("password_token_type", PASSWORD_TOKEN_TYPES);
 
 // === Tables
 export const managedEntity = pgTable(
@@ -86,6 +88,7 @@ export const user = pgTable(
 
 export const userRelations = relations(user, (r) => ({
 	roles: r.many(userRole),
+	passwordTokens: r.many(userPasswordToken),
 }));
 
 export const role = pgTable(
@@ -146,6 +149,34 @@ export const userRoleRelations = relations(userRole, (r) => ({
 		references: [managedEntity.id],
 	}),
 	handledInstanceSteps: r.many(workflowInstanceStep),
+}));
+
+export const userPasswordToken = pgTable(
+	"user_password_token",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		userId: bigint({ mode: "number" })
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		tokenHash: text().notNull(),
+		type: passwordTokenTypeEnum().notNull(),
+		expiresAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
+		usedAt: timestamp({ mode: "string", withTimezone: true }),
+		...fields("common"),
+	},
+	(t) => [
+		uniqueIndex().on(t.tokenHash),
+		uniqueIndex()
+			.on(t.userId, t.type)
+			.where(and(isNull(t.usedAt), gt(t.expiresAt, sql`now()`))!),
+	],
+);
+
+export const userPasswordTokenRelations = relations(userPasswordToken, (r) => ({
+	user: r.one(user, {
+		fields: [userPasswordToken.userId],
+		references: [user.id],
+	}),
 }));
 
 export const permission = pgTable(
