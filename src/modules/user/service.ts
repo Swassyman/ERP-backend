@@ -13,9 +13,9 @@ export async function createUser(input: CreateUserSchema) {
 		passwordHash: await hashPassword(initial_password),
 	});
 
-	const rawToken = generateSecureString(32);
-	const tokenHash = await hashPassword(rawToken);
-	const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); //Now the expiry is 24hrs, Can be increased later if needed. 
+	const token = generateSecureString(32);
+	const tokenHash = await hashPassword(token);
+	const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); //Now the expiry is 24hrs, Can be increased later if needed.
 
 	await repository.insertPasswordToken({
 		userId: user.id,
@@ -25,10 +25,15 @@ export async function createUser(input: CreateUserSchema) {
 	});
 
 	const frontendUrl = quickEnv("FRONTEND_ORIGIN", true);
-	const setupUrl = `${frontendUrl}/setup-password?token=${rawToken}`;
+	const setupUrl = `${frontendUrl}/setup-password?token=${token}`;
 	const html = getPasswordSetupHtml(setupUrl);
 
-	await sendEmail(input.email, "Welcome! Set up your password", html);
+	try {
+		await sendEmail(input.email, "Welcome! Set up your password", html);
+	} catch (error) {
+		await repository.rollbackUserCreation(user.id); //for deleting the user if email fails to send (useless entry in user table can be there).
+		throw error;
+	}
 
 	return user;
 }

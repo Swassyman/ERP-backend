@@ -1,6 +1,9 @@
 import { jwtVerify } from "jose";
-import { verifyPassword } from "@/lib/argon2.js";
+import { hashPassword, verifyPassword } from "@/lib/argon2.js";
+import { sendEmail } from "@/lib/email.js";
+import { getPasswordUpdatedHtml } from "@/lib/email-templates.js";
 import { NotFoundError, UnauthorizedError } from "@/lib/errors.js";
+import { quickEnv } from "@/lib/helpers.js";
 import {
 	generateAccessToken,
 	generateRefreshToken,
@@ -72,4 +75,34 @@ export async function createNewTokens(refreshToken: string) {
 		accessToken: newAccessToken,
 		refreshToken: newRefreshToken,
 	};
+}
+
+export async function setPassword(token: string, newPassword: string) {
+	const tokenHash = await hashPassword(token);
+	const tokenRecord = await repository.findActivePasswordToken(tokenHash);
+
+	if (tokenRecord == null) {
+		throw new UnauthorizedError("Invalid, expired, or already used token");
+	}
+
+	if (tokenRecord.user.deletedAt !== null) {
+		throw new NotFoundError("Associated account not found");
+	}
+
+	const newPasswordHash = await hashPassword(newPassword);
+
+	await repository.applyPasswordChange({
+		userId: tokenRecord.user.id,
+		tokenId: tokenRecord.id,
+		newPasswordHash,
+	});
+
+	try {
+		const frontendUrl = quickEnv("FRONTEND_ORIGIN", true);
+		const loginUrl = `${frontendUrl}/login`;
+		const html = getPasswordUpdatedHtml(loginUrl);
+		await sendEmail(tokenRecord.user.email, "Password Updated Successfully", html);
+	} catch (error) {
+		console.error("Password was updated, but the confirmation email failed to send.", error);
+	}
 }

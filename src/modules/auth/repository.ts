@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db/index.js";
 import { dbAction } from "@/lib/helpers.js";
 
@@ -51,3 +51,37 @@ export const getUserWithPermissions = dbAction(async (id: number) => {
 		permissions: permissions.map((permission) => permission.code),
 	};
 });
+
+export const findActivePasswordToken = dbAction(async (tokenHash: string) => {
+	return await db.query.userPasswordToken.findFirst({
+		where: and(
+			eq(schema.userPasswordToken.tokenHash, tokenHash),
+			isNull(schema.userPasswordToken.usedAt),
+			gt(schema.userPasswordToken.expiresAt, sql`now()`),
+		),
+		with: {
+			user: true,
+		},
+	});
+});
+
+export const applyPasswordChange = dbAction(
+	async (params: { userId: number; tokenId: number; newPasswordHash: string }) => {
+		await db.transaction(async (tx) => {
+			await tx
+				.update(schema.user)
+				.set({
+					passwordHash: params.newPasswordHash,
+					isActive: true,
+				})
+				.where(eq(schema.user.id, params.userId));
+
+			await tx
+				.update(schema.userPasswordToken)
+				.set({
+					usedAt: sql`now()`,
+				})
+				.where(eq(schema.userPasswordToken.id, params.tokenId));
+		});
+	},
+);

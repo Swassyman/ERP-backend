@@ -61,3 +61,10 @@ export const insertPasswordToken = dbAction(
 		return inserted;
 	},
 );
+
+export const rollbackUserCreation = dbAction(async (userId: number) => {
+	await db.transaction(async (tx) => {
+		await tx.delete(schema.userPasswordToken).where(eq(schema.userPasswordToken.userId, userId));
+		await tx.delete(schema.user).where(eq(schema.user.id, userId));
+	});
+});

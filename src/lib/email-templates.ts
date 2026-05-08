@@ -1,5 +1,5 @@
 export function getPasswordSetupHtml(setupUrl: string) {
-return `
+	return `
 <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
 	<div style="max-width:620px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);">
 
@@ -52,6 +52,39 @@ return `
 			</p>
 		</div>
 
+	</div>
+</div>
+`;
+}
+
+export function getPasswordUpdatedHtml(loginUrl: string) {
+	return `
+<div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+	<div style="max-width:620px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);">
+		<div style="background:linear-gradient(135deg,#10b981,#059669);padding:32px;text-align:center;">
+			<h1 style="margin:0;color:#fff;font-size:28px;font-weight:600;">Success!</h1>
+			<p style="margin:10px 0 0;color:rgba(255,255,255,.9);font-size:15px;">
+				Your password has been updated
+			</p>
+		</div>
+		<div style="padding:40px 36px;">
+			<p style="margin:0 0 18px;font-size:16px;color:#1f2937;line-height:1.6;">
+				Hello,
+			</p>
+			<p style="margin:0 0 18px;font-size:16px;color:#4b5563;line-height:1.7;">
+				Your password was successfully set and your account is active. You can now log in using your new credentials.
+			</p>
+			<div style="text-align:center;margin:36px 0;">
+				<a href="${loginUrl}" style="background:#10b981;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;display:inline-block;box-shadow:0 4px 14px rgba(16,185,129,.35);">
+					Go to Login
+				</a>
+			</div>
+		</div>
+		<div style="border-top:1px solid #e5e7eb;padding:20px 36px;background:#fafafa;">
+			<p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+				This is an automated message. Please do not reply.
+			</p>
+		</div>
 	</div>
 </div>
 `;

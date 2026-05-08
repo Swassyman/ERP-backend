@@ -13,3 +13,14 @@ export const loginSchema = z
 	.strict();
 
 export type LoginSchema = z.output<typeof loginSchema>;
+
+export const setPasswordSchema = z
+	.object({
+		token: z.string({ error: "Token is required" }).trim().nonempty(),
+		password: z
+			.string({ error: "Invalid password input" })
+			.min(6, { error: "Password must be at least 6 characters" }),
+	})
+	.strict();
+
+export type SetPasswordSchema = z.output<typeof setPasswordSchema>;
