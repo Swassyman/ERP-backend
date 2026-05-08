@@ -1,4 +1,5 @@
 import { DrizzleQueryError } from "drizzle-orm/errors";
+import { nanoid } from "nanoid";
 import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/lib/constants.js";
 import { handleDbError, UnauthorizedError, UnreachableError } from "./errors.js";
 
@@ -62,4 +63,8 @@ export function dbAction<T extends unknown[], R>(
 export function snakeToNormalCase(s: string) {
 	const r = s.split("_").join(" ").replace(/\s+/g, " ");
 	return r[0]?.toUpperCase() + r.slice(1);
+}
+
+export function generateSecureString(length: number = 12) {
+	return nanoid(length);
 }

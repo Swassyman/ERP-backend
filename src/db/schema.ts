@@ -1,4 +1,4 @@
-import { type HasDefault, isNull, type NotNull, relations, sql, gt, and } from "drizzle-orm";
+import { and, gt, type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -14,14 +14,14 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import {
+	EVENT_ORGANIZER_INVITATION_STATUS,
+	EVENT_ORGANIZER_ROLES,
+	EVENT_STATUS,
 	INSTITUTION_DOMAIN,
 	MANAGED_ENTITY_TYPES,
 	PASSWORD_TOKEN_TYPES,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
-	EVENT_STATUS,
-	EVENT_ORGANIZER_ROLES,
-	EVENT_ORGANIZER_INVITATION_STATUS,
 	WORKFLOW_INSTANCE_STATUS,
 	WORKFLOW_INSTANCE_STEP_STATUS,
 } from "@/lib/constants.js";

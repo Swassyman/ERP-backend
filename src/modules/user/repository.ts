@@ -46,3 +46,18 @@ export const getUsers = dbAction(async () => {
 		},
 	});
 });
+
+export const insertPasswordToken = dbAction(
+	async (data: {
+		userId: number;
+		tokenHash: string;
+		type: (typeof schema.passwordTokenTypeEnum.enumValues)[number];
+		expiresAt: string;
+	}) => {
+		const [inserted] = await db.insert(schema.userPasswordToken).values(data).returning({
+			id: schema.userPasswordToken.id,
+		});
+
+		return inserted;
+	},
+);
