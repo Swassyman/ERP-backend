@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { nanoid } from "nanoid";
 import { FLATTENED_PERMISSIONS, PERMISSION_SCOPES } from "@/lib/constants.js";
@@ -67,4 +68,8 @@ export function snakeToNormalCase(s: string) {
 
 export function generateSecureString(length: number = 12) {
 	return nanoid(length);
+}
+
+export function hashToken(token: string) {
+	return createHash("sha256").update(token).digest("hex");
 }

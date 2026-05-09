@@ -3,7 +3,7 @@ import { hashPassword, verifyPassword } from "@/lib/argon2.js";
 import { sendEmail } from "@/lib/email.js";
 import { getPasswordUpdatedHtml } from "@/lib/email-templates.js";
 import { NotFoundError, UnauthorizedError } from "@/lib/errors.js";
-import { quickEnv } from "@/lib/helpers.js";
+import { hashToken, quickEnv } from "@/lib/helpers.js";
 import {
 	generateAccessToken,
 	generateRefreshToken,
@@ -78,7 +78,7 @@ export async function createNewTokens(refreshToken: string) {
 }
 
 export async function setPassword(token: string, newPassword: string) {
-	const tokenHash = await hashPassword(token);
+	const tokenHash = hashToken(token);
 	const tokenRecord = await repository.findActivePasswordToken(tokenHash);
 
 	if (tokenRecord == null) {
