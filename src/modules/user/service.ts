@@ -31,7 +31,7 @@ export async function createUser(input: CreateUserSchema) {
 	try {
 		await sendEmail(input.email, "Welcome! Set up your password", html);
 	} catch (error) {
-		await repository.rollbackUserCreation(user.id); //for deleting the user if email fails to send (useless entry in user table can be there).
+		await repository.rollbackUserCreation(user.id); //for deleting the user if email fails to send (useless entry in user table can be there which can cause problems).
 		throw error;
 	}
 

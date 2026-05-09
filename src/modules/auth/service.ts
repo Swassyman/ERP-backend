@@ -99,7 +99,7 @@ export async function setPassword(token: string, newPassword: string) {
 
 	try {
 		const frontendUrl = quickEnv("FRONTEND_ORIGIN", true);
-		const loginUrl = `${frontendUrl}/login`;
+		const loginUrl = `${frontendUrl}/login`; //change the url as needed
 		const html = getPasswordUpdatedHtml(loginUrl);
 		await sendEmail(tokenRecord.user.email, "Password Updated Successfully", html);
 	} catch (error) {

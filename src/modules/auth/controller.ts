@@ -62,6 +62,6 @@ export const refresh: ApiRequestHandler<{
 
 export const setPassword: ApiRequestHandler = async (req, res) => {
 	const body = setPasswordSchema.parse(req.body);
-	await service.setPassword(body.token, body.password);
-	return ok(res, { message: "Password updated successfully" });
+	const result = await service.setPassword(body.token, body.password);
+	return ok(res, result);
 };
