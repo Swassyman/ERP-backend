@@ -19,7 +19,7 @@ export const EVENT_STATUS = [
 	"overridden",
 	"completed",
 ] as const;
-export const EVENT_ORGANIZER_ROLES = ["host", "co_host"] as const;
+export const EVENT_ORGANIZER_ROLES = ["host", "co_host", "resource_provider"] as const;
 export const EVENT_ORGANIZER_INVITATION_STATUS = [
 	"pending",
 	"accepted",
@@ -65,6 +65,10 @@ export const PERMISSION = {
 		create: "Create venue types",
 		create_role: "Create roles under venue types",
 	},
+	event_organizer: {
+		add: "Add organizer to event",
+		remove: "Remove organizer from event",
+	}
 } as const;
 
 export const PERMISSION_SCOPES = Object.keys(PERMISSION) as PermissionScope[];
