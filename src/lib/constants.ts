@@ -70,6 +70,12 @@ export const PERMISSION = {
 		delete: "Delete event types",
 		modify_hierarchy: "Modify hierarchy of event types",
 	},
+	event: {
+		manage: "Manage events",
+		view_own: "View own organization's events of all statuses",
+		view_all_confirmed: "View all confirmed and upcoming events",
+		view_all: "View all events of all statuses",
+	},
 } as const;
 
 export const PERMISSION_SCOPES = Object.keys(PERMISSION) as PermissionScope[];
