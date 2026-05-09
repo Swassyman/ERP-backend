@@ -66,5 +66,14 @@ export const rollbackUserCreation = dbAction(async (userId: number) => {
 	await db.transaction(async (tx) => {
 		await tx.delete(schema.userPasswordToken).where(eq(schema.userPasswordToken.userId, userId));
 		await tx.delete(schema.user).where(eq(schema.user.id, userId));
+export const findUserById = dbAction(async (id: number) => {
+	return await db.query.user.findFirst({
+		where: and(eq(schema.user.id, id), isNull(schema.user.deletedAt)),
+	});
+});
+
+export const findUserByEmail = dbAction(async (email: string) => {
+	return await db.query.user.findFirst({
+		where: and(eq(schema.user.email, email), isNull(schema.user.deletedAt)),
 	});
 });
