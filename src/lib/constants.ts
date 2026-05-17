@@ -8,6 +8,17 @@ export const INSTITUTION_DOMAIN = "tkmce.ac.in";
 
 export const REFRESH_TOKEN_COOKIE_NAME = "refresh-token";
 
+export const SECOND = 1000;
+export const MINUTE = 60 * SECOND;
+export const HOUR = 60 * MINUTE;
+export const DAY = 24 * HOUR;
+export const WEEK = 7 * DAY;
+
+export const defaultAlphabet =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"; //Is it okke to define it here?. maybe useful for other purpose also, thats why put it here.
+
+export const PASSWORD_TOKEN_EXPIRY = 1 * DAY; //todo: change as needed
+
 // === System Level
 export const USER_TYPES = ["admin", "end_user"] as const;
 export const MANAGED_ENTITY_TYPES = ["organization", "venue"] as const;

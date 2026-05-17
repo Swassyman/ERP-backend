@@ -1,4 +1,4 @@
-import { type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
+import { and, type HasDefault, isNull, lt, type NotNull, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -14,13 +14,14 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import {
+	EVENT_ORGANIZER_INVITATION_STATUS,
+	EVENT_ORGANIZER_ROLES,
+	EVENT_STATUS,
 	INSTITUTION_DOMAIN,
 	MANAGED_ENTITY_TYPES,
+	PASSWORD_TOKEN_EXPIRY,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
-	EVENT_STATUS,
-	EVENT_ORGANIZER_ROLES,
-	EVENT_ORGANIZER_INVITATION_STATUS,
 	WORKFLOW_INSTANCE_STATUS,
 	WORKFLOW_INSTANCE_STEP_STATUS,
 } from "@/lib/constants.js";
@@ -86,6 +87,7 @@ export const user = pgTable(
 
 export const userRelations = relations(user, (r) => ({
 	roles: r.many(userRole),
+	passwordTokens: r.many(userPasswordToken),
 }));
 
 export const role = pgTable(
@@ -146,6 +148,40 @@ export const userRoleRelations = relations(userRole, (r) => ({
 		references: [managedEntity.id],
 	}),
 	handledInstanceSteps: r.many(workflowInstanceStep),
+}));
+
+export const userPasswordToken = pgTable(
+	"user_password_token",
+	{
+		id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+		userId: bigint({ mode: "number" })
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		tokenHash: text().notNull(),
+		usedAt: timestamp({ mode: "string", withTimezone: true }),
+		...fields("common"),
+	},
+	(t) => [
+		uniqueIndex().on(t.tokenHash),
+		uniqueIndex()
+			.on(t.userId)
+			.where(
+				and(
+					isNull(t.usedAt),
+					lt(
+						sql`now()`,
+						sql`${t.createdAt} + (${PASSWORD_TOKEN_EXPIRY} * interval '1 millisecond')`,
+					),
+				)!,
+			),
+	],
+);
+
+export const userPasswordTokenRelations = relations(userPasswordToken, (r) => ({
+	user: r.one(user, {
+		fields: [userPasswordToken.userId],
+		references: [user.id],
+	}),
 }));
 
 export const permission = pgTable(
