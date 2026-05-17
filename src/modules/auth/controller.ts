@@ -2,7 +2,7 @@ import { IS_PROD, REFRESH_TOKEN_COOKIE_NAME } from "@/lib/constants.js";
 import { UnauthorizedError } from "@/lib/errors.js";
 import { getAuthenticatedUser, ok } from "@/lib/helpers.js";
 import { JWT_REFRESH_TOKEN_EXPIRY } from "@/lib/jwt.js";
-import { loginSchema, setPasswordSchema } from "./schema.js";
+import { loginSchema, resetPasswordSchema } from "./schema.js";
 import * as service from "./service.js";
 
 export const login: ApiRequestHandler<{
@@ -60,8 +60,8 @@ export const refresh: ApiRequestHandler<{
 	});
 };
 
-export const setPassword: ApiRequestHandler = async (req, res) => {
-	const body = setPasswordSchema.parse(req.body);
-	const result = await service.setPassword(body.token, body.password);
+export const resetPassword: ApiRequestHandler = async (req, res) => {
+	const body = resetPasswordSchema.parse(req.body);
+	const result = await service.resetPassword(body.token, body.password);
 	return ok(res, result);
 };

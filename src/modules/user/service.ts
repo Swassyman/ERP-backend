@@ -1,15 +1,14 @@
 import { hashPassword } from "@/lib/argon2.js";
 import { sendEmail } from "@/lib/email.js";
-import { getPasswordSetupHtml } from "@/lib/email-templates.js";
-import { generateSecureString, hashToken, quickEnv } from "@/lib/helpers.js";
+import { getPasswordSetupContent } from "@/lib/email-templates.js";
+import { generateSecureString, hexSha256, quickEnv } from "@/lib/helpers.js";
 import * as repository from "./repository.js";
 import type { CreateUserSchema } from "./schema.js";
 
 export async function createUser(input: CreateUserSchema) {
 	const initial_password = generateSecureString();
 	const token = generateSecureString(32);
-	const tokenHash = hashToken(token);
-	const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // todo: Now the expiry is 24hrs, Can be increased if needed.
+	const tokenHash = hexSha256(token);
 
 	const user = await repository.insertUser(
 		{
@@ -19,14 +18,12 @@ export async function createUser(input: CreateUserSchema) {
 		},
 		{
 			tokenHash,
-			type: "initial_setup",
-			expiresAt,
 		},
 	);
 
 	const frontendUrl = quickEnv("FRONTEND_ORIGIN", true);
-	const setupUrl = `${frontendUrl}/setup-password?token=${token}`;
-	const html = getPasswordSetupHtml(setupUrl);
+	const setupUrl = `${frontendUrl}/reset-password?token=${token}`; //todo: change the url as needed for frontend
+	const html = getPasswordSetupContent(setupUrl);
 
 	try {
 		await sendEmail(input.email, "Welcome! Set up your password", html);

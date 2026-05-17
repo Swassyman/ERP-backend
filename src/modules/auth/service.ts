@@ -1,9 +1,9 @@
 import { jwtVerify } from "jose";
 import { hashPassword, verifyPassword } from "@/lib/argon2.js";
 import { sendEmail } from "@/lib/email.js";
-import { getPasswordUpdatedHtml } from "@/lib/email-templates.js";
+import { getPasswordUpdatedContent } from "@/lib/email-templates.js";
 import { NotFoundError, UnauthorizedError } from "@/lib/errors.js";
-import { hashToken, quickEnv } from "@/lib/helpers.js";
+import { hexSha256, quickEnv } from "@/lib/helpers.js";
 import {
 	generateAccessToken,
 	generateRefreshToken,
@@ -77,8 +77,8 @@ export async function createNewTokens(refreshToken: string) {
 	};
 }
 
-export async function setPassword(token: string, newPassword: string) {
-	const tokenHash = hashToken(token);
+export async function resetPassword(token: string, newPassword: string) {
+	const tokenHash = hexSha256(token);
 	const tokenRecord = await repository.findActivePasswordToken(tokenHash);
 
 	if (tokenRecord == null) {
@@ -99,10 +99,10 @@ export async function setPassword(token: string, newPassword: string) {
 
 	try {
 		const frontendUrl = quickEnv("FRONTEND_ORIGIN", true);
-		const loginUrl = `${frontendUrl}/login`; //change the url as needed
-		const html = getPasswordUpdatedHtml(loginUrl);
+		const loginUrl = `${frontendUrl}/login`; //todo: change the url as needed
+		const html = getPasswordUpdatedContent(loginUrl);
 		await sendEmail(tokenRecord.user.email, "Password Updated Successfully", html);
 	} catch (error) {
-		console.error("Password was updated, but the confirmation email failed to send.", error);
+		return error;
 	}
 }

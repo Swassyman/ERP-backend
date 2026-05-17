@@ -14,7 +14,7 @@ export const loginSchema = z
 
 export type LoginSchema = z.output<typeof loginSchema>;
 
-export const setPasswordSchema = z
+export const resetPasswordSchema = z
 	.object({
 		token: z.string({ error: "Token is required" }).trim().nonempty(),
 		password: z
@@ -23,4 +23,4 @@ export const setPasswordSchema = z
 	})
 	.strict();
 
-export type SetPasswordSchema = z.output<typeof setPasswordSchema>;
+export type ResetPasswordSchema = z.output<typeof resetPasswordSchema>;

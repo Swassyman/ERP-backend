@@ -7,11 +7,10 @@ export const insertUser = dbAction(
 		userData: { email: string; passwordHash: string; fullName: string },
 		tokenData: {
 			tokenHash: string;
-			type: (typeof schema.passwordTokenTypeEnum.enumValues)[number];
-			expiresAt: string;
 		},
 	) => {
-		return await db.transaction(async (tx) => { //transaction because to maintain db consistency (Both user and token should be inserted or neither should be).
+		return await db.transaction(async (tx) => {
+			//transaction because to maintain db consistency (Both user and token should be inserted or neither should be).
 			const [user] = await tx
 				.insert(schema.user)
 				.values({
@@ -30,8 +29,6 @@ export const insertUser = dbAction(
 			await tx.insert(schema.userPasswordToken).values({
 				userId: user.id,
 				tokenHash: tokenData.tokenHash,
-				type: tokenData.type,
-				expiresAt: tokenData.expiresAt,
 			});
 
 			return user;
@@ -62,7 +59,6 @@ export const getUsers = dbAction(async () => {
 		},
 	});
 });
-
 
 export const rollbackUserCreation = dbAction(async (userId: number) => {
 	await db.transaction(async (tx) => {

@@ -1,4 +1,4 @@
-import { and, gt, type HasDefault, isNull, type NotNull, relations, sql } from "drizzle-orm";
+import { and, type HasDefault, isNull, lt, type NotNull, relations, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
 	bigint,
@@ -19,7 +19,7 @@ import {
 	EVENT_STATUS,
 	INSTITUTION_DOMAIN,
 	MANAGED_ENTITY_TYPES,
-	PASSWORD_TOKEN_TYPES,
+	PASSWORD_TOKEN_EXPIRY,
 	USER_TYPES,
 	VENUE_ACCESS_LEVELS,
 	WORKFLOW_INSTANCE_STATUS,
@@ -47,7 +47,6 @@ export const workflowInstanceStepStatusEnum = pgEnum(
 	"workflow_instance_step_status",
 	WORKFLOW_INSTANCE_STEP_STATUS,
 );
-export const passwordTokenTypeEnum = pgEnum("password_token_type", PASSWORD_TOKEN_TYPES);
 
 // === Tables
 export const managedEntity = pgTable(
@@ -159,16 +158,22 @@ export const userPasswordToken = pgTable(
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
 		tokenHash: text().notNull(),
-		type: passwordTokenTypeEnum().notNull(),
-		expiresAt: timestamp({ mode: "string", withTimezone: true }).notNull(),
 		usedAt: timestamp({ mode: "string", withTimezone: true }),
 		...fields("common"),
 	},
 	(t) => [
 		uniqueIndex().on(t.tokenHash),
 		uniqueIndex()
-			.on(t.userId, t.type)
-			.where(and(isNull(t.usedAt), gt(t.expiresAt, sql`now()`))!),
+			.on(t.userId)
+			.where(
+				and(
+					isNull(t.usedAt),
+					lt(
+						sql`now()`,
+						sql`${t.createdAt} + (${PASSWORD_TOKEN_EXPIRY} * interval '1 millisecond')`,
+					),
+				)!,
+			),
 	],
 );
 
